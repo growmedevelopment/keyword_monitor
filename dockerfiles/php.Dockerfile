@@ -32,6 +32,10 @@ RUN echo "zend_extension=$(find /usr/local/lib/php/extensions/ -name xdebug.so)"
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Set correct permissions
-RUN chown -R www-data:www-data /var/www/laravel/storage /var/www/laravel/bootstrap/cache
+# Ensure Laravel storage and cache directories exist and set correct permissions
+RUN mkdir -p /var/www/laravel/storage /var/www/laravel/bootstrap/cache \
+    && chown -R www-data:www-data /var/www/laravel/storage /var/www/laravel/bootstrap/cache
 
 CMD ["php-fpm", "-y", "/usr/local/etc/php-fpm.conf", "-R"]
+
+
