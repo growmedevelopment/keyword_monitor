@@ -36,8 +36,9 @@ This project is a Laravel application with React and TypeScript integrated for f
    ```
 
 3. Install Node.js dependencies:
-
+    
    ```bash
+   cd .\src\
    npm install
    ```
 

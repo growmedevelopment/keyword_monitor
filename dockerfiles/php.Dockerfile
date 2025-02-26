@@ -10,15 +10,16 @@ RUN apk add --no-cache \
     g++ \
     make \
     linux-headers \
-    mariadb-client \
-    libpq
+    mysql-client \
+    libpq \
+    mysql-dev
+
 
 # Install PHP extensions
 RUN docker-php-ext-install pdo pdo_mysql
 
 # Install Xdebug via PECL
-RUN pecl install xdebug \
-    && docker-php-ext-enable xdebug
+RUN pecl install xdebug && docker-php-ext-enable xdebug || true
 
 # Configure Xdebug
 RUN echo "zend_extension=$(find /usr/local/lib/php/extensions/ -name xdebug.so)" > /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
@@ -27,4 +28,10 @@ RUN echo "zend_extension=$(find /usr/local/lib/php/extensions/ -name xdebug.so)"
     && echo "xdebug.client_host=host.docker.internal" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
     && echo "xdebug.client_port=9003" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
 
-CMD ["php-fpm"]
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Set correct permissions
+RUN chown -R www-data:www-data /var/www/laravel/storage /var/www/laravel/bootstrap/cache
+
+CMD ["php-fpm", "-y", "/usr/local/etc/php-fpm.conf", "-R"]
