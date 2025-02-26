@@ -22,28 +22,22 @@ This project is a Laravel application with React and TypeScript integrated for f
 
 ## Installation
 1. Build the Docker containers:
+   ```bash
+   cd ./docker/
+   ```
     ```bash
     docker-compose build
     ```
 
-2. Start the Docker containers in detached mode:
-
-    ```bash
-    docker-compose up -d
-    ```
-
-3. Create a new Laravel project using Docker Compose:
-
+2. Create a new Laravel project using Docker Compose:
    ```bash
    cd ..
-   rm -rf laravel
    ```
-
    ```bash
    laravel new laravel
    ```
-
-4. Install Node.js dependencies:
+ 
+3. Install Node.js dependencies:
    
     for iOS  
    ```bash
@@ -62,7 +56,7 @@ This project is a Laravel application with React and TypeScript integrated for f
    npm install
    ```
 
-5. Update the `.env` file with the following database configuration:
+4. Update the `.env` file with the following database configuration:
 
    ```env
    DB_CONNECTION=mysql
@@ -73,6 +67,11 @@ This project is a Laravel application with React and TypeScript integrated for f
    DB_PASSWORD=password
    ```
 
+5. Start the Docker containers in detached mode:
+
+    ```bash
+    docker-compose up -d
+    ```
 6. Run migrations using Docker Compose:
    ```bash
    cd ../docker/
@@ -80,30 +79,10 @@ This project is a Laravel application with React and TypeScript integrated for f
    ```bash
    docker-compose exec php php /var/www/laravel/artisan migrate --seed
    ```
-
 ---
 
 ## React and TypeScript Configuration
-
-### Files and Directories
-- **Source Directory**: `resources/ts/`
-- **Compiled Output**: `public/js/`
-
-### Compile Assets
-
-- Development build:
-
-  ```bash
-  npm run dev
-  ```
-
-- Production build:
-
-  ```bash
-  npm run prod
-  ```
-
-### Install TypeScript and React Type Definitions
+### Install TypeScript
 - Production build:
 
 ```bash
@@ -117,19 +96,19 @@ This project is a Laravel application with React and TypeScript integrated for f
 
 update vite.config.js
 ```js
-   import { defineConfig } from 'vite';
-   import laravel from 'laravel-vite-plugin';
-   import react from '@vitejs/plugin-react';
-   
-   export default defineConfig({
-       plugins: [
-           laravel({
-               input: 'resources/js/app.tsx',
-               refresh: true,
-           }),
-           react(),
-       ],
-   });
+import { defineConfig } from 'vite';
+import laravel from 'laravel-vite-plugin';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+   plugins: [
+      laravel({
+         input: ['resources/js/app.tsx', 'resources/css/app.scss'],
+         refresh: true,
+      }),
+      react(),
+   ],
+});
 ```
 
 Create a tsconfig.json File
@@ -160,6 +139,7 @@ Then, open the generated tsconfig.json and modify these settings:
 Update resources/js/app.tsx
 ```tsx
 import '../css/app.css';
+import '../scss/app.scss';
 import './bootstrap';
 
 import { createInertiaApp } from '@inertiajs/react';
@@ -195,22 +175,46 @@ Rename All .jsx Files to .tsx
 
 
 ### Blade Template Update
-Ensure your Blade template has a `<link rel="stylesheet" href="{{ mix('css/app.css') }}">`  in your main layout or template file:
+Ensure your Blade template has a `resources/css/app.scss`  in your main layout or template file:
 
 ```html
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Laravel with React and TypeScript</title>
-    <link rel="stylesheet" href="{{ mix('css/app.css') }}">
+   <meta charset="utf-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1">
+
+   <title inertia>{{ config('app.name', 'Laravel') }}</title>
+
+   <!-- Fonts -->
+   <link rel="preconnect" href="https://fonts.bunny.net">
+   <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+
+   <!-- Scripts -->
+   @routes
+   @viteReactRefresh
+   @vite(['resources/js/app.tsx', "resources/js/Pages/{$page['component']}.tsx", 'resources/css/app.scss'])
+   @inertiaHead
 </head>
-<body>
-    <div id="app"></div>
-    <script src="{{ mix('js/app.js') }}"></script>
+<body class="font-sans antialiased">
+@inertia
 </body>
 </html>
+
+
+
+```
+
+---
+
+## Install Sass and Required Dependencies
+```bash 
+  npm install --save-dev sass
+```
+
+Import SCSS in Your React TypeScript Files
+```tsx
+import '../scss/app.scss';
 ```
 
 ---
