@@ -22,30 +22,45 @@ This project is a Laravel application with React and TypeScript integrated for f
 ---
 
 ## Installation
+1. Build the Docker containers:
+    ```bash
+    docker-compose build
+    ```
 
-1. Start the Docker containers in detached mode:
+2. Start the Docker containers in detached mode:
+
+    ```bash
+    docker-compose up -d
+    ```
+
+3. Create a new Laravel project using Docker Compose:
 
    ```bash
-   docker-compose up -d
+   cd ..
+   rm -rf app
    ```
 
-2. Create a new Laravel project using Docker Compose:
-
    ```bash
-   docker-compose run composer create-project laravel/laravel .
+   laravel new app
    ```
 
-3. Install Node.js dependencies:
-    
+4. Install Node.js dependencies:
+   
+    for iOS  
    ```bash
-   cd .\src\
+   cd .\app\ 
+    ```
+   for Windows
+   ```bash
+   cd ./app/ 
+    ```
+
+   ```bash
+   nvm use 23
+   ```
+   
+    ```bash
    npm install
-   ```
-
-4. Generate the application key:
-
-   ```bash
-   php artisan key:generate
    ```
 
 5. Update the `.env` file with the following database configuration:
@@ -60,9 +75,11 @@ This project is a Laravel application with React and TypeScript integrated for f
    ```
 
 6. Run migrations using Docker Compose:
-
    ```bash
-   docker-compose run artisan migrate
+   cd ../docker/
+   ```
+   ```bash
+   docker-compose exec php php /var/www/laravel/artisan migrate --seed
    ```
 
 ---
