@@ -6,10 +6,10 @@ This project is a modern development starter combining **Laravel** (PHP backend)
 
 ## 🚀 Features
 
-- **Laravel 10+** backend (API-first)
+- **Laravel 12+** backend (API-first)
 - **React + TypeScript + Vite** SPA frontend
 - **MySQL 8** database
-- **Dockerized** services for PHP, MySQL, Nginx, Node
+- **Dockerized** services for PHP, MySQL, Nginx
 - **Live reload** for frontend via Vite dev server
 - **Hot-reload friendly** for Laravel and React during development
 
@@ -18,22 +18,21 @@ This project is a modern development starter combining **Laravel** (PHP backend)
 ## 🧰 Requirements
 
 - Docker & Docker Compose
-- Node.js (v23+) if running frontend outside Docker
+- Node.js (v24+ optional) — only needed if you run Vite outside Docker
 
 ---
 
 ## 📦 Project Structure
 
 ```
-LaravelReactDockerStarter/
+KeywordMonitor/
 ├── backend/         # Laravel app
 ├── frontend/        # React + TypeScript app (Vite)
 ├── docker/
 │   ├── php/
 │   ├── composer/
-│   ├── frontend/
 │   └── nginx/
-├── docker-compose.yaml
+├── docker-compose.yml
 └── README.md
 ```
 
@@ -44,25 +43,35 @@ LaravelReactDockerStarter/
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourname/yourproject.git
-cd yourproject
+    git clone https://github.com/yourname/yourproject.git
+    cd yourproject
 ```
 
-### 2. Initialize the Frontend
+---
+
+### 2. Initialize the Frontend (One-Time Setup)
+
+If the `frontend/` folder is empty, create the app manually:
 
 ```bash
-cd frontend
-npm create vite@latest . -- --template react-ts
-npm install
+    npm create vite@latest frontend -- --template react-ts
+    cd frontend
+    npm install
 ```
 
-Optional (for SCSS):
+Or using `yarn`:
 
 ```bash
-npm install --save-dev sass
+    yarn create vite frontend --template react-ts
+    cd frontend
+    yarn
 ```
 
-Add to `vite.config.ts`:
+---
+
+### 3. Configure Vite Proxy for Laravel API
+
+Edit `frontend/vite.config.ts`:
 
 ```ts
 import { defineConfig } from 'vite';
@@ -71,8 +80,8 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 5173,
     host: true,
+    port: 5173,
     proxy: {
       '/api': {
         target: 'http://nginx',
@@ -84,11 +93,17 @@ export default defineConfig({
 });
 ```
 
+You can also install SCSS:
+
+```bash
+    npm install --save-dev sass
+```
+
 ---
 
-### 3. Set Laravel `.env`
+### 4. Set Laravel `.env`
 
-Update `backend/.env`:
+Update `backend/.env` with Docker DB credentials:
 
 ```env
 DB_CONNECTION=mysql
@@ -101,44 +116,46 @@ DB_PASSWORD=laravel_password
 
 ---
 
-### 4. Start the Application
+### 5. Start the App
 
 From the root directory:
 
 ```bash
-docker-compose up --build
+    docker-compose up --build
 ```
+
+> This will start:
+> - Laravel at [http://localhost:8000](http://localhost:8000)
+> - React at [http://localhost:5173](http://localhost:5173)
 
 ---
 
-### 5. Migrate the Database
+### 6. Run Laravel Commands
 
 ```bash
-docker-compose exec php php artisan migrate --seed
+    docker-compose run --rm artisan migrate
+    docker-compose run --rm artisan key:generate
 ```
 
 ---
 
 ## 🧪 Development Access
 
-- **Frontend (Vite)**: [http://localhost:5173](http://localhost:5173)
+- **Frontend (React + Vite)**: [http://localhost:5173](http://localhost:5173)
 - **Backend (Laravel)**: [http://localhost:8000](http://localhost:8000)
-- **API Proxy**: Frontend calls to `/api/*` will be proxied to Laravel
+- **API Calls**: Frontend can call `/api/*` and it will proxy to Laravel automatically
 
 ---
 
 ## 🏗 Production Mode (Optional)
 
-In production, you can build the frontend with:
+To build frontend for production:
 
 ```bash
-docker-compose run --rm frontend npm run build
+    cd frontend
+    npm run build
 ```
 
-Then serve it via Nginx from the `/frontend/dist` folder.
+Then update your Nginx config to serve `/frontend/dist` as a static site.
 
 ---
-
-## 📝 License
-
-This project is open-source and available under the [MIT license](https://opensource.org/licenses/MIT).
