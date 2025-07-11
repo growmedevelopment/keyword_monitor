@@ -2,7 +2,7 @@ name: '${COMPOSE_PROJECT_NAME}'
 
 services:
   nginx:
-    image: 'nginx:stable-alpine'
+    image: nginx:stable-alpine
     ports:
       - "8000:80"
     volumes:
@@ -29,19 +29,15 @@ services:
       - "db_data:/var/lib/mysql"
 
   composer:
-    build:
-      context: .
-      dockerfile: docker/composer/Dockerfile
+    image: composer:latest
     volumes:
       - "./backend:/var/www/laravel"
 
   artisan:
-    build:
-      context: .
-      dockerfile: docker/composer/Dockerfile
+    image: composer:latest
     volumes:
       - "./backend:/var/www/laravel"
-    entrypoint: [ "php", "/var/www/laravel/artisan" ]
+    entrypoint: [ "php", "artisan" ]
 
   frontend:
     image: node:current-alpine
