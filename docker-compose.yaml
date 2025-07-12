@@ -1,4 +1,4 @@
-name: '${COMPOSE_PROJECT_NAME}'
+name: 'keywords_monitor'
 
 services:
   nginx:
@@ -34,9 +34,12 @@ services:
       - "./backend:/var/www/laravel"
 
   artisan:
-    image: composer:latest
+    build:
+      context: "./docker/php"
+      dockerfile: "Dockerfile"
     volumes:
       - "./backend:/var/www/laravel"
+    working_dir: /var/www/laravel
     entrypoint: [ "php", "artisan" ]
 
   frontend:
@@ -45,7 +48,7 @@ services:
       - "./frontend:/app"
       - "/app/node_modules"
     ports:
-      - "5173:5173"
+      - "5174:5173"
     working_dir: /app
     command: npm run dev -- --host
 volumes:
