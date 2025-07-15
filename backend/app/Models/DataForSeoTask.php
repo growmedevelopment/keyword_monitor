@@ -7,19 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class DataForSeoTask extends Model
 {
-    protected $fillable = [
-        'keyword_id',
-        'project_id',
-        'task_id',
-        'cost',
-        'status',
-        'type',
-        'result_count',
-        'result_url',
-        'submitted_at',
-        'completed_at',
-        'raw_response',
-    ];
+    protected $guarded = [];
 
     protected $casts = [
         'submitted_at' => 'datetime',

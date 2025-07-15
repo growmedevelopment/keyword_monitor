@@ -6,13 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class KeywordRank extends Model
 {
-    protected $fillable = [
-        'keyword_id',
-        'position',
-        'url',
-        'ranked_at',
-        'snapshot',
-    ];
+    protected $guarded = [];
 
     protected $casts = [
         'ranked_at' => 'datetime',

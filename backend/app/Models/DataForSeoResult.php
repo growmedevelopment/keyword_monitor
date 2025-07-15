@@ -6,5 +6,5 @@ use Illuminate\Database\Eloquent\Model;
 
 class DataForSeoResult extends Model
 {
-    //
+    protected $guarded = [];
 }

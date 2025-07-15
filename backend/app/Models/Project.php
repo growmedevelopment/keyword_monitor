@@ -11,7 +11,7 @@ class Project extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'user_id', 'url'];
+    protected $guarded = [];
 
     public function keywords(): HasMany {
         return $this->hasMany(Keyword::class);

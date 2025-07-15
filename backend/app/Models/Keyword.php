@@ -8,11 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Keyword extends Model
 {
-    protected $fillable = [
-        'project_id',
-        'keyword',
-        'tracking_priority',
-    ];
+    protected $guarded = [];
 
 
     public function dataForSeoTasks(): HasMany {
