@@ -13,6 +13,10 @@ return [
     | a conventional file to locate the various service credentials.
     |
     */
+    'dataforseo' => [
+        'username' => env('DATAFORSEO_USERNAME'),
+        'password' => env('DATAFORSEO_PASSWORD'),
+    ],
 
     'postmark' => [
         'token' => env('POSTMARK_TOKEN'),
