@@ -22,6 +22,7 @@ return new class extends Migration
             $table->text('description')->nullable(); // rename from snippet
             $table->string('url')->nullable();
             $table->text('breadcrumb')->nullable();
+            $table->timestamps();
         });
     }
 
