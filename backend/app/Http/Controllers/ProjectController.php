@@ -6,13 +6,15 @@ use App\Http\Resources\ProjectResource;
 use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Auth;
+use App\Services\ProjectService;
 
 class ProjectController extends Controller
 {
+    public function __construct(private ProjectService $projectService) {}
+
     public function index(): JsonResponse
     {
-        return response()->json(ProjectResource::collection(Project::get()));
+        return response()->json(ProjectResource::collection($this->projectService->getAll()));
     }
 
     public function store(Request $request): JsonResponse
@@ -21,17 +23,14 @@ class ProjectController extends Controller
             'name' => 'required|string|max:255',
         ]);
 
-        $project = Project::create([
-            'name' => $data['name'],
-            'user_id' => Auth::id(), // or hardcoded for now
-        ]);
+        $project = $this->projectService->create($data);
 
         return response()->json($project, 201);
     }
 
     public function show(Project $project): JsonResponse
     {
-        return response()->json($project->load(['user', 'keywords', 'tasks']));
+        return response()->json($this->projectService->show($project));
     }
 
     public function update(Request $request, Project $project): JsonResponse
@@ -40,14 +39,14 @@ class ProjectController extends Controller
             'name' => 'required|string|max:255',
         ]);
 
-        $project->update($data);
+        $updatedProject = $this->projectService->update($project, $data);
 
-        return response()->json($project);
+        return response()->json($updatedProject);
     }
 
     public function destroy(Project $project): JsonResponse
     {
-        $project->delete();
+        $this->projectService->delete($project);
 
         return response()->json(['message' => 'Project deleted successfully.']);
     }
