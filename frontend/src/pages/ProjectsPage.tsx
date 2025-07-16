@@ -1,20 +1,9 @@
 import { use, Suspense } from 'react';
-import axios from 'axios';
-const api = import.meta.env.VITE_API_BACKEND_ENDPOINT;
-
-// Define the structure of your project data
-type Project = {
-    id: number;
-    name: string;
-    domain: string;
-    created_at: string;
-};
+import projectService from '../services/projectService'
 
 
-const projectPromise: Promise<Project[]> = axios
-    .get<Project[]>(`${api}/api/projects`)
-    .then((res) => res.data);
 
+const projectPromise = projectService.getAll();
 
 function ProjectList() {
     const projects = use(projectPromise);
