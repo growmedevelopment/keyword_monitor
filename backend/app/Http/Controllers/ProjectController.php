@@ -21,6 +21,7 @@ class ProjectController extends Controller
     {
         $data = $request->validate([
             'name' => 'required|string|max:255',
+            'ulr' => 'required|string|max:55',
         ]);
 
         $project = $this->projectService->create($data);
