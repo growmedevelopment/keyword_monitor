@@ -15,26 +15,33 @@ const headers = {
     //Authorization: `Bearer ${import.meta.env.VITE_API_TOKEN}`,
 };
 
-
+async function ensureCsrfCookie() {
+    await axios.get(`${API}/sanctum/csrf-cookie`, { withCredentials: true });
+}
 const projectService = {
+
     async getAll() {
-        const response = await axios.get<Project[]>(`${API}/api/projects`, { headers });
+        await ensureCsrfCookie();
+        const response = await axios.get<Project[]>(`${API}/api/projects`, { headers,  withCredentials: true,});
         return response.data;
     },
     async getById(id: number | string) {
-        const response = await axios.get(`${API}/api/projects/${id}`, { headers });
+        const response = await axios.get(`${API}/api/projects/${id}`, { headers,  withCredentials: true,});
         return response.data;
     },
     async create(data: any) {
-        const response = await axios.post(`${API}/api/projects`, data, { headers });
+        await ensureCsrfCookie();
+        const response = await axios.post(`${API}/api/projects`, data, { headers,  withCredentials: true,});
         return response.data;
     },
     async update(id: number | string, data: any) {
-        const response = await axios.put(`${API}/api/projects/${id}`, data, { headers });
+        await ensureCsrfCookie();
+        const response = await axios.put(`${API}/api/projects/${id}`, data, { headers,  withCredentials: true,});
         return response.data;
     },
     async delete(id: number | string) {
-        const response = await axios.delete(`${API}/api/projects/${id}`, { headers });
+        await ensureCsrfCookie();
+        const response = await axios.delete(`${API}/api/projects/${id}`, { headers,  withCredentials: true,});
         return response.data;
     },
 };

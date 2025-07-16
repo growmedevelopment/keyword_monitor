@@ -12,9 +12,9 @@ Route::middleware('auth:sanctum')->get('/test', function () {
     return response()->json(['message' => 'ok']);
 });
 
-//Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('projects', ProjectController::class);
-//});
+});
 
 
 
