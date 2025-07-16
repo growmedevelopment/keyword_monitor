@@ -6,4 +6,5 @@ backend/.DS_Store
 backend/.env
 backend/node_modules
 backend/*.log
+frontend/.env
 

@@ -34,7 +34,7 @@ export default function Sidebar() {
                     <ListItemText primary="Dashboard" />
                 </ListItem>
 
-                <ListItem  component={Link} to="/dashboard">
+                <ListItem  component={Link} to="/projects">
                     <ListItemIcon>
                         <DashboardIcon />
                     </ListItemIcon>

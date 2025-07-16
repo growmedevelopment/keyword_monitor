@@ -16,7 +16,8 @@ RUN apk add --no-cache \
     mysql-dev
 
 # Install PHP extensions
-RUN docker-php-ext-install pdo pdo_mysql zip
+RUN docker-php-ext-install pdo pdo_mysql zip \
+    && echo "memory_limit = 512M" > /usr/local/etc/php/conf.d/memory-limit.ini \
 
 # Install Xdebug (dev only)
 RUN pecl install xdebug && docker-php-ext-enable xdebug || true
