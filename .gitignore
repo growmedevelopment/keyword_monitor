@@ -1,2 +1,9 @@
 .idea
 laravel
+backend/storage/pail
+backend/vendor
+backend/.DS_Store
+backend/.env
+backend/node_modules
+backend/*.log
+

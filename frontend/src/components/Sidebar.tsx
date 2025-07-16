@@ -27,13 +27,19 @@ export default function Sidebar() {
         >
             <Toolbar />
             <List>
-                <ListItem button component={Link} to="/dashboard">
+                <ListItem  component={Link} to="/dashboard">
                     <ListItemIcon>
                         <DashboardIcon />
                     </ListItemIcon>
                     <ListItemText primary="Dashboard" />
                 </ListItem>
 
+                <ListItem  component={Link} to="/dashboard">
+                    <ListItemIcon>
+                        <DashboardIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Projects" />
+                </ListItem>
                 {/* Add more links here */}
             </List>
         </Drawer>
