@@ -14,11 +14,10 @@ class ProjectService
 
     public function create(array $data)
     {
-        dd($data);
         return Project::create([
             'name' => $data['name'],
             'user_id' => Auth::id(),
-            'ulr' => $data['url'],
+            'url' => $data['url'],
         ]);
     }
 
