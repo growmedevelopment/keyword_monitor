@@ -3,6 +3,7 @@ import {Routes, Route } from 'react-router-dom'
 import Sidebar from './components/Sidebar'
 import Dashboard from './pages/Dashboard'
 import ProjectsPage from './pages/ProjectsPage'
+import UserRegisterPage from "./pages/UserRegisterPage.tsx";
 
 export default function App() {
     return (
@@ -14,6 +15,8 @@ export default function App() {
                     <Routes>
                         <Route path="/" element={<Dashboard />} />
                         <Route path="/projects" element={<ProjectsPage />} />
+                        <Route path="/register" element={<UserRegisterPage />} />
+                        <Route path="/login" element={<UserLoginPage />} />
                     </Routes>
                 </Box>
             </Box>
