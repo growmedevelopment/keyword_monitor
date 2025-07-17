@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios';
+import axios from '../axios';
 
 const API = import.meta.env.VITE_API_BACKEND_ENDPOINT;
 
@@ -19,10 +19,10 @@ export default function UserLoginPage() {
 
         try {
             // Step 1: Get CSRF cookie
-            await axios.get(`${API}/sanctum/csrf-cookie`, { withCredentials: true });
+            await axios.get(`${API}/sanctum/csrf-cookie`);
 
             // Step 2: Attempt login
-            await axios.post(`${API}/api/login`, form, { withCredentials: true });
+            await axios.post(`${API}/api/login`, form );
 
             setSuccess('Login successful!');
             // OPTIONAL: redirect or fetch /me

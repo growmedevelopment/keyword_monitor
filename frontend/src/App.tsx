@@ -4,23 +4,38 @@ import Sidebar from './components/Sidebar'
 import Dashboard from './pages/Dashboard'
 import ProjectsPage from './pages/ProjectsPage'
 import UserRegisterPage from "./pages/UserRegisterPage.tsx";
+import { Navigate } from 'react-router-dom';
+import { useAuth } from './context/AuthContext';
 import UserLoginPage from "./pages/UserLoginPage.tsx";
 
+
 export default function App() {
+    const { user, loading } = useAuth();
+
+    if (loading) return <p>Loading...</p>;
+
     return (
         <>
             <CssBaseline />
-            <Box sx={{ display: 'flex' }}>
-                <Sidebar />
-                <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-                    <Routes>
-                        <Route path="/" element={<Dashboard />} />
-                        <Route path="/projects" element={<ProjectsPage />} />
-                        <Route path="/register" element={<UserRegisterPage />} />
-                        <Route path="/login" element={<UserLoginPage />} />
-                    </Routes>
+            {user ? (
+                <Box sx={{ display: 'flex' }}>
+                    <Sidebar />
+                    <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+                        <Routes>
+                            <Route path="/" element={<Dashboard />} />
+                            <Route path="/projects" element={<ProjectsPage />} />
+                            <Route path="/register" element={<UserRegisterPage />} />
+                            <Route path="/login" element={<Dashboard />} />
+                        </Routes>
+                    </Box>
                 </Box>
-            </Box>
+            ) : (
+                <Routes>
+                    <Route path="/*" element={<Navigate to="/login" replace/>} />
+                    <Route path="/login" element={<UserLoginPage/>} />
+                    <Route path="/register" element={<UserRegisterPage />} />
+                </Routes>
+            )}
         </>
-    )
+    );
 }
