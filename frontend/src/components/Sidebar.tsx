@@ -7,11 +7,21 @@ import {
     Toolbar,
 } from '@mui/material';
 import DashboardIcon from '@mui/icons-material/Dashboard';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import LogoutIcon from '@mui/icons-material/Logout';
+import { useAuth } from "../context/AuthContext";
 
 const drawerWidth = 240;
 
+
 export default function Sidebar() {
+    const { logout } = useAuth();
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        logout();
+        navigate('/login');
+    };
     return (
         <Drawer
             sx={{
@@ -40,7 +50,14 @@ export default function Sidebar() {
                     </ListItemIcon>
                     <ListItemText primary="Projects" />
                 </ListItem>
-                {/* Add more links here */}
+
+                <ListItem component={Link}  onClick={handleLogout} >
+                    <ListItemIcon>
+                        <LogoutIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Log out" />
+                </ListItem>
+
             </List>
         </Drawer>
     );

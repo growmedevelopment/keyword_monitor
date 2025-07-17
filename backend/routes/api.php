@@ -15,7 +15,7 @@ Route::middleware('auth:sanctum')->group(function () {
         dd($request->user());
         return response()->json($request->user());
     });
-    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/logout', [AuthController::class, 'logout']);
 
     Route::apiResource('projects', ProjectController::class);
 });
