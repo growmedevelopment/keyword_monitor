@@ -4,6 +4,7 @@ import Sidebar from './components/Sidebar'
 import Dashboard from './pages/Dashboard'
 import ProjectsPage from './pages/ProjectsPage'
 import UserRegisterPage from "./pages/UserRegisterPage.tsx";
+import UserLoginPage from "./pages/UserLoginPage.tsx";
 
 export default function App() {
     return (
