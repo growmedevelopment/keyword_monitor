@@ -1,7 +1,7 @@
 import {startTransition, Suspense, use, useOptimistic, useState } from 'react';
 import { Button, Stack, Alert } from '@mui/material';
 import projectService from '../services/projectService';
-import CreateProjectDialog from '../components/CreateProjectDialog';
+import CreateProjectDialog from '../components/ProjectDialog/CreateProjectDialog.tsx';
 import ProjectList from "../components/ProjectList.tsx";
 
 // Preload promise once

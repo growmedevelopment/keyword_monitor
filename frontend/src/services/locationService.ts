@@ -1,9 +1,21 @@
 import axios from '../axios';
-const API = import.meta.env.VITE_API_BACKEND_ENDPOINT
+const API = import.meta.env.VITE_API_BACKEND_ENDPOINT;
 
 const locationService = {
-    async getAll() {
-        const response = await axios.get(`${API}/serp/locations` );
+    async getCountries(): Promise<any> {
+        const response = await axios.post(`${API}/api/serp/locations/`, {
+            request_type: 'county',
+            location_type: 'county',
+        });
+        return response.data;
+    },
+
+    async getCities(country_iso_code: string): Promise<any> {
+        const response = await axios.post(`${API}/api/serp/locations/`, {
+            request_type: 'cities',
+            location_type: 'cities',
+            country_iso_code,
+        });
         return response.data;
     },
 };

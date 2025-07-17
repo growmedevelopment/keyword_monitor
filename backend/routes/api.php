@@ -17,7 +17,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     Route::get('/logout', [AuthController::class, 'logout']);
 
-    Route::get('/serp/locations', [SerpLocationController::class, 'index']);
+    Route::post('/serp/locations', [SerpLocationController::class, 'index']);
 
     Route::apiResource('projects', ProjectController::class);
 });
