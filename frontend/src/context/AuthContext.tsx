@@ -1,6 +1,7 @@
 // src/context/AuthContext.tsx
 import { createContext, useContext, useEffect, useState } from 'react';
 import axios from 'axios';
+import userService from '../services/userService';
 
 // AuthContext.tsx
 interface AuthContextType {
@@ -27,17 +28,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const login = (userData: any, authToken: string) => {
         setUser(userData);
         setToken(authToken);
-        sessionStorage.setItem('token', authToken);
-        sessionStorage.setItem('user', JSON.stringify(userData));
-        axios.defaults.headers.common['Authorization'] = `Bearer ${authToken}`;
+        userService.loginUser(userData, authToken);
     };
 
     const logout = () => {
         setUser(null);
         setToken(null);
-        sessionStorage.removeItem('token');
-        sessionStorage.removeItem('user');
-        delete axios.defaults.headers.common['Authorization'];
+        userService.logoutUser();
     };
 
     useEffect(() => {

@@ -19,6 +19,9 @@ class ProjectController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+
+        dd($request->all());
+
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'ulr' => 'required|string|max:55',

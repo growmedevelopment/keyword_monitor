@@ -8,18 +8,18 @@ type User = {
 };
 
 
-
-async function ensureCsrfCookie() {
-    await axios.get(`${API}/sanctum/csrf-cookie`);
-}
 const userService = {
-    async getUser() {
-        await ensureCsrfCookie();
-
-        const response = await axios.get<User>(`${API}/api/user`, { withCredentials: true,});
-        return response.data;
+    loginUser: (user: User, token: string) => {
+        sessionStorage.setItem('token', token);
+        sessionStorage.setItem('user', JSON.stringify(user));
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     },
 
+    logoutUser: () => {
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('user');
+        delete axios.defaults.headers.common['Authorization'];
+    },
 };
 
 export default userService
