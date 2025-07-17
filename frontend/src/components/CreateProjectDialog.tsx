@@ -1,13 +1,17 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
     Dialog, DialogTitle, DialogContent, DialogActions,
     Button, TextField
 } from '@mui/material';
 
+import locationService  from '../services/locationService';
+
 interface Project {
     id: number;
     name: string;
     url: string;
+    country: string;
+    location_code: number;
 }
 
 interface Props {
@@ -18,13 +22,19 @@ interface Props {
 
 export default function CreateProjectDialog({ isOpen, onClose, onCreate }: Props) {
 
-
     const [data, setData] = useState({
         name: '',
         url: '',
+        country: '',
+        location_code: ''
     });
     const [loading, setLoading] = useState(false);
+    const [locations, setLocations] = useState([]);
 
+    // getting all locations from API
+    useEffect(() => {
+        locationService.getAll().then(setLocations).catch(console.error);
+    }, []);
 
     function handleDataState(dataName: string, dataValue: string) {
         setData(prev => ({

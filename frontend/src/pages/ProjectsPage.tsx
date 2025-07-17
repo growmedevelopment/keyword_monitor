@@ -51,11 +51,12 @@ export default function ProjectsPage() {
                     {errors.message}
                 </Alert>}
 
-                <CreateProjectDialog
-                    isOpen={dialogOpen}
-                    onClose={handleDialog}
-                    onCreate={handleCreate}
-                />
+                {dialogOpen && <CreateProjectDialog
+                  isOpen={dialogOpen}
+                  onClose={handleDialog}
+                  onCreate={handleCreate}
+                />}
+
             </Stack>
         </Suspense>
     );

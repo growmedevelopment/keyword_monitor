@@ -1,7 +1,5 @@
 import axios from '../axios';
 
-const API = import.meta.env.VITE_API_BACKEND_ENDPOINT
-
 type User = {
     id: number;
     name: string;
