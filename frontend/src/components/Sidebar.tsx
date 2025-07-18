@@ -18,7 +18,8 @@ export default function Sidebar() {
     const { logout } = useAuth();
     const navigate = useNavigate();
 
-    const handleLogout = () => {
+    const handleLogout = (event: { preventDefault: () => void; }) => {
+        event.preventDefault();
         logout();
         navigate('/login');
     };
@@ -51,7 +52,7 @@ export default function Sidebar() {
                     <ListItemText primary="Projects" />
                 </ListItem>
 
-                <ListItem component={Link}  onClick={handleLogout} >
+                <ListItem component={Link} to="!#"  onClick={handleLogout} >
                     <ListItemIcon>
                         <LogoutIcon />
                     </ListItemIcon>

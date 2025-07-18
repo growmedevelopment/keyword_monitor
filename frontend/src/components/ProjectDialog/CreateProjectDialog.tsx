@@ -3,7 +3,7 @@ import {
     Dialog, DialogTitle, DialogContent,
     DialogActions, TextField, Button
 } from '@mui/material';
-import type {Project} from "../components/types/projectTypes.ts";
+import type {Project} from "../types/projectTypes.ts";
 import type {CountryOption} from '../types/locationTypes';
 import CitySelect from './CitySelect';
 import CountrySelect from './CountrySelect';
@@ -17,6 +17,7 @@ interface Props {
 
 export default function CreateProjectDialog({ isOpen, onClose, onCreate }: Props) {
     const [data, setData] = useState<Project>({
+        keywords: [],
         id: 0,
         name: '',
         url: '',

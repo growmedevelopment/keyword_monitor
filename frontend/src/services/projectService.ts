@@ -1,13 +1,9 @@
 import axios from '../axios';
+import type {Project} from "../components/types/projectTypes.ts";
 
 const API = import.meta.env.VITE_API_BACKEND_ENDPOINT
 
-type Project = {
-    id: number;
-    name: string;
-    domain: string;
-    created_at: string;
-};
+
 
 
 async function ensureCsrfCookie() {
@@ -21,7 +17,7 @@ const projectService = {
     },
 
     async getById(id: string) {
-        const response = await axios.get(`${API}/api/projects/${id}` );
+        const response = await axios.get<Project>(`${API}/api/projects/${id}` );
         return response.data;
     },
 
