@@ -18,11 +18,12 @@ class ProjectResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'url' => $this->url,
-            'user' => $this->user ? [
+            'user' =>[
                 'id' => $this->user->id,
                 'name' => $this->user->name,
                 'email' => $this->user->email,
-            ] : null,
+            ],
+            'keywords' => KeywordResource::collection($this->whenLoaded('keywords')),
             'created_at' => $this->created_at,
         ];
     }

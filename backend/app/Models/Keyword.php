@@ -11,8 +11,21 @@ class Keyword extends Model
     protected $guarded = [];
 
 
-    public function dataForSeoTasks(): HasMany {
+    public function dataForSeoTasks()
+    {
         return $this->hasMany(DataForSeoTask::class);
+    }
+
+    public function dataForSeoResults()
+    {
+        return $this->hasManyThrough(
+            DataForSeoResult::class,
+            DataForSeoTask::class,
+            'keyword_id',              // Foreign key on DataForSeoTask
+            'data_for_seo_task_id',   // Foreign key on DataForSeoResult
+            'id',                      // Local key on Keyword
+            'id'                       // Local key on DataForSeoTask
+        );
     }
 
     public function project(): BelongsTo {

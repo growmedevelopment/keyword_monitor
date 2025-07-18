@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Http\Resources\ProjectResource;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
@@ -45,24 +46,15 @@ class ProjectService
         return true;
     }
 
-    public function show(string $project_id): Project {
+    public function show(string $project_id): ProjectResource {
 
-        $project = Project::findOrFail($project_id);
+        $project = Project::with('keywords.dataForSeoResults')->findOrFail($project_id);
 
         if ($project->user_id !== auth()->id()) {
             abort(403, 'Unauthorized');
         }
 
-        // Hide fields on project
-        $project->makeHidden(['id', 'user_id', 'updated_at']);
-
-        // Hide fields on related keywords
-        $project->setRelation(
-            'keywords',
-            $project->keywords->makeHidden(['id', 'project_id', 'created_at', 'updated_at', 'location', 'is_active', 'tracking_priority', 'language'])
-        );
-
-        return $project;
+        return new ProjectResource($project);
 
     }
 }
