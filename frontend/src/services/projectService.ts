@@ -16,12 +16,11 @@ async function ensureCsrfCookie() {
 const projectService = {
 
     async getAll() {
-        await ensureCsrfCookie();
         const response = await axios.get<Project[]>(`${API}/api/projects`);
         return response.data;
     },
 
-    async getById(id: number | string) {
+    async getById(id: string) {
         const response = await axios.get(`${API}/api/projects/${id}` );
         return response.data;
     },

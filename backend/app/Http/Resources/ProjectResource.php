@@ -17,11 +17,12 @@ class ProjectResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'user' => [
+            'url' => $this->url,
+            'user' => $this->user ? [
                 'id' => $this->user->id,
                 'name' => $this->user->name,
                 'email' => $this->user->email,
-            ],
+            ] : null,
             'created_at' => $this->created_at,
         ];
     }

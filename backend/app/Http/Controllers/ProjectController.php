@@ -12,9 +12,14 @@ class ProjectController extends Controller
 {
     public function __construct(private ProjectService $projectService) {}
 
+    /**
+     * @throws \Exception
+     */
     public function index(): JsonResponse
     {
-        return response()->json(ProjectResource::collection($this->projectService->getAll()));
+        $user = auth()->user();
+
+        return response()->json(ProjectResource::collection($this->projectService->getAllByUser($user)));
     }
 
     public function store(Request $request): JsonResponse
@@ -29,9 +34,9 @@ class ProjectController extends Controller
         return response()->json($project, 201);
     }
 
-    public function show(Project $project): JsonResponse
+    public function show(Request $request, $id): JsonResponse
     {
-        return response()->json($this->projectService->show($project));
+        return response()->json($this->projectService->show($id));
     }
 
     public function update(Request $request, Project $project): JsonResponse
@@ -51,4 +56,5 @@ class ProjectController extends Controller
 
         return response()->json(['message' => 'Project deleted successfully.']);
     }
+
 }

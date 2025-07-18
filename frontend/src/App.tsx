@@ -7,6 +7,7 @@ import UserRegisterPage from "./pages/UserRegisterPage.tsx";
 import { Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import UserLoginPage from "./pages/UserLoginPage.tsx";
+import ProjectShowPage from "./pages/ProjectShowPage.tsx";
 
 
 export default function App() {
@@ -24,6 +25,7 @@ export default function App() {
                         <Routes>
                             <Route path="/" element={<Dashboard />} />
                             <Route path="/projects" element={<ProjectsPage />} />
+                            <Route path="/projects/:id" element={<ProjectShowPage />} />
                             <Route path="/register" element={<UserRegisterPage />} />
                             <Route path="/login" element={<Dashboard />} />
                         </Routes>

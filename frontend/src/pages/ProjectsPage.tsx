@@ -1,17 +1,20 @@
-import {startTransition, Suspense, use, useOptimistic, useState } from 'react';
+import {startTransition, Suspense, use, useEffect, useOptimistic, useState} from 'react';
 import { Button, Stack, Alert } from '@mui/material';
 import projectService from '../services/projectService';
 import CreateProjectDialog from '../components/ProjectDialog/CreateProjectDialog.tsx';
 import ProjectList from "../components/ProjectList.tsx";
 
-// Preload promise once
-const projectPromise = projectService.getAll();
 
 export default function ProjectsPage() {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [errors, setErrors] = useState<{message: string, errors:{} }>({});
 
-    const [realProjects, setRealProjects] = useState(use(projectPromise))
+    const [realProjects, setRealProjects] = useState([]);
+    useEffect(() => {
+        projectService.getAll().then(setRealProjects).catch((err) => {
+            console.error('Failed to fetch projects', err);
+        });
+    }, []);
     const [optimisticProjects, addOptimisticProject] = useOptimistic(
         realProjects,
         (prevProjects, newProject) => [...prevProjects, newProject]
@@ -38,7 +41,6 @@ export default function ProjectsPage() {
 
     return (
         <Suspense fallback={<p>Loading...</p>}>
-
 
             <Stack spacing={2}>
                 <ProjectList projects={optimisticProjects} />

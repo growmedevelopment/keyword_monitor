@@ -12,10 +12,6 @@ axios.interceptors.request.use((config) => {
         config.headers['X-XSRF-TOKEN'] = decodeURIComponent(xsrfToken);
     }
 
-    // const token = localStorage.getItem('token');
-    // if (token) {
-    //     config.headers['Authorization'] = `Bearer ${token}`;
-    // }
     return config;
 }, (error) => {
     return Promise.reject(error);
