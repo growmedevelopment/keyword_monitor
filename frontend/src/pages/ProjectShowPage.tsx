@@ -1,54 +1,36 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import {
-    Box, Typography, Paper, Table, TableBody, TableCell, TableHead,
-    TableRow, TextField, Button
-} from '@mui/material';
-import projectService  from '../services/projectService';
+import { Box, Typography, Paper } from '@mui/material';
+import projectService from '../services/projectService';
+import KeywordTable from '../components/Tables/KeywordTable';
+import type {Project} from "../components/types/projectTypes.ts";
 
-
-interface Project {
-    id: number;
-    name: string;
-    url: string;
-    keywords: string[];
-}
 
 export default function ProjectShowPage() {
     const { id } = useParams<{ id: string }>();
     const [project, setProject] = useState<Project | null>(null);
-    // const [newKeyword, setNewKeyword] = useState('');
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         if (!id) return;
-        projectService.getById(id).then((response) => {
-            console.log(response);
-        })
 
+        projectService.getById(id)
+            .then((response) => {
+                setProject(response);
+            })
+            .catch((err) => {
+                console.error('Failed to fetch project', err);
+                setError('Failed to load project');
+            })
+            .finally(() => {
+                setLoading(false);
+            });
+    }, [id]);
 
-        // Replace this with actual API call
-        // const fetchProject = async () => {
-        //     const data: Project = {
-        //         id: Number(id),
-        //         name: 'Example Project',
-        //         url: 'https://example.com',
-        //         keywords: ['seo audit', 'keyword research', 'on-page optimization']
-        //     };
-        //     setProject(data);
-        // };
-        //
-        // fetchProject().then();
-    }, []);
-
-    // const handleAddKeyword = () => {
-    //     if (!newKeyword.trim()) return;
-    //     setProject(prev =>
-    //         prev ? { ...prev, keywords: [...prev.keywords, newKeyword.trim()] } : prev
-    //     );
-    //     setNewKeyword('');
-    // };
-
-    if (!project) return <Typography>Loading...</Typography>;
+    if (loading) return <Typography>Loading...</Typography>;
+    if (error) return <Typography color="error">{error}</Typography>;
+    if (!project) return <Typography>No project found</Typography>;
 
     return (
         <Box p={3}>
@@ -59,35 +41,7 @@ export default function ProjectShowPage() {
 
             <Paper sx={{ mt: 3, p: 2 }}>
                 <Typography variant="h6">Assigned Keywords</Typography>
-
-                <Table size="small" sx={{ mt: 2 }}>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>#</TableCell>
-                            <TableCell>Keyword</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {project.keywords.map((kw, index) => (
-                            <TableRow key={index}>
-                                <TableCell>{index + 1}</TableCell>
-                                <TableCell>{kw}</TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-
-                {/*<Box display="flex" gap={2} mt={2}>*/}
-                {/*    <TextField*/}
-                {/*        label="New Keyword"*/}
-                {/*        variant="outlined"*/}
-                {/*        size="small"*/}
-                {/*        value={newKeyword}*/}
-                {/*        onChange={(e) => setNewKeyword(e.target.value)}*/}
-                {/*        onKeyDown={(e) => e.key === 'Enter' && handleAddKeyword()}*/}
-                {/*    />*/}
-                {/*    <Button variant="contained" onClick={handleAddKeyword}>Add Keyword</Button>*/}
-                {/*</Box>*/}
+                <KeywordTable keywords={project.keywords} />
             </Paper>
         </Box>
     );

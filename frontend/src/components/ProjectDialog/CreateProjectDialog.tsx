@@ -3,7 +3,8 @@ import {
     Dialog, DialogTitle, DialogContent,
     DialogActions, TextField, Button
 } from '@mui/material';
-import type {Project, CountryOption} from '../types/locationTypes';
+import type {Project} from "../components/types/projectTypes.ts";
+import type {CountryOption} from '../types/locationTypes';
 import CitySelect from './CitySelect';
 import CountrySelect from './CountrySelect';
 import locationService from '../../services/locationService';

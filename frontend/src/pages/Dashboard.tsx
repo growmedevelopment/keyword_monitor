@@ -1,5 +1,5 @@
 'use client'
-import { Box, Card, CardContent, Typography } from '@mui/material';
+import { Box,Typography } from '@mui/material';
 
 export default function Dashboard() {
     return (
