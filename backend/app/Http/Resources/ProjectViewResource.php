@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class ProjectResource extends JsonResource
+class ProjectViewResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -25,6 +25,8 @@ class ProjectResource extends JsonResource
             ],
             'keywords' => KeywordResource::collection($this->whenLoaded('keywords')),
             'created_at' => $this->created_at,
+            'location_code' => $this->location_code,
+            'country' =>$this->country,
         ];
     }
 }

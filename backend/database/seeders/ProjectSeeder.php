@@ -15,7 +15,9 @@ class ProjectSeeder extends Seeder
         Project::create([
             'name' => 'Demo Project',
             'user_id' => $user->id,
-            'url'=> 'https://laracasts.com'
+            'url'=> 'https://laracasts.com',
+            'country'=> 'CA',
+            'location_code'=> 1001801
         ]);
     }
 }

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\ProjectResource;
 use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -19,14 +18,17 @@ class ProjectController extends Controller
     {
         $user = auth()->user();
 
-        return response()->json(ProjectResource::collection($this->projectService->getAllByUser($user)));
+        return response()->json($this->projectService->getAllByUser($user));
     }
 
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
+            'id'=>'integer|required',
             'name' => 'required|string|max:255',
             'url' => 'required|url|max:255',
+            'location_code' => 'required|integer',
+            'country'=> 'required|string|max:4',
         ]);
 
         $project = $this->projectService->create($data);

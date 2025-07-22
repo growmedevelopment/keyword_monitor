@@ -2,11 +2,13 @@
 
 namespace App\Services;
 
-use App\Http\Resources\ProjectResource;
+use App\Http\Resources\ProjectsResource;
+use App\Http\Resources\ProjectViewResource;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class ProjectService
 {
@@ -14,13 +16,15 @@ class ProjectService
     /**
      * @throws \Exception
      */
-    public function getAllByUser(?User $user): Collection
+    public function getAllByUser(?User $user): AnonymousResourceCollection
     {
         if (!$user) {
             throw new \Exception('Unauthenticated');
         }
+        $projects = Project::where('user_id', $user->id)->get();
 
-        return Project::where('user_id', $user->id)->get();
+        return ProjectsResource::collection($projects);
+
     }
 
     public function getAll(): Collection {
@@ -33,6 +37,8 @@ class ProjectService
             'name' => $data['name'],
             'user_id' => Auth::id(),
             'url' => $data['url'],
+            'country' => $data['country'],
+            'location_code' => $data['location_code'],
         ]);
     }
 
@@ -46,7 +52,7 @@ class ProjectService
         return true;
     }
 
-    public function show(string $project_id): ProjectResource {
+    public function show(string $project_id): ProjectViewResource {
 
         $project = Project::with('keywords.dataForSeoResults')->findOrFail($project_id);
 
@@ -54,7 +60,7 @@ class ProjectService
             abort(403, 'Unauthorized');
         }
 
-        return new ProjectResource($project);
+        return new ProjectViewResource($project);
 
     }
 }

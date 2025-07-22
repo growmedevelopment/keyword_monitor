@@ -9,12 +9,6 @@ class DataForSeoTask extends Model
 {
     protected $guarded = [];
 
-    protected $casts = [
-        'submitted_at' => 'datetime',
-        'completed_at' => 'datetime',
-        'raw_response' => 'array',
-    ];
-
     public function keyword(): BelongsTo {
         return $this->belongsTo(Keyword::class);
     }

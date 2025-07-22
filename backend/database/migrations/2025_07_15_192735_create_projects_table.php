@@ -9,8 +9,10 @@ return new class extends Migration {
     {
         Schema::create('projects', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade'); // links to users.id
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('name');
+            $table->integer('location_code');
+            $table->string('country');
             $table->string('url');
             $table->timestamps();
         });
