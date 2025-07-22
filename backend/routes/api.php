@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\KeywordController;
 use App\Http\Controllers\SerpLocationController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProjectController;
@@ -20,6 +21,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/serp/locations', [SerpLocationController::class, 'index']);
 
     Route::apiResource('projects', ProjectController::class);
+
+    Route::post('/projects/{project}/keywords/create', [KeywordController::class, 'addKeywordToProject']);
 });
 
 
