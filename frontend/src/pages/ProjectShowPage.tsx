@@ -80,7 +80,7 @@ export default function ProjectShowPage() {
             <Typography variant="subtitle1" gutterBottom color="text.secondary">{project.url}</Typography>
             <Typography variant="subtitle1" gutterBottom color="text.secondary">{project.country}</Typography>
             <Typography variant="subtitle1" gutterBottom color="text.secondary">{project.location_code}</Typography>
-            <Typography variant="subtitle1" gutterBottom color="text.secondary">{project.created_at}</Typography>
+            <Typography variant="subtitle1" gutterBottom color="text.secondary">{new Date(project.created_at).toLocaleString()}</Typography>
 
             <Paper sx={{ mt: 3, p: 2 }}>
                 <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
