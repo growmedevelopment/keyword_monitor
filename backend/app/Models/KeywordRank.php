@@ -9,8 +9,8 @@ class KeywordRank extends Model
     protected $guarded = [];
 
     protected $casts = [
-        'ranked_at' => 'datetime',
-        'snapshot' => 'array',
+        'raw' => 'array',
+        'tracked_at' => 'date',
     ];
 
     public function keyword()

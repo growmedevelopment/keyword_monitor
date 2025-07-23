@@ -7,6 +7,7 @@ use App\Jobs\PollDataForSeoTaskJob;
 use App\Models\DataForSeoTask;
 use App\Models\Keyword;
 use App\Models\DataForSeoResult;
+use App\Models\KeywordRank;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -122,8 +123,7 @@ class DataForSeoResultService
             if (!empty($items)) {
                 $bestRanked = $this->extractBestRanked($items, $projectUrl);
                 if ($bestRanked) {
-                    $results->push($this->storeResult($task->id, $bestRanked));
-                    $task->update(['status' => 'Completed']);
+                    $results->push($this->saveResults($task, $bestRanked));
                     continue;
                 }
             }
@@ -136,27 +136,6 @@ class DataForSeoResultService
         return $results;
     }
 
-    private function tryImmediateFetch($task, string $projectUrl, array $credentials): ?DataForSeoResult
-    {
-        $maxRetries = 6; // retry ~1 minute
-        $delay = self::SUBSEQUENT_DELAY;
-
-        for ($i = 0; $i < $maxRetries; $i++) {
-            $items = $this->fetchTaskResult($task->task_id, $credentials);
-
-            if (!empty($items)) {
-                $bestRanked = $this->extractBestRanked($items, $projectUrl);
-
-                if ($bestRanked) {
-                    return $this->storeResult($task->id, $bestRanked);
-                }
-            }
-
-            sleep($delay); // Only immediate polling uses blocking sleep
-        }
-
-        return null;
-    }
 
     public function pollSingleTask(DataForSeoTask $task, bool $nonBlocking = false): bool
     {
@@ -169,17 +148,29 @@ class DataForSeoResultService
             $bestRanked = $this->extractBestRanked($items, $projectUrl);
 
             if ($bestRanked) {
-                $this->storeResult($task->id, $bestRanked);
-                $task->update(['status' => 'Completed']);
+                $this->saveResults($task, $bestRanked);
                 return true;
             }
         }
 
-        // No sleep here if nonBlocking is true
-        if (!$nonBlocking) {
-            sleep(self::SUBSEQUENT_DELAY);
-        }
-
         return false;
+    }
+
+    private function storeKeywordRank(DataForSeoTask $task, array $bestRanked): void {
+        KeywordRank::create([
+            'keyword_id' => $task->keyword_id,
+            'position' => $bestRanked['rank_group'] ?? NULL,
+            'url' => $bestRanked['url'] ?? NULL,
+            'raw' => $bestRanked, // store full API item
+            'tracked_at' => now()->toDateString(),
+        ]);
+    }
+
+    private function saveResults(DataForSeoTask $task, array $bestRanked): DataForSeoResult
+    {
+        $result = $this->storeResult($task->id, $bestRanked);
+        $this->storeKeywordRank($task, $bestRanked);
+        $task->update(['status' => 'Completed']);
+        return $result;
     }
 }
