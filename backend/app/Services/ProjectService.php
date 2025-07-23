@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use App\Services\DataForSeoResultService;
 
 class ProjectService
 {
@@ -54,7 +55,7 @@ class ProjectService
 
     public function show(string $project_id): ProjectViewResource {
 
-        $project = Project::with('keywords.dataForSeoResults')->findOrFail($project_id);
+        $project = Project::with('keywords.dataForSeoResults')->findOrFail($project_id);;
 
         if ($project->user_id !== auth()->id()) {
             abort(403, 'Unauthorized');

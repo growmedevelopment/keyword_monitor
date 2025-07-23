@@ -38,8 +38,8 @@ class FetchKeywordResults extends Command
             $taskData = $data['tasks'][0] ?? null;
             $results = $taskData['result'][0]['items'] ?? [];
             $bestRanked = collect($results)
-                ->filter(fn($item) => isset($item['url'], $item['rank_absolute']) && str_contains($item['url'], $project_url))
-                ->sortBy('rank_absolute')
+                ->filter(fn($item) => isset($item['url'], $item['rank_group']) && str_contains($item['url'], $project_url))
+                ->sortBy('rank_group')
                 ->first();
 
             if (!empty($bestRanked)) {

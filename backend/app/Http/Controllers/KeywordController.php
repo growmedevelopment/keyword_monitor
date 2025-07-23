@@ -21,6 +21,8 @@ class KeywordController extends Controller
             $project = Project::findOrFail($project_id);
             $keyword = $this->keywordSubmissionService->submitKeyword($project, $request->input('keyword'));
 
+
+
             return response()->json([
                 'message' => 'Keyword has been added successfully.',
                 'keyword' => $keyword,

@@ -6,10 +6,17 @@ use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Services\ProjectService;
+use App\Services\DataForSeoResultService;
 
 class ProjectController extends Controller
 {
-    public function __construct(private ProjectService $projectService) {}
+    protected DataForSeoResultService $seoResultService;
+    protected ProjectService $projectService;
+
+    public function __construct(ProjectService $projectService, DataForSeoResultService $seoResultService) {
+        $this->seoResultService = $seoResultService;
+        $this->projectService = $projectService;
+    }
 
     /**
      * @throws \Exception
@@ -38,7 +45,11 @@ class ProjectController extends Controller
 
     public function show(Request $request, $id): JsonResponse
     {
-        return response()->json($this->projectService->show($id));
+        $project = $this->projectService->show($id);
+
+        $this->seoResultService->fetchSEOResultsBySubmittedTasks($project);
+
+        return response()->json($project);
     }
 
     public function update(Request $request, Project $project): JsonResponse
