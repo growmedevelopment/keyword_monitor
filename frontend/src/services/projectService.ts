@@ -21,7 +21,7 @@ const projectService = {
         return response.data;
     },
 
-    async create(data: any) {
+    async create(data: Project) {
         await ensureCsrfCookie();
         const response = await axios.post(`${API}/api/projects`, data );
         return response.data;

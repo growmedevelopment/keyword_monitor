@@ -5,7 +5,7 @@ import projectService from '../services/projectService';
 import KeywordTable from '../components/Tables/KeywordTable';
 import AddKeywordDialog from '../components/KeywordDialog/AddKeywordDialog';
 import type { Project } from '../components/types/projectTypes';
-import keywordService from "../services/keywordService.ts";
+import keywordService from '../services/keywordService.ts';
 
 export default function ProjectShowPage() {
     const { id } = useParams<{ id: string }>();
@@ -14,8 +14,11 @@ export default function ProjectShowPage() {
     const [error, setError] = useState<string | null>(null);
     const [isDialogOpen, setDialogOpen] = useState(false);
 
+    // Initial fetch + polling
     useEffect(() => {
         if (!id) return;
+
+        // First load
         projectService.getById(id)
             .then(setProject)
             .catch((err) => {
@@ -23,15 +26,48 @@ export default function ProjectShowPage() {
                 setError('Failed to load project');
             })
             .finally(() => setLoading(false));
+
+        // Poll every 10s ONLY if there are non-completed keywords
+        const interval = setInterval(() => {
+            setProject((prev) => {
+                // Skip polling if all keywords are completed
+                if (prev && prev.keywords.every(k => k.status === 'Completed')) return prev;
+
+                projectService.getById(id)
+                    .then((freshProject) => setProject(freshProject))
+                    .catch((err) => console.error("Polling failed", err));
+
+                return prev;
+            });
+        }, 10000);
+
+        return () => clearInterval(interval);
     }, [id]);
 
-    const handleAddKeyword = (newKeyword: string) => {
+    // Add keyword and optimistically show it in UI
+    const handleAddKeyword = (newKeywords: string[]) => {
         if (!project || !id) return;
 
-        keywordService.create(id, newKeyword).then((updatedProject) => {
-            setProject(updatedProject);
-            setDialogOpen(false);
+        newKeywords.forEach((newKeyword) => {
+            keywordService.create(id, newKeyword)
+                .then((response) => {
+                    const createdKeyword = {
+                        ...response.keyword,
+                        status: response.keyword.status ?? 'Queued', // fallback
+                        data_for_seo_results: response.keyword.data_for_seo_results ?? []
+                    };
+
+                    // Optimistic update
+                    setProject((prev) =>
+                        prev
+                            ? { ...prev, keywords: [...prev.keywords, createdKeyword] }
+                            : prev
+                    );
+                })
+                .catch((err) => console.error("Keyword creation failed", err));
         });
+
+        setDialogOpen(false);
     };
 
     if (loading) return <Typography>Loading...</Typography>;
@@ -42,6 +78,9 @@ export default function ProjectShowPage() {
         <Box p={3}>
             <Typography variant="h4" gutterBottom>{project.name}</Typography>
             <Typography variant="subtitle1" gutterBottom color="text.secondary">{project.url}</Typography>
+            <Typography variant="subtitle1" gutterBottom color="text.secondary">{project.country}</Typography>
+            <Typography variant="subtitle1" gutterBottom color="text.secondary">{project.location_code}</Typography>
+            <Typography variant="subtitle1" gutterBottom color="text.secondary">{project.created_at}</Typography>
 
             <Paper sx={{ mt: 3, p: 2 }}>
                 <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
@@ -57,9 +96,7 @@ export default function ProjectShowPage() {
             <AddKeywordDialog
                 isOpen={isDialogOpen}
                 onClose={() => setDialogOpen(false)}
-                onSubmit={(keywords) => {
-                    console.log('Submitted keywords:', keywords);
-                }}
+                onSubmit={handleAddKeyword}
             />
         </Box>
     );

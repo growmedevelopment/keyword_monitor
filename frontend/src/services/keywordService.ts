@@ -3,7 +3,7 @@ const API = import.meta.env.VITE_API_BACKEND_ENDPOINT;
 
 const keywordService = {
     async create(projectId: string, keyword: string): Promise<any> {
-        const response = await axios.post(`${API}/api/projects/${projectId}/keywords`, { keyword });
+        const response = await axios.post(`${API}/api/projects/${projectId}/keywords/create`, { keyword });
         return response.data;
     },
 };

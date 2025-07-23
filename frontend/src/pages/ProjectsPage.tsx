@@ -32,9 +32,8 @@ export default function ProjectsPage() {
 
     const handleDialog = () => setDialogOpen((prev) => !prev);
 
-    const handleCreate = async (data: Omit<Project, 'id'>) => {
-        const tempId = Date.now();
-        const optimisticProject: Project = { id: tempId, ...data };
+    const handleCreate = async (data: Project) => {
+        const optimisticProject: Project = { ...data };
 
         startTransition(() => {
             addOptimisticProject(optimisticProject);
