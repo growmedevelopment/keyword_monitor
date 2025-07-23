@@ -63,8 +63,8 @@ class KeywordSubmissionService
 
             $json = $response->json();
 
-            Log::info('DataForSEO response', [
-                'API_response' => json_encode($json),
+            Log::info('DataForSEO response after submit keyword ToDataForSeo and create a task', [
+                'data' => $response->json(),
             ]);
 
             if ($response->successful() && isset($json['tasks'][0]['id'])) {

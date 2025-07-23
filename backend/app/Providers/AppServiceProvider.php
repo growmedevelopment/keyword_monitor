@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\DataForSeoTask;
+use App\Observers\DataForSeoTaskObserver;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Sanctum\PersonalAccessToken;
 use Laravel\Sanctum\Sanctum;
@@ -24,11 +26,6 @@ class AppServiceProvider extends ServiceProvider
     {
         Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
 
-        Route::middleware('api')
-            ->prefix('api')
-            ->group(base_path('routes/api.php'));
-
-        Route::middleware('web')
-            ->group(base_path('routes/web.php'));
+        DataForSeoTask::observe(DataForSeoTaskObserver::class);
     }
 }

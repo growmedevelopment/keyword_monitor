@@ -10,6 +10,7 @@ class KeywordResource extends JsonResource
     {
         return [
             'keyword' => $this->keyword,
+            'status' => optional($this->dataForSeoTasks()->latest()->first())->status ?? 'Queued',
             'results' => DataForSeoResultResource::collection(
                 $this->whenLoaded('dataForSeoResults')
             ),

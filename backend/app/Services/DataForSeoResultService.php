@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Http\Resources\ProjectViewResource;
+use App\Jobs\PollDataForSeoTaskJob;
 use App\Models\DataForSeoTask;
 use App\Models\Keyword;
 use App\Models\DataForSeoResult;
@@ -12,6 +13,11 @@ use Illuminate\Support\Facades\Log;
 
 class DataForSeoResultService
 {
+    public const INITIAL_DELAY = 3;
+    public const SUBSEQUENT_DELAY = 10;
+    public const MAX_RETRIES = 30;
+
+
     public function fetchSEOResultsByKeyword(Keyword $keyword): Collection
     {
         $credentials = $this->getCredentials();
@@ -55,26 +61,28 @@ class DataForSeoResultService
         return $keyword->dataForSeoTasks()->where('status', 'Submitted')->get();
     }
 
-    private function fetchTaskResult(string $taskId, array $credentials): ?array
+    private function fetchTaskResult(string $taskId, array $credentials): array
     {
         $response = Http::withBasicAuth($credentials['username'], $credentials['password'])
             ->get("https://api.dataforseo.com/v3/serp/google/organic/task_get/regular/{$taskId}");
 
+        $json = $response->json();
+
+        Log::info('Polling DataForSEO task result', [
+            'task_id' => $taskId,
+            'response' => $json,
+        ]);
+
         if (!$response->successful()) {
             Log::warning('Failed to fetch DataForSEO task result', [
                 'task_id' => $taskId,
-                'status' => $response->status(),
-                'body' => $response->body(),
+                'status'  => $response->status(),
+                'body'    => $response->body(),
             ]);
-            return null;
+            return [];
         }
 
-        Log::info('DataForSEO task results response', [
-            'task_id' => $taskId,
-            'data' => $response->json(),
-        ]);
-
-        return $response->json()['tasks'][0] ?? null;
+        return $json['tasks'][0]['result'][0]['items'] ?? [];
     }
 
     private function extractBestRanked(array $items, string $projectUrl): ?array
@@ -108,24 +116,70 @@ class DataForSeoResultService
         $results = collect();
 
         foreach ($tasks as $task) {
-            $taskData = $this->fetchTaskResult($task->task_id, $credentials);
+            // Immediate single attempt (no retry loop)
+            $items = $this->fetchTaskResult($task->task_id, $credentials);
 
-            if (!$taskData) {
-                continue;
+            if (!empty($items)) {
+                $bestRanked = $this->extractBestRanked($items, $projectUrl);
+                if ($bestRanked) {
+                    $results->push($this->storeResult($task->id, $bestRanked));
+                    $task->update(['status' => 'Completed']);
+                    continue;
+                }
             }
 
-            $items = $taskData['result'][0]['items'] ?? [];
-            $bestRanked = $this->extractBestRanked($items, $projectUrl);
-
-
-            if ($bestRanked) {
-                $results->push($this->storeResult($task->id, $bestRanked));
-//                $task->update(['status' => 'Completed']);
-            }
-
-            sleep(1); // API rate limit
+            // Queue for async polling
+            PollDataForSeoTaskJob::dispatch($task->id)->delay(now()->addSeconds(self::INITIAL_DELAY));
+            $task->update(['status' => 'Queued']);
         }
 
         return $results;
+    }
+
+    private function tryImmediateFetch($task, string $projectUrl, array $credentials): ?DataForSeoResult
+    {
+        $maxRetries = 6; // retry ~1 minute
+        $delay = self::SUBSEQUENT_DELAY;
+
+        for ($i = 0; $i < $maxRetries; $i++) {
+            $items = $this->fetchTaskResult($task->task_id, $credentials);
+
+            if (!empty($items)) {
+                $bestRanked = $this->extractBestRanked($items, $projectUrl);
+
+                if ($bestRanked) {
+                    return $this->storeResult($task->id, $bestRanked);
+                }
+            }
+
+            sleep($delay); // Only immediate polling uses blocking sleep
+        }
+
+        return null;
+    }
+
+    public function pollSingleTask(DataForSeoTask $task, bool $nonBlocking = false): bool
+    {
+        $credentials = $this->getCredentials();
+        $projectUrl  = $task->keyword->project->url;
+
+        $items = $this->fetchTaskResult($task->task_id, $credentials);
+
+        if (!empty($items)) {
+            $bestRanked = $this->extractBestRanked($items, $projectUrl);
+
+            if ($bestRanked) {
+                $this->storeResult($task->id, $bestRanked);
+                $task->update(['status' => 'Completed']);
+                return true;
+            }
+        }
+
+        // No sleep here if nonBlocking is true
+        if (!$nonBlocking) {
+            sleep(self::SUBSEQUENT_DELAY);
+        }
+
+        return false;
     }
 }
