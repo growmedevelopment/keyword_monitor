@@ -7,6 +7,7 @@ export interface Project {
     url: string;
     country: string;
     location_code: number;
+    location_name: string;
     keywords: Keyword[];
     created_at: string;
 }
