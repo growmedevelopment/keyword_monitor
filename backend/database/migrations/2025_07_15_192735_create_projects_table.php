@@ -12,6 +12,7 @@ return new class extends Migration {
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->integer('location_code');
+            $table->string('location_name');
             $table->string('country');
             $table->string('url');
             $table->timestamps();

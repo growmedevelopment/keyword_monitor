@@ -39,6 +39,7 @@ class ProjectService
             'url' => $data['url'],
             'country' => $data['country'],
             'location_code' => $data['location_code'],
+            'location_name' => $data['location_name'],
         ]);
     }
 

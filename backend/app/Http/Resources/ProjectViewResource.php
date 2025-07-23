@@ -26,6 +26,7 @@ class ProjectViewResource extends JsonResource
             'keywords' => KeywordResource::collection($this->whenLoaded('keywords')),
             'created_at' => $this->created_at,
             'location_code' => $this->location_code,
+            'location_name' => $this->location_name,
             'country' =>$this->country,
         ];
     }

@@ -35,6 +35,7 @@ class ProjectController extends Controller
             'name' => 'required|string|max:255',
             'url' => 'required|url|max:255',
             'location_code' => 'required|integer',
+            'location_name' => 'required|string|max:255',
             'country'=> 'required|string|max:4',
         ]);
 

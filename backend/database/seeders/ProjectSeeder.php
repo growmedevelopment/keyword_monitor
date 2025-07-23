@@ -17,7 +17,8 @@ class ProjectSeeder extends Seeder
             'user_id' => $user->id,
             'url'=> 'https://laracasts.com',
             'country'=> 'CA',
-            'location_code'=> 1001801
+            'location_code'=> 1001801,
+            'location_name'=> 'Calgary',
         ]);
     }
 }
