@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\KeywordRankResultResource;
+use App\Models\Keyword;
 use App\Models\Project;
 use App\Services\DataForSeoResultService;
 use Illuminate\Http\JsonResponse;
@@ -61,4 +63,15 @@ class KeywordController extends Controller
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+
+    public function show(Request $request, string $id): JsonResponse {
+        $keyword = Keyword::with('keywordsRank')->findOrFail($id);
+
+        return response()->json([
+            'id' => $keyword->id,
+            'keyword' => $keyword->keyword,
+            'keywords_rank' => KeywordRankResultResource::collection($keyword->keywordsRank),
+        ]);
+    }
+
 }

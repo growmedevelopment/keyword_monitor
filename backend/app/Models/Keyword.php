@@ -31,4 +31,8 @@ class Keyword extends Model
     public function project(): BelongsTo {
         return $this->belongsTo(Project::class);
     }
+
+    public function keywordsRank(): HasMany {
+        return $this->hasMany(KeywordRank::class);
+    }
 }

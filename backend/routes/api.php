@@ -23,6 +23,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('projects', ProjectController::class);
 
     Route::post('/projects/{project}/keywords/create', [KeywordController::class, 'addKeywordToProject']);
+
+    Route::get('/keywords/{keyword}', [KeywordController::class, 'show']);
 });
 
 
