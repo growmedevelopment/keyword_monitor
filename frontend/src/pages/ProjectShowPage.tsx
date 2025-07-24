@@ -10,7 +10,6 @@ import {
     ListItemIcon,
     ListItemText,
     Skeleton,
-    Chip
 } from '@mui/material';
 
 import PublicIcon from '@mui/icons-material/Public';

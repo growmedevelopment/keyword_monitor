@@ -1,4 +1,4 @@
-import { Table, TableHead, TableRow, TableCell, TableBody, Typography, Skeleton } from '@mui/material';
+import { Table, TableHead, TableRow, TableCell, TableBody, Typography, Skeleton, Link } from '@mui/material';
 import type {Keyword} from "../types/keywordTypes.ts";
 
 
@@ -30,7 +30,10 @@ export default function KeywordTable({ keywords }: { keywords: Keyword[] }) {
                     return results.map((result, i) => (
                         <TableRow key={`${index}-${i}`}>
                             {/* Keyword */}
-                            <TableCell>{kw.keyword}</TableCell>
+
+                            <TableCell>
+                                <Link href={`/keywords/${kw.id}`}>{kw.keyword}</Link>
+                            </TableCell>
 
                             {/* Status */}
                             <TableCell>

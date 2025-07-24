@@ -1,4 +1,3 @@
-// types/keywordTypes.ts
 export interface KeywordResult {
     rank_absolute: number;
     rank_group: number;
@@ -6,9 +5,30 @@ export interface KeywordResult {
     title: string;
 }
 
+export interface KeywordRank {
+    id: number;
+    keyword_id: number;
+    position: number;
+    url: string;
+    raw: {
+        url: string;
+        type: string;
+        title: string;
+        domain: string;
+        breadcrumb: string;
+        rank_group: number;
+        description: string;
+        rank_absolute: number;
+    };
+    tracked_at: string;
+    created_at: string;
+    updated_at: string;
+}
+
 export interface Keyword {
     id: number;
     keyword: string;
     status: 'Queued' | 'Completed' | 'Submitted';
     results: KeywordResult[];
+    keywords_rank : KeywordRank[];
 }

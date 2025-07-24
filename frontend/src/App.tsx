@@ -8,6 +8,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import UserLoginPage from "./pages/UserLoginPage.tsx";
 import ProjectShowPage from "./pages/ProjectShowPage.tsx";
+import KeywordShowPage from "./pages/KeywordShowPage.tsx";
 
 
 export default function App() {
@@ -26,6 +27,7 @@ export default function App() {
                             <Route path="/" element={<Dashboard />} />
                             <Route path="/projects" element={<ProjectsPage />} />
                             <Route path="/projects/:id" element={<ProjectShowPage />} />
+                            <Route path="/keywords/:id" element={<KeywordShowPage />} />
                             <Route path="/register" element={<UserRegisterPage />} />
                             <Route path="/login" element={<Dashboard />} />
                         </Routes>
