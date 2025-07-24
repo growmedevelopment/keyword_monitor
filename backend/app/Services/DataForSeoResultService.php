@@ -88,11 +88,19 @@ class DataForSeoResultService
 
     private function extractBestRanked(array $items, string $projectUrl): ?array
     {
+        Log::info('Extracting best ranked', [
+            'project_url' => $projectUrl,
+            'items_count' => count($items),
+            'first_item_url' => $items[0]['url'] ?? null
+        ]);
+
+        $projectHost = parse_url($projectUrl, PHP_URL_HOST);
+
         return collect($items)
-            ->filter(fn($item) =>
-                isset($item['url'], $item['rank_group']) &&
-                str_contains($item['url'], $projectUrl)
-            )
+            ->filter(function ($item) use ($projectHost) {
+                return isset($item['url'], $item['rank_group']) &&
+                    parse_url($item['url'], PHP_URL_HOST) === $projectHost;
+            })
             ->sortBy('rank_group')
             ->first();
     }
@@ -136,7 +144,6 @@ class DataForSeoResultService
         return $results;
     }
 
-
     public function pollSingleTask(DataForSeoTask $task, bool $nonBlocking = false): bool
     {
         $credentials = $this->getCredentials();
@@ -157,6 +164,7 @@ class DataForSeoResultService
     }
 
     private function storeKeywordRank(DataForSeoTask $task, array $bestRanked): void {
+
         KeywordRank::create([
             'keyword_id' => $task->keyword_id,
             'position' => $bestRanked['rank_group'] ?? NULL,
@@ -168,9 +176,13 @@ class DataForSeoResultService
 
     private function saveResults(DataForSeoTask $task, array $bestRanked): DataForSeoResult
     {
+        Log::info('saveResults', [$bestRanked]);
         $result = $this->storeResult($task->id, $bestRanked);
         $this->storeKeywordRank($task, $bestRanked);
-        $task->update(['status' => 'Completed']);
+        $task->update([
+            'status' => 'Completed',
+            'completed_at' => now()->toDateString(),
+         ]);
         return $result;
     }
 }

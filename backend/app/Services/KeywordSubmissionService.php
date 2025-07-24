@@ -22,7 +22,7 @@ class KeywordSubmissionService
         return $keyword;
     }
 
-    private function getCredentials(): array
+    public function getCredentials(): array
     {
         $username = config('services.dataforseo.username');
         $password = config('services.dataforseo.password');
@@ -44,7 +44,7 @@ class KeywordSubmissionService
         return $keyword->refresh();
     }
 
-    private function buildPayload(Keyword $keyword, Project $project): array
+    public function buildPayload(Keyword $keyword, Project $project): array
     {
         return [[
             "keyword"        => mb_convert_encoding($keyword->keyword, "UTF-8"),
@@ -55,7 +55,7 @@ class KeywordSubmissionService
         ]];
     }
 
-    private function submitToDataForSeo(array $payload, Keyword $keyword, Project $project, array $credentials): void
+    public function submitToDataForSeo(array $payload, Keyword $keyword, Project $project, array $credentials): void
     {
         try {
             $response = Http::withBasicAuth($credentials['username'], $credentials['password'])

@@ -15,6 +15,7 @@ return new class extends Migration {
             $table->string('location')->nullable();
             $table->string('language')->default('en');
             $table->boolean('is_active')->default(true);
+            $table->timestamp('last_submitted_at')->nullable();
             $table->timestamps();
             $table->unique(['project_id', 'keyword', 'location', 'language']);
         });
