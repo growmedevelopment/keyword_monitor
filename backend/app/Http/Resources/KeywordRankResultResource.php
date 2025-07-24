@@ -12,6 +12,7 @@ class KeywordRankResultResource extends JsonResource
         return [
             'position' => $this->position,
             'url'      => $this->url,
+            'tracked_at'      => $this->tracked_at,
         ];
     }
 }

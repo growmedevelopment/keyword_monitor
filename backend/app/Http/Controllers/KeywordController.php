@@ -64,12 +64,15 @@ class KeywordController extends Controller
         }
     }
 
-    public function show(Request $request, string $id): JsonResponse {
-        $keyword = Keyword::with('keywordsRank')->findOrFail($id);
+    public function show(Request $request, string $id): JsonResponse
+    {
+        $keyword = Keyword::with(['keywordsRank' => function ($query) {
+            $query->orderBy('tracked_at', 'desc'); // Sort by tracked_at on keywords_rank
+        }])->findOrFail($id);
 
         return response()->json([
-            'id' => $keyword->id,
-            'keyword' => $keyword->keyword,
+            'id'            => $keyword->id,
+            'keyword'       => $keyword->keyword,
             'keywords_rank' => KeywordRankResultResource::collection($keyword->keywordsRank),
         ]);
     }
