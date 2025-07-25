@@ -35,7 +35,7 @@ export default function KeywordShowPage() {
 
     if (error) return <Typography color="error">{error}</Typography>;
     if (!keyword) return <Typography>No keyword found</Typography>;
-
+    console.log(keyword.keywords_rank )
     return (
         <Box p={3}>
             <Typography variant="h4" gutterBottom>

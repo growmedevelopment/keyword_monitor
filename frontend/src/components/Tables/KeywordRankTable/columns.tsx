@@ -1,4 +1,5 @@
 import type { ColDef, ICellRendererParams } from 'ag-grid-community';
+import dayjs from 'dayjs';
 
 export const columnDefs: ColDef[] = [
     {
@@ -6,12 +7,14 @@ export const columnDefs: ColDef[] = [
         headerName: 'Month',
         rowGroup: true,
         hide: true, // hides the column but still groups by it
+        sort: 'desc',
     },
     {
         field: 'tracked_at',
         headerName: 'Date',
         sortable: true,
-        width: 150, // fixed width
+        width: 150,
+        comparator: (a, b) => dayjs(a).valueOf() - dayjs(b).valueOf(),
         valueFormatter: params =>
             new Date(params.value).toISOString().slice(0, 10),
     },
