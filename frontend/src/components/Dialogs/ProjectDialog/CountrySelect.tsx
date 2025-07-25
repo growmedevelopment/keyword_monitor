@@ -19,19 +19,23 @@ const CountrySelect: React.FC<Props> = ({ value, onChange }) => (
         onChange={(_, newVal) => onChange(newVal)}
         getOptionLabel={(option) => option.label}
         isOptionEqualToValue={(option, val) => option.value === val.value}
-        renderOption={(props, option) => (
-            <Box component="li" {...props}>
-                <img
-                    loading="lazy"
-                    width="20"
-                    src={`https://flagcdn.com/w20/${option.value.toLowerCase()}.png`}
-                    srcSet={`https://flagcdn.com/w40/${option.value.toLowerCase()}.png 2x`}
-                    alt=""
-                    style={{ marginRight: 8 }}
-                />
-                {option.label} ({option.value})
-            </Box>
-        )}
+        renderOption={(props, option) => {
+            const { key, ...rest } = props; // remove key from props
+
+            return (
+                <Box key={key} component="li" {...rest}>
+                    <img
+                        loading="lazy"
+                        width="20"
+                        src={`https://flagcdn.com/w20/${option.value.toLowerCase()}.png`}
+                        srcSet={`https://flagcdn.com/w40/${option.value.toLowerCase()}.png 2x`}
+                        alt=""
+                        style={{ marginRight: 8 }}
+                    />
+                    {option.label} ({option.value})
+                </Box>
+            );
+        }}
         renderInput={(params) => (
             <TextField
                 {...params}

@@ -1,8 +1,5 @@
 import { useState } from 'react';
-import {
-    Dialog, DialogTitle, DialogContent,
-    DialogActions, TextField, Button
-} from '@mui/material';
+import {Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button} from '@mui/material';
 import type {Project} from "../../types/projectTypes.ts";
 import type {CountryOption} from '../../types/locationTypes.ts';
 import CitySelect from './CitySelect.tsx';
@@ -25,6 +22,7 @@ export default function CreateProjectDialog({ isOpen, onClose, onCreate }: Props
         country: '',
         location_code: 0,
         created_at: '',
+        location_name: '',
     });
     const [selectedCountry, setSelectedCountry] = useState<CountryOption | null>(null);
     const [loading, setLoading] = useState(false);
