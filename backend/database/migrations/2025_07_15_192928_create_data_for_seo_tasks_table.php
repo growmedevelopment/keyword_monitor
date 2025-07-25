@@ -13,10 +13,7 @@ return new class extends Migration {
             $table->foreignId('project_id')->constrained()->onDelete('cascade');
             $table->string('task_id')->unique();              // DataForSEO's unique task ID
             $table->float('cost')->nullable();              // DataForSEO's unique task ID
-            $table->string('status')->default('queued');      // queued, running, done, error
-            $table->string('type')->nullable();               // e.g., 'rank_tracking', 'search_volume', etc.
-            $table->integer('result_count')->nullable();      // number of results found
-            $table->text('result_url')->nullable();           // optional direct URL from response
+            $table->string('status')->nullable();
             $table->timestamp('submitted_at')->nullable();    // when the task was submitted
             $table->timestamp('completed_at')->nullable();    // when it finished
             $table->json('raw_response')->nullable();         // full response from DataForSEO

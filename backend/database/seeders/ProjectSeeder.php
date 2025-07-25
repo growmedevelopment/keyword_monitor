@@ -10,15 +10,14 @@ class ProjectSeeder extends Seeder
 {
     public function run(): void
     {
-        $user = User::first(); // Get the test user we just created
+        $users = User::all();
 
-        Project::create([
-            'name' => 'Demo Project',
-            'user_id' => $user->id,
-            'url'=> 'https://laracasts.com',
-            'country'=> 'CA',
-            'location_code'=> 1001801,
-            'location_name'=> 'Calgary',
+        Project::factory(3)->create([
+            'user_id' => $users[0]->id
+        ]);
+
+        Project::factory(2)->create([
+            'user_id' => $users[1]->id
         ]);
     }
 }

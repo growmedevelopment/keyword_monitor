@@ -9,15 +9,15 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
 
         // Run other seeders
         $this->call([
+            UserSeeder::class,
             ProjectSeeder::class,
             KeywordSeeder::class,
+            DataForSeoTaskSeeder::class,
+            DataForSeoResultSeeder::class,
+            KeywordRankSeeder::class,
         ]);
     }
 }

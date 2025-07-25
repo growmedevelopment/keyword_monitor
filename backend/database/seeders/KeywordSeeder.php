@@ -10,18 +10,12 @@ class KeywordSeeder extends Seeder
 {
     public function run(): void
     {
-        $project = Project::first();
+        $projects = Project::all();
 
-        Keyword::create([
-            'project_id' => $project->id,
-            'keyword' => 'Laravel SEO',
-            'tracking_priority' => 1,
-        ]);
-
-        Keyword::create([
-            'project_id' => $project->id,
-            'keyword' => 'Eloquent ORM',
-            'tracking_priority' => 1,
-        ]);
+        foreach ($projects as $project) {
+            Keyword::factory(10)->create([
+                'project_id' => $project->id
+            ]);
+        }
     }
 }
