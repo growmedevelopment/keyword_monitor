@@ -19,7 +19,7 @@ import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 
 import projectService from '../services/projectService';
 import keywordService from '../services/keywordService.ts';
-import KeywordTable from '../components/Tables/KeywordTable';
+import KeywordTable from '../components/Tables/KeywordTable/KeywordTable.tsx';
 import AddKeywordDialog from '../components/KeywordDialog/AddKeywordDialog';
 import type { Project } from '../components/types/projectTypes';
 
