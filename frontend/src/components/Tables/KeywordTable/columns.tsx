@@ -17,6 +17,7 @@ export const columnDefs: ColDef<Keyword>[] = [
                 </a>
             );
         },
+        sort: 'asc',
     },
 
     // Status column

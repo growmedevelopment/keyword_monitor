@@ -2,7 +2,7 @@ import type {Keyword} from "./keywordTypes.ts";
 
 
 export interface Project {
-    id: number|Date;
+    id: number;
     name: string;
     url: string;
     country: string;

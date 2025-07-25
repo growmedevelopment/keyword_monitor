@@ -2,8 +2,8 @@ import { startTransition, Suspense, useEffect, useOptimistic, useState } from 'r
 import { Button, Stack, Alert } from '@mui/material';
 import projectService from '../services/projectService';
 import CreateProjectDialog from '../components/ProjectDialog/CreateProjectDialog';
-import ProjectList from '../components/ProjectList';
 import type { Project } from '../components/types/projectTypes';
+import ProjectsTable from "../components/Tables/ProjectsTable/ProjectsTable.tsx";
 
 interface ProjectError {
     message: string;
@@ -52,7 +52,7 @@ export default function ProjectsPage() {
     return (
         <Suspense fallback={<p>Loading...</p>}>
             <Stack spacing={2}>
-                <ProjectList projects={optimisticProjects} />
+                <ProjectsTable projects={optimisticProjects}/>
 
                 <Button variant="contained" onClick={handleDialog}>
                     Create New Project
