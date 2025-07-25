@@ -1,7 +1,7 @@
 import { startTransition, Suspense, useEffect, useOptimistic, useState } from 'react';
 import { Button, Stack, Alert } from '@mui/material';
 import projectService from '../services/projectService';
-import CreateProjectDialog from '../components/ProjectDialog/CreateProjectDialog';
+import CreateProjectDialog from '../components/Dialogs/ProjectDialog/CreateProjectDialog';
 import type { Project } from '../components/types/projectTypes';
 import ProjectsTable from "../components/Tables/ProjectsTable/ProjectsTable.tsx";
 

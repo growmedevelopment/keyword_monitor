@@ -3,18 +3,15 @@ import { useParams } from "react-router-dom";
 import {
     Box,
     Typography,
-    Paper,
-    Button,
     Skeleton,
-    Stack,
 } from "@mui/material";
 
 import projectService from "../services/projectService";
 import keywordService from "../services/keywordService.ts";
-import KeywordTable from "../components/Tables/KeywordTable/KeywordTable.tsx";
-import AddKeywordDialog from "../components/KeywordDialog/AddKeywordDialog";
+import AddKeywordDialog from "../components/Dialogs/AddKeywordDialog/AddKeywordDialog.tsx";
 import type { Project } from "../components/types/projectTypes";
 import ProjectDetails from "../components/Project/ProjectDetails.tsx";
+import ProjectKeywordsSection from "../components/Project/ProjectKeywordsSection.tsx";
 
 export default function ProjectShowPage() {
     const { id } = useParams<{ id: string }>();
@@ -107,16 +104,10 @@ export default function ProjectShowPage() {
             <ProjectDetails project={project} />
 
             {/* Keywords Section */}
-            <Paper sx={{ p: 2 }}>
-                <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-                    <Typography variant="h6">Assigned Keywords</Typography>
-                    <Button variant="contained" size="small" onClick={() => setDialogOpen(true)}>
-                        Add Keyword
-                    </Button>
-                </Stack>
-
-                <KeywordTable keywords={project.keywords} />
-            </Paper>
+            <ProjectKeywordsSection
+                keywords={project.keywords}
+                onAddKeyword={() => setDialogOpen(true)}
+            />
 
             {/* Add Keyword Dialog */}
             <AddKeywordDialog

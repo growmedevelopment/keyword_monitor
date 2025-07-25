@@ -1,6 +1,6 @@
 import React from 'react';
 import { Autocomplete, TextField, Box } from '@mui/material';
-import type {CountryOption} from '../types/locationTypes';
+import type {CountryOption} from '../../types/locationTypes.ts';
 
 interface Props {
     value: CountryOption | null;

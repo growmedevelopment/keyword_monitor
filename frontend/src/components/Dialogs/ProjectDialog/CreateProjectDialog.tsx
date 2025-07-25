@@ -3,11 +3,11 @@ import {
     Dialog, DialogTitle, DialogContent,
     DialogActions, TextField, Button
 } from '@mui/material';
-import type {Project} from "../types/projectTypes.ts";
-import type {CountryOption} from '../types/locationTypes';
-import CitySelect from './CitySelect';
-import CountrySelect from './CountrySelect';
-import locationService from '../../services/locationService';
+import type {Project} from "../../types/projectTypes.ts";
+import type {CountryOption} from '../../types/locationTypes.ts';
+import CitySelect from './CitySelect.tsx';
+import CountrySelect from './CountrySelect.tsx';
+import locationService from '../../../services/locationService.ts';
 
 interface Props {
     isOpen: boolean;

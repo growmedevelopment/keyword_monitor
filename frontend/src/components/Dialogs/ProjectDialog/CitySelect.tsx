@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Autocomplete, TextField, CircularProgress } from '@mui/material';
-import type { CityOption } from '../types/locationTypes';
+import type { CityOption } from '../../types/locationTypes.ts';
 
 //  Cache declared outside the component
 const cityCache = new Map<string, CityOption[]>();
