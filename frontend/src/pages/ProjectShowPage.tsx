@@ -1,10 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
-import {
-    Box,
-    Typography,
-    Skeleton,
-} from "@mui/material";
+import { Box, Typography } from "@mui/material";
 
 import projectService from "../services/projectService";
 import keywordService from "../services/keywordService.ts";
@@ -12,6 +8,7 @@ import AddKeywordDialog from "../components/Dialogs/AddKeywordDialog/AddKeywordD
 import type { Project } from "../components/types/projectTypes";
 import ProjectDetails from "../components/Project/ProjectDetails.tsx";
 import ProjectKeywordsSection from "../components/Project/ProjectKeywordsSection.tsx";
+import DataStateHandler from "../components/Common/DataStateHandler.tsx";
 
 export default function ProjectShowPage() {
     const { id } = useParams<{ id: string }>();
@@ -20,9 +17,6 @@ export default function ProjectShowPage() {
     const [error, setError] = useState<string | null>(null);
     const [isDialogOpen, setDialogOpen] = useState(false);
 
-    /**
-     * Load project details
-     */
     const loadProject = useCallback(() => {
         if (!id) return;
 
@@ -34,16 +28,13 @@ export default function ProjectShowPage() {
             .finally(() => setLoading(false));
     }, [id]);
 
-    /**
-     * Initial load + polling for incomplete keywords
-     */
     useEffect(() => {
         loadProject();
 
         const interval = setInterval(() => {
             setProject((prev) => {
                 if (!prev || prev.keywords.every((k) => k.status === "Completed")) {
-                    return prev; // Stop polling if all completed
+                    return prev;
                 }
                 loadProject();
                 return prev;
@@ -53,9 +44,6 @@ export default function ProjectShowPage() {
         return () => clearInterval(interval);
     }, [loadProject]);
 
-    /**
-     * Handle adding new keyword
-     */
     const handleAddKeyword = (newKeywords: string[]) => {
         if (!project || !id) return;
 
@@ -79,42 +67,39 @@ export default function ProjectShowPage() {
         setDialogOpen(false);
     };
 
-    /** ---------------- RENDER ---------------- */
-
-    if (loading) {
-        return (
-            <Box p={3}>
-                <Skeleton variant="text" width={200} height={40} />
-                <Skeleton variant="rectangular" height={120} sx={{ mt: 2 }} />
-            </Box>
-        );
-    }
-
-    if (error) return <Typography color="error">{error}</Typography>;
-    if (!project) return <Typography>No project found</Typography>;
-
     return (
         <Box p={3}>
-            {/* Project Title */}
-            <Typography variant="h4" gutterBottom>
-                {project.name}
-            </Typography>
+            <DataStateHandler<Project>
+                loading={loading}
+                error={error}
+                data={project}
+                emptyMessage="No project found"
+            >
+                {(projectData: Project) => (
+                    <>
+                        {/* Project Title */}
+                        <Typography variant="h4" gutterBottom>
+                            {projectData.name}
+                        </Typography>
 
-            {/* Project Details */}
-            <ProjectDetails project={project} />
+                        {/* Project Details */}
+                        <ProjectDetails project={projectData} />
 
-            {/* Keywords Section */}
-            <ProjectKeywordsSection
-                keywords={project.keywords}
-                onAddKeyword={() => setDialogOpen(true)}
-            />
+                        {/* Keywords Section */}
+                        <ProjectKeywordsSection
+                            keywords={projectData.keywords}
+                            onAddKeyword={() => setDialogOpen(true)}
+                        />
 
-            {/* Add Keyword Dialog */}
-            <AddKeywordDialog
-                isOpen={isDialogOpen}
-                onClose={() => setDialogOpen(false)}
-                onSubmit={handleAddKeyword}
-            />
+                        {/* Add Keyword Dialog */}
+                        <AddKeywordDialog
+                            isOpen={isDialogOpen}
+                            onClose={() => setDialogOpen(false)}
+                            onSubmit={handleAddKeyword}
+                        />
+                    </>
+                )}
+            </DataStateHandler>
         </Box>
     );
 }

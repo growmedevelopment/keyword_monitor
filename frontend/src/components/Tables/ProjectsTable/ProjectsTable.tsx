@@ -28,6 +28,7 @@ export default function ProjectsTable({ projects }: { projects: Project[] }) {
                 defaultColDef={defaultColDef}
                 pagination
                 paginationPageSize={10}
+                paginationPageSizeSelector={[10, 20, 50, 100]}
             />
         </div>
     );
