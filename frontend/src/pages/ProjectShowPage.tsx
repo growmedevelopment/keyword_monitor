@@ -1,27 +1,20 @@
-import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useEffect, useState, useCallback } from "react";
+import { useParams } from "react-router-dom";
 import {
     Box,
     Typography,
     Paper,
     Button,
-    List,
-    ListItem,
-    ListItemIcon,
-    ListItemText,
     Skeleton,
-} from '@mui/material';
+    Stack,
+} from "@mui/material";
 
-import PublicIcon from '@mui/icons-material/Public';
-import LanguageIcon from '@mui/icons-material/Language';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-
-import projectService from '../services/projectService';
-import keywordService from '../services/keywordService.ts';
-import KeywordTable from '../components/Tables/KeywordTable/KeywordTable.tsx';
-import AddKeywordDialog from '../components/KeywordDialog/AddKeywordDialog';
-import type { Project } from '../components/types/projectTypes';
+import projectService from "../services/projectService";
+import keywordService from "../services/keywordService.ts";
+import KeywordTable from "../components/Tables/KeywordTable/KeywordTable.tsx";
+import AddKeywordDialog from "../components/KeywordDialog/AddKeywordDialog";
+import type { Project } from "../components/types/projectTypes";
+import ProjectDetails from "../components/Project/ProjectDetails.tsx";
 
 export default function ProjectShowPage() {
     const { id } = useParams<{ id: string }>();
@@ -30,61 +23,66 @@ export default function ProjectShowPage() {
     const [error, setError] = useState<string | null>(null);
     const [isDialogOpen, setDialogOpen] = useState(false);
 
-    // Initial fetch + polling
-    useEffect(() => {
+    /**
+     * Load project details
+     */
+    const loadProject = useCallback(() => {
         if (!id) return;
 
-        // First load
+        setLoading(true);
         projectService
             .getById(id)
             .then(setProject)
-            .catch((err) => {
-                console.error('Failed to fetch project', err);
-                setError('Failed to load project');
-            })
+            .catch(() => setError("Failed to load project"))
             .finally(() => setLoading(false));
+    }, [id]);
 
-        // Poll every 10s if there are pending keywords
+    /**
+     * Initial load + polling for incomplete keywords
+     */
+    useEffect(() => {
+        loadProject();
+
         const interval = setInterval(() => {
             setProject((prev) => {
-                if (prev && prev.keywords.every((k) => k.status === 'Completed')) return prev;
-
-                projectService
-                    .getById(id)
-                    .then((freshProject) => setProject(freshProject))
-                    .catch((err) => console.error('Polling failed', err));
-
+                if (!prev || prev.keywords.every((k) => k.status === "Completed")) {
+                    return prev; // Stop polling if all completed
+                }
+                loadProject();
                 return prev;
             });
         }, 10000);
 
         return () => clearInterval(interval);
-    }, [id]);
+    }, [loadProject]);
 
-    // Add keyword and optimistically show it in UI
+    /**
+     * Handle adding new keyword
+     */
     const handleAddKeyword = (newKeywords: string[]) => {
         if (!project || !id) return;
 
-        newKeywords.forEach((newKeyword) => {
+        newKeywords.forEach((keyword) => {
             keywordService
-                .create(id, newKeyword)
+                .create(id, keyword)
                 .then((response) => {
                     const createdKeyword = {
                         ...response.keyword,
-                        status: response.keyword.status ?? 'Queued',
-                        data_for_seo_results: response.keyword.data_for_seo_results ?? []
+                        status: response.keyword.status ?? "Queued",
+                        data_for_seo_results: response.keyword.data_for_seo_results ?? [],
                     };
 
-                    // Optimistic update
                     setProject((prev) =>
                         prev ? { ...prev, keywords: [...prev.keywords, createdKeyword] } : prev
                     );
                 })
-                .catch((err) => console.error('Keyword creation failed', err));
+                .catch(() => console.error("Failed to create keyword"));
         });
 
         setDialogOpen(false);
     };
+
+    /** ---------------- RENDER ---------------- */
 
     if (loading) {
         return (
@@ -100,66 +98,27 @@ export default function ProjectShowPage() {
 
     return (
         <Box p={3}>
+            {/* Project Title */}
             <Typography variant="h4" gutterBottom>
                 {project.name}
             </Typography>
 
-            {/* Project Info */}
-            <Box mb={2}>
-                <List dense>
-                    <ListItem>
-                        <ListItemIcon>
-                            <LanguageIcon color="primary" />
-                        </ListItemIcon>
-                        <ListItemText
-                            primary="Website"
-                            secondary={
-                                <a href={project.url} target="_blank" rel="noopener noreferrer">
-                                    {project.url}
-                                </a>
-                            }
-                        />
-                    </ListItem>
-
-                    <ListItem>
-                        <ListItemIcon>
-                            <PublicIcon color="primary" />
-                        </ListItemIcon>
-                        <ListItemText primary="Country" secondary={project.country} />
-                    </ListItem>
-
-                    <ListItem>
-                        <ListItemIcon>
-                            <LocationOnIcon color="primary" />
-                        </ListItemIcon>
-                        <ListItemText primary="Location" secondary={project.location_name} />
-                    </ListItem>
-
-                    <ListItem>
-                        <ListItemIcon>
-                            <CalendarTodayIcon color="primary" />
-                        </ListItemIcon>
-                        <ListItemText
-                            primary="Created At"
-                            secondary={new Date(project.created_at).toLocaleString()}
-                        />
-                    </ListItem>
-                </List>
-            </Box>
+            {/* Project Details */}
+            <ProjectDetails project={project} />
 
             {/* Keywords Section */}
-            <Paper sx={{ mt: 3, p: 2 }}>
-                <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+            <Paper sx={{ p: 2 }}>
+                <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
                     <Typography variant="h6">Assigned Keywords</Typography>
                     <Button variant="contained" size="small" onClick={() => setDialogOpen(true)}>
                         Add Keyword
                     </Button>
-                </Box>
+                </Stack>
 
                 <KeywordTable keywords={project.keywords} />
             </Paper>
 
-            {/* Add Keyword Modal */}
+            {/* Add Keyword Dialog */}
             <AddKeywordDialog
                 isOpen={isDialogOpen}
                 onClose={() => setDialogOpen(false)}

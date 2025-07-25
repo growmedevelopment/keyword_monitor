@@ -11,6 +11,7 @@ import {
     ModuleRegistry,
     ClientSideRowModelModule,
     TextFilterModule,
+    PaginationModule,
 } from 'ag-grid-community';
 import {
     RowGroupingModule,
@@ -26,6 +27,7 @@ ModuleRegistry.registerModules([
     TextFilterModule,
     GroupFilterModule,
     ValidationModule,
+    PaginationModule,
 ]);
 
 
