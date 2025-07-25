@@ -10,7 +10,6 @@ import UserLoginPage from "./pages/UserLoginPage.tsx";
 import ProjectShowPage from "./pages/ProjectShowPage.tsx";
 import KeywordShowPage from "./pages/KeywordShowPage.tsx";
 
-
 export default function App() {
     const { user, loading } = useAuth();
 

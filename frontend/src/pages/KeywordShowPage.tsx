@@ -1,9 +1,9 @@
-import { Box, Skeleton, Typography, Table, TableHead, TableRow, TableCell, TableBody, Paper } from "@mui/material";
+import { Box, Skeleton, Typography, Paper } from "@mui/material";
 import type { Keyword } from "../components/types/keywordTypes.ts";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import keywordService from "../services/keywordService.ts";
-import dayjs from "dayjs";
+import KeywordRankGrid from "../components/Tables/KeywordRankTable/KeywordRankGrid.tsx";
 
 export default function KeywordShowPage() {
     const { id } = useParams<{ id: string }>();
@@ -44,34 +44,7 @@ export default function KeywordShowPage() {
 
             {/* Rankings Table */}
             <Paper sx={{ mt: 3 }}>
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>Date</TableCell>
-                            <TableCell>Position</TableCell>
-                            <TableCell>URL</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {keyword.keywords_rank?.map((rank, index) => (
-                            <TableRow key={index}>
-                                <TableCell>
-                                    {dayjs(rank.tracked_at).format("YYYY-MM-DD")}
-                                </TableCell>
-                                <TableCell>{rank.position}</TableCell>
-                                <TableCell>
-                                    <a
-                                        href={rank.url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                    >
-                                        {rank.url}
-                                    </a>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
+                <KeywordRankGrid data={keyword.keywords_rank ?? []} />
             </Paper>
         </Box>
     );

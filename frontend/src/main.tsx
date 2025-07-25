@@ -7,6 +7,23 @@ import { AuthProvider } from './context/AuthContext.tsx';
 import CssBaseline from '@mui/material/CssBaseline';
 import App from './App';
 import theme from './theme';
+import {
+    ModuleRegistry,
+    ClientSideRowModelModule,
+} from 'ag-grid-community';
+import {
+    RowGroupingModule,
+    RowGroupingPanelModule,
+    GroupFilterModule,
+} from 'ag-grid-enterprise';
+
+ModuleRegistry.registerModules([
+    ClientSideRowModelModule,
+    RowGroupingModule,
+    RowGroupingPanelModule,
+    GroupFilterModule,
+]);
+
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
      <React.StrictMode>
