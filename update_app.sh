@@ -12,6 +12,9 @@ cd $REPO_DIR
 git sparse-checkout init
 git sparse-checkout set backend frontend README.md
 
+git stash push -m "Auto-stash before pull"
+git pull origin main
+
 echo "🔄 Pulling latest code from Git..."
 git pull origin main
 
