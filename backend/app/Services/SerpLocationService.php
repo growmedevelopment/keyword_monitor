@@ -19,8 +19,7 @@ class SerpLocationService
      */
     private function fetchAPI(): array
     {
-        $username = config('services.dataforseo.username');
-        $password = config('services.dataforseo.password');
+        ['username' => $username, 'password' => $password] = $this->getCredentials();
 
         $response = Http::withBasicAuth($username, $password)
             ->get($this->apiUrl);
@@ -30,6 +29,18 @@ class SerpLocationService
         }
 
         throw new \Exception('Failed to fetch locations from external API');
+    }
+
+    private function getCredentials(): array
+    {
+        $username = config('services.dataforseo.username');
+        $password = config('services.dataforseo.password');
+
+        if (!$username || !$password) {
+            throw new \RuntimeException('Missing DataForSEO credentials.');
+        }
+
+        return compact('username', 'password');
     }
 
     private function getCountries(): JsonResponse {
