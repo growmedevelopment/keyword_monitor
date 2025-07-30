@@ -7,7 +7,7 @@ const cityCache = new Map<string, CityOption[]>();
 
 interface Props {
     value: number;
-    onChange: (val: number) => void;
+    onChange: (val: { code: number; name: string }) => void;
     countryCode: string;
     fetchCities: (code: string) => Promise<CityOption[]>;
 }
@@ -22,7 +22,7 @@ const CitySelect: React.FC<Props> = ({ value, onChange, countryCode, fetchCities
     useEffect(() => {
         setSelected(null);
         setOptions([]);
-        onChange(0);
+        onChange({ code: 0, name: '' });
     }, [countryCode]);
 
     // Fetch or use cached cities on open + valid countryCode
@@ -58,7 +58,7 @@ const CitySelect: React.FC<Props> = ({ value, onChange, countryCode, fetchCities
             value={selected}
             getOptionLabel={(option) => option.label}
             isOptionEqualToValue={(option, val) => option.value === val.value}
-            onChange={(_, newVal) => newVal && onChange(newVal.value)}
+            onChange={(_, newVal) => newVal && onChange({code: newVal.value, name: newVal.label})}
             renderOption={(props, option) => (
                 <li {...props} key={option.value}>
                     {option.label}
