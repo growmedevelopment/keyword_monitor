@@ -23,11 +23,17 @@ export default function UserLoginPage() {
             await axios.get(`${API}/sanctum/csrf-cookie`);
 
             // Attempt login
-            await axios.post(`${API}/api/login`, form).then(response => {
+            await axios.post(`${API}/api/login`, form,
+                {
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                    }
+                }
+            ).then(response => {
+
                 const token = response.data.token;
                 const user = response.data.user;
 
-                //set context
                 login(user, token);
 
                 //redirect

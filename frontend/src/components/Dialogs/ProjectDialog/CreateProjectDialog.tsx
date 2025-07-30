@@ -37,7 +37,10 @@ export default function CreateProjectDialog({ isOpen, onClose, onCreate }: Props
         handleChange('location_code', 0);
     };
 
-    const handleCityChange = (code: number) => handleChange('location_code', code);
+    const handleCityChange = ({ code, name }: { code: number; name: string }) => {
+        handleChange('location_code', code)
+        handleChange('location_name', name)
+    };
 
     const handleSubmit = () => {
         const { name, url, country, location_code } = data;
