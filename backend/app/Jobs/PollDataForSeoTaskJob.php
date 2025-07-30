@@ -9,6 +9,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 class PollDataForSeoTaskJob implements ShouldQueue
 {
@@ -27,24 +28,28 @@ class PollDataForSeoTaskJob implements ShouldQueue
     {
         $task = DataForSeoTask::find($this->taskId);
 
-        // Stop if missing or already completed
+        // Stop if task missing or already completed
         if (!$task || $task->status === 'Completed') {
             return;
         }
 
-        // Non-blocking poll
-        $ready = $service->pollSingleTask($task, true);
+        $completed = $service->pollSingleTask($task, true);
 
-        if (!$ready) {
+        if (!$completed) {
             $this->attemptCount++;
 
             if ($this->attemptCount >= DataForSeoResultService::MAX_RETRIES) {
                 $task->update(['status' => 'Failed']);
-                $this->fail(new \Exception("Task {$this->taskId} exceeded max retries."));
+                Log::warning("Task {$this->taskId} failed after max retries.");
                 return;
             }
 
-            $this->release(DataForSeoResultService::SUBSEQUENT_DELAY);
+            // Exponential backoff (3s, 10s, 20s, 40s…)
+            $delay = DataForSeoResultService::SUBSEQUENT_DELAY * ($this->attemptCount + 1);
+
+            // Re-dispatch with incremented attempt count
+            self::dispatch($this->taskId, $this->attemptCount)
+                ->delay(now()->addSeconds($delay));
         }
     }
 }
