@@ -26,8 +26,8 @@ export default function UserLoginPage() {
             await axios.post(`${API}/api/login`, form,
                 {
                     headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-                    }
+                        'Content-Type': 'application/json',
+                    },
                 }
             ).then(response => {
 

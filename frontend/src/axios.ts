@@ -9,7 +9,7 @@ axios.defaults.headers.common['Accept'] = 'application/json';
 axios.interceptors.request.use((config) => {
     const xsrfToken = Cookies.get('XSRF-TOKEN');
     if (xsrfToken) {
-        config.headers['X-XSRF-TOKEN'] = decodeURIComponent(xsrfToken);
+        config.headers['X-XSRF-TOKEN'] = xsrfToken;
     }
 
     return config;
