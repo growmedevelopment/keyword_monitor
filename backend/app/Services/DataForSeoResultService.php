@@ -319,18 +319,15 @@ class DataForSeoResultService
 
         $this->log('info','saveResults', [$bestRanked]);
         $result = $this->storeResult($task->id, $bestRanked);
-//        $this->storeKeywordRank($task, $bestRanked);
-        dump($task->keyword);
+        $this->storeKeywordRank($task, $bestRanked);
 
-        $result =  DataForSeoResult::find(39);
-
-//        $task->update([
-//            'status' => DataForSeoTaskStatus::COMPLETED,
-//            'completed_at' => now()->toDateString(),
-//         ]);
+        $task->update([
+            'status' => DataForSeoTaskStatus::COMPLETED,
+            'completed_at' => now()->toDateString(),
+         ]);
 
         //send data to the front-end via broadcasting
-        event(new KeywordUpdatedEvent($task->keyword, $result));
+        event(new KeywordUpdatedEvent($task, $result));
 
         return $result;
     }

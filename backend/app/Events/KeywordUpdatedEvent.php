@@ -3,6 +3,7 @@
 namespace App\Events;
 
 use App\Models\DataForSeoResult;
+use App\Models\DataForSeoTask;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
@@ -15,12 +16,14 @@ class KeywordUpdatedEvent implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
+    public DataForSeoTask $task;
     public array $keyword;
     public array $result;
 
-    public function __construct(Keyword $keyword, DataForSeoResult $result)
+    public function __construct(DataForSeoTask $task, DataForSeoResult $result)
     {
-        $this->keyword = $keyword->toArray();
+        $this->task = $task;
+        $this->keyword = $task->keyword->toArray();
         $this->result = $result->toArray();
 
         // Log raw model info
@@ -29,8 +32,6 @@ class KeywordUpdatedEvent implements ShouldBroadcastNow
             'project_id' => $this->keyword['project_id'],
             'result'     => $this->result,
         ]);
-        dump($this->keyword);
-        dump($this->result);
     }
 
     public function broadcastOn(): Channel
@@ -49,7 +50,7 @@ class KeywordUpdatedEvent implements ShouldBroadcastNow
             'keyword' => [
                 'id' => $this->keyword['id'],
                 'keyword' => $this->keyword['keyword'],
-                'status' => 'custom status',
+                'status' => $this->task->status,
                 'results' => [
                     'type' => $this->result['type'],
                     'rank_group' => $this->result['rank_group'],
