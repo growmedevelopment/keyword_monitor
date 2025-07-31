@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 
 class Keyword extends Model
 {
@@ -18,8 +20,7 @@ class Keyword extends Model
         return $this->hasMany(DataForSeoTask::class);
     }
 
-    public function dataForSeoResults()
-    {
+    public function dataForSeoResults(): HasManyThrough|Keyword {
         return $this->hasManyThrough(
             DataForSeoResult::class,
             DataForSeoTask::class,
@@ -36,5 +37,16 @@ class Keyword extends Model
 
     public function keywordsRank(): HasMany {
         return $this->hasMany(KeywordRank::class);
+    }
+
+    public function lowestDataForSeoResults(): HasOneThrough|Keyword {
+        return $this->hasOneThrough(
+            DataForSeoResult::class,
+            DataForSeoTask::class,
+            'keyword_id',            // Foreign key on data_for_seo_tasks table
+            'data_for_seo_task_id',  // Foreign key on data_for_seo_results table
+            'id',                    // Local key on keywords table
+            'id'                     // Local key on data_for_seo_tasks table
+        )->orderBy('rank_absolute', 'asc');
     }
 }

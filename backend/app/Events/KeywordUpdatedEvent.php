@@ -29,6 +29,8 @@ class KeywordUpdatedEvent implements ShouldBroadcastNow
             'project_id' => $this->keyword['project_id'],
             'result'     => $this->result,
         ]);
+        dump($this->keyword);
+        dump($this->result);
     }
 
     public function broadcastOn(): Channel
@@ -45,8 +47,16 @@ class KeywordUpdatedEvent implements ShouldBroadcastNow
     {
         return [
             'keyword' => [
-                ...$this->keyword,
-                'data_for_seo_results' => [$this->result],
+                'id' => $this->keyword['id'],
+                'keyword' => $this->keyword['keyword'],
+                'status' => 'custom status',
+                'results' => [
+                    'type' => $this->result['type'],
+                    'rank_group' => $this->result['rank_group'],
+                    'rank_absolute' => $this->result['rank_absolute'],
+                    'url' => $this->result['url'],
+                    'title' => $this->result['title'],
+                ],
             ],
         ];
     }

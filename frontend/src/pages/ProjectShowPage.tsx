@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
-import { Box, Typography } from "@mui/material";
+import {Box, Table, TableBody, TableCell, TableHead, TableRow, Typography} from "@mui/material";
 import pusher from "../pusher";
 import projectService from "../services/projectService";
 import keywordService from "../services/keywordService.ts";
@@ -45,14 +45,21 @@ export default function ProjectShowPage() {
         const handleKeywordUpdate = (data: any) => {
             console.log("Keyword updated:", data);
 
-            const updatedKeyword = data.keyword; // Ensure backend sends { keyword: {...} }
+            const updatedKeyword = data.keyword;
+
+            // Extract title and position from first result if available
+            const firstResult = updatedKeyword.data_for_seo_results?.[0] || {};
+            const enrichedKeyword = {
+                ...updatedKeyword,
+                title: firstResult.title || "-",
+                position: firstResult.rank_group || "-",
+            };
 
             setProject((prevProject) => {
                 if (!prevProject) return prevProject;
 
-                // Update only the changed keyword
                 const updatedKeywords = prevProject.keywords.map((k) =>
-                    k.id === updatedKeyword.id ? { ...k, ...updatedKeyword } : k
+                    k.id === enrichedKeyword.id ? { ...k, ...enrichedKeyword } : k
                 );
 
                 return {
@@ -96,38 +103,84 @@ export default function ProjectShowPage() {
     };
 
     return (
+        // <Box p={3}>
+        //     <DataStateHandler<Project>
+        //         loading={loading}
+        //         error={error}
+        //         data={project}
+        //         emptyMessage="No project found"
+        //     >
+        //         {(projectData: Project) => (
+        //             <>
+        //                 {/* Project Title */}
+        //                 <Typography variant="h4" gutterBottom>
+        //                     {projectData.name}
+        //                 </Typography>
+        //
+        //                 {/* Project Details */}
+        //                 <ProjectDetails project={projectData} />
+        //
+        //                 {/* Keywords Section */}
+        //                 <ProjectKeywordsSection
+        //                     keywords={projectData.keywords}
+        //                     onAddKeyword={() => setDialogOpen(true)}
+        //                 />
+        //
+        //                 {/* Add Keyword Dialog */}
+        //                 <AddKeywordDialog
+        //                     isOpen={isDialogOpen}
+        //                     onClose={() => setDialogOpen(false)}
+        //                     onSubmit={handleAddKeyword}
+        //                 />
+        //             </>
+        //         )}
+        //     </DataStateHandler>
+        // </Box>
+
         <Box p={3}>
-            <DataStateHandler<Project>
-                loading={loading}
-                error={error}
-                data={project}
-                emptyMessage="No project found"
-            >
-                {(projectData: Project) => (
-                    <>
-                        {/* Project Title */}
-                        <Typography variant="h4" gutterBottom>
-                            {projectData.name}
-                        </Typography>
+            {/* Loading and error handling */}
+            {loading && <Typography>Loading...</Typography>}
+            {error && <Typography color="error">{error}</Typography>}
+            {!loading && !error && project && (
+                <>
+                    {/* Project Title */}
+                    <Typography variant="h4" gutterBottom>
+                        {project.name}
+                    </Typography>
 
-                        {/* Project Details */}
-                        <ProjectDetails project={projectData} />
+                    {/* Project Details */}
+                    <ProjectDetails project={project} />
 
-                        {/* Keywords Section */}
-                        <ProjectKeywordsSection
-                            keywords={projectData.keywords}
-                            onAddKeyword={() => setDialogOpen(true)}
-                        />
+                    {/* Keywords Table */}
+                    <Table>
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>Keyword</TableCell>
+                                <TableCell>Status</TableCell>
+                                <TableCell>Position</TableCell>
+                                <TableCell>Title</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {project.keywords.map((k) => (
+                                <TableRow key={k.id}>
+                                    <TableCell>{k.keyword}</TableCell>
+                                    <TableCell>{k.status}</TableCell>
+                                    {/*<TableCell>{k.results.rank_group ?? "-"}</TableCell>*/}
+                                    {/*<TableCell>{k.results[0].title ?? "-"}</TableCell>*/}
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
 
-                        {/* Add Keyword Dialog */}
-                        <AddKeywordDialog
-                            isOpen={isDialogOpen}
-                            onClose={() => setDialogOpen(false)}
-                            onSubmit={handleAddKeyword}
-                        />
-                    </>
-                )}
-            </DataStateHandler>
+                    {/* Add Keyword Dialog */}
+                    <AddKeywordDialog
+                        isOpen={isDialogOpen}
+                        onClose={() => setDialogOpen(false)}
+                        onSubmit={handleAddKeyword}
+                    />
+                </>
+            )}
         </Box>
     );
 }
