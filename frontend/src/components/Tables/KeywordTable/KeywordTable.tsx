@@ -1,10 +1,24 @@
 import { AgGridReact } from 'ag-grid-react';
-import type { Keyword } from '../../types/keywordTypes';
 import { useMemo } from 'react';
 import {columnDefs} from "./columns.tsx";
 
+
+interface projectKeyword{
+    id: number;
+    keyword: string;
+    status: 'Queued' | 'Completed' | 'Submitted';
+    results: {
+        type: string;
+        rank_absolute: number;
+        rank_group: number;
+        url: string;
+        title: string;
+    };
+
+}
+
 interface Props {
-    keywords: Keyword[];
+    keywords: projectKeyword[];
 }
 
 export default function KeywordTable({ keywords }: Props) {

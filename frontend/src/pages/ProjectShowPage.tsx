@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
-import {Box, Table, TableBody, TableCell, TableHead, TableRow, Typography} from "@mui/material";
+import {Box, Typography} from "@mui/material";
 import pusher from "../pusher";
 import projectService from "../services/projectService";
 import keywordService from "../services/keywordService.ts";
@@ -102,85 +102,44 @@ export default function ProjectShowPage() {
         setDialogOpen(false);
     };
 
+
+
+
     return (
-        // <Box p={3}>
-        //     <DataStateHandler<Project>
-        //         loading={loading}
-        //         error={error}
-        //         data={project}
-        //         emptyMessage="No project found"
-        //     >
-        //         {(projectData: Project) => (
-        //             <>
-        //                 {/* Project Title */}
-        //                 <Typography variant="h4" gutterBottom>
-        //                     {projectData.name}
-        //                 </Typography>
-        //
-        //                 {/* Project Details */}
-        //                 <ProjectDetails project={projectData} />
-        //
-        //                 {/* Keywords Section */}
-        //                 <ProjectKeywordsSection
-        //                     keywords={projectData.keywords}
-        //                     onAddKeyword={() => setDialogOpen(true)}
-        //                 />
-        //
-        //                 {/* Add Keyword Dialog */}
-        //                 <AddKeywordDialog
-        //                     isOpen={isDialogOpen}
-        //                     onClose={() => setDialogOpen(false)}
-        //                     onSubmit={handleAddKeyword}
-        //                 />
-        //             </>
-        //         )}
-        //     </DataStateHandler>
-        // </Box>
-
         <Box p={3}>
-            {/* Loading and error handling */}
-            {loading && <Typography>Loading...</Typography>}
-            {error && <Typography color="error">{error}</Typography>}
-            {!loading && !error && project && (
-                <>
-                    {/* Project Title */}
-                    <Typography variant="h4" gutterBottom>
-                        {project.name}
-                    </Typography>
+            <DataStateHandler<Project>
+                loading={loading}
+                error={error}
+                data={project}
+                emptyMessage="No project found"
+            >
 
-                    {/* Project Details */}
-                    <ProjectDetails project={project} />
 
-                    {/* Keywords Table */}
-                    <Table>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>Keyword</TableCell>
-                                <TableCell>Status</TableCell>
-                                <TableCell>Position</TableCell>
-                                <TableCell>Title</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {project.keywords.map((k) => (
-                                <TableRow key={k.id}>
-                                    <TableCell>{k.keyword}</TableCell>
-                                    <TableCell>{k.status}</TableCell>
-                                    {/*<TableCell>{k.results.rank_group ?? "-"}</TableCell>*/}
-                                    {/*<TableCell>{k.results[0].title ?? "-"}</TableCell>*/}
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                {(projectData: Project) => (
+                    <>
+                        {/* Project Title */}
+                        <Typography variant="h4" gutterBottom>
+                            {projectData.name}
+                        </Typography>
 
-                    {/* Add Keyword Dialog */}
-                    <AddKeywordDialog
-                        isOpen={isDialogOpen}
-                        onClose={() => setDialogOpen(false)}
-                        onSubmit={handleAddKeyword}
-                    />
-                </>
-            )}
+                        {/* Project Details */}
+                        <ProjectDetails project={projectData} />
+
+                        {/*/!* Keywords Section *!/*/}
+                        <ProjectKeywordsSection
+                            keywords={projectData.keywords}
+                            onAddKeyword={() => setDialogOpen(true)}
+                        />
+
+                        {/* Add Keyword Dialog */}
+                        <AddKeywordDialog
+                            isOpen={isDialogOpen}
+                            onClose={() => setDialogOpen(false)}
+                            onSubmit={handleAddKeyword}
+                        />
+                    </>
+                )}
+            </DataStateHandler>
         </Box>
     );
 }

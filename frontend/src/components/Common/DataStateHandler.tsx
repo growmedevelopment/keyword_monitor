@@ -9,13 +9,7 @@ interface DataStateHandlerProps<T> {
     children: (data: T) => ReactNode; // <-- function returning JSX
 }
 
-export default function DataStateHandler<T>({
-                                                loading,
-                                                error,
-                                                data,
-                                                emptyMessage = "No data found",
-                                                children,
-                                            }: DataStateHandlerProps<T>) {
+export default function DataStateHandler<T>({loading, error, data, emptyMessage = "No data found", children,}: DataStateHandlerProps<T>) {
     if (loading) {
         return (
             <Box p={3}>
