@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\DataForSeoTaskStatus;
 use App\Models\Project;
 use Illuminate\Console\Command;
 use App\Models\DataForSeoTask;
@@ -18,7 +19,7 @@ class FetchKeywordResults extends Command
         $username = config('services.dataforseo.username');
         $password = config('services.dataforseo.password');
 
-        $tasks = DataForSeoTask::where('status', 'Submitted')->get();
+        $tasks = DataForSeoTask::where('status', DataForSeoTaskStatus::SUBMITTED)->get();
 
 
 

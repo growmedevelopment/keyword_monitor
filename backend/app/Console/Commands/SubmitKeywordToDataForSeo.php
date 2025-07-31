@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\DataForSeoTaskStatus;
 use Illuminate\Console\Command;
 use App\Models\Keyword;
 use App\Models\DataForSeoTask;
@@ -45,7 +46,7 @@ class SubmitKeywordToDataForSeo extends Command
                         'keyword_id'   => $keyword->id,
                         'project_id'   => $keyword->project_id,
                         'task_id'      => $taskData['id'],
-                        'status'       => 'Submitted',
+                        'status'       => DataForSeoTaskStatus::SUBMITTED,
                         'cost'         => $taskData['cost'] ?? 0,
                         'submitted_at' => now(),
                         'raw_response' => $taskData,
