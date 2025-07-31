@@ -20,6 +20,8 @@
     "axios": "^1.11.0",
     "dayjs": "^1.11.13",
     "js-cookie": "^3.0.5",
+    "laravel-echo": "^2.1.7",
+    "pusher-js": "^8.4.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.7.1",
