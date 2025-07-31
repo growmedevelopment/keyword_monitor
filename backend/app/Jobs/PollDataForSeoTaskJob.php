@@ -64,7 +64,7 @@ class PollDataForSeoTaskJob implements ShouldQueue
                 }
 
 
-                $delay = min($subsequentDelay * pow($backoffFactor, $this->attemptCount - 1), 60);
+                $delay = min($subsequentDelay * ($backoffFactor ** ($this->attemptCount - 1)), 60);
 
                 Log::info("[DataForSEO] Retry scheduled", [
                     'task_id' => $this->taskId,
