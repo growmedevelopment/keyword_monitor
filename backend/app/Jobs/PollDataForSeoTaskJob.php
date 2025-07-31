@@ -54,6 +54,7 @@ class PollDataForSeoTaskJob implements ShouldQueue
 
                 $maxRetries = config('dataforseo.polling.max_retries');
                 $subsequentDelay = config('dataforseo.polling.subsequent_delay');
+                $backoffFactor = config('dataforseo.polling.backoff_factor');
 
                 if ($this->attemptCount >= $maxRetries) {
                     $task->update(['status' => DataForSeoTaskStatus::FAILED]);
@@ -61,8 +62,11 @@ class PollDataForSeoTaskJob implements ShouldQueue
                     return;
                 }
 
+                // Delay increases with each attempt: e.g., 10s → 20s → 40s
+                $delay = $subsequentDelay * pow($backoffFactor, $this->attemptCount - 1);
+
                 self::dispatch($this->taskId, $this->attemptCount)
-                    ->delay(now()->addSeconds($subsequentDelay));
+                    ->delay(now()->addSeconds($delay));
             }
         } catch (\Throwable $e) {
             \Log::error("Polling failed for Task {$this->taskId}: {$e->getMessage()}");
