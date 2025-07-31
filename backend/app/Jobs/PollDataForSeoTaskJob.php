@@ -52,14 +52,17 @@ class PollDataForSeoTaskJob implements ShouldQueue
             if (!$ready) {
                 $this->attemptCount++;
 
-                if ($this->attemptCount >= DataForSeoResultService::MAX_RETRIES) {
+                $maxRetries = config('dataforseo.polling.max_retries');
+                $subsequentDelay = config('dataforseo.polling.subsequent_delay');
+
+                if ($this->attemptCount >= $maxRetries) {
                     $task->update(['status' => DataForSeoTaskStatus::FAILED]);
                     $this->fail(new \Exception("Task {$this->taskId} exceeded max retries."));
                     return;
                 }
 
                 self::dispatch($this->taskId, $this->attemptCount)
-                    ->delay(now()->addSeconds(DataForSeoResultService::SUBSEQUENT_DELAY));
+                    ->delay(now()->addSeconds($subsequentDelay));
             }
         } catch (\Throwable $e) {
             \Log::error("Polling failed for Task {$this->taskId}: {$e->getMessage()}");

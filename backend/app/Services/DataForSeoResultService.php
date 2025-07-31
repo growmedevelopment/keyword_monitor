@@ -15,9 +15,7 @@ use App\Enums\DataForSeoTaskStatus;
 
 class DataForSeoResultService
 {
-    public const INITIAL_DELAY = 3;
-    public const SUBSEQUENT_DELAY = 10;
-    public const MAX_RETRIES = 30;
+
 
     /**
      * Fetch SEO results for all submitted DataForSEO tasks associated with a specific keyword.
@@ -259,7 +257,8 @@ class DataForSeoResultService
 
             $task->update(['status' => DataForSeoTaskStatus::QUEUED]);
             // Queue for async polling
-            PollDataForSeoTaskJob::dispatch($task->id)->delay(now()->addSeconds(self::INITIAL_DELAY));
+            $initialDelay = config('dataforseo.polling.initial_delay');
+            PollDataForSeoTaskJob::dispatch($task->id)->delay(now()->addSeconds($initialDelay));
 
         }
 

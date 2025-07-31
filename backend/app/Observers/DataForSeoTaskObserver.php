@@ -20,8 +20,9 @@ class DataForSeoTaskObserver
 
             if ($immediateResult->isEmpty()) {
                 // Queue non-blocking polling
+                $initialDelay = config('dataforseo.polling.initial_delay');
                 PollDataForSeoTaskJob::dispatch($task->id)
-                    ->delay(now()->addSeconds(DataForSeoResultService::INITIAL_DELAY));
+                    ->delay(now()->addSeconds($initialDelay));
             }
         }
     }
