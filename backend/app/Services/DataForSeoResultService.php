@@ -8,6 +8,7 @@ use App\Models\DataForSeoTask;
 use App\Models\Keyword;
 use App\Models\DataForSeoResult;
 use App\Models\KeywordRank;
+use App\Services\DataForSeo\CredentialsService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -31,7 +32,7 @@ class DataForSeoResultService
      */
     public function fetchSEOResultsByKeyword(Keyword $keyword): Collection
     {
-        $credentials = $this->getCredentials();
+        $credentials = CredentialsService::get();
         $projectUrl = $keyword->project->url;
         $tasks = $this->getSubmittedTasks($keyword);
         return $this->processTasks($tasks, $projectUrl, $credentials);
@@ -51,7 +52,7 @@ class DataForSeoResultService
      */
     public function fetchSEOResultsBySubmittedTasks(ProjectViewResource $project): Collection
     {
-        $credentials = $this->getCredentials();
+        $credentials = CredentialsService::get();
         $projectUrl = $project->url;
 
         $tasks = DataForSeoTask::whereHas('keyword', function ($query) use ($project) {
@@ -64,30 +65,6 @@ class DataForSeoResultService
 
         return collect();
 
-    }
-
-
-    /**
-     * Retrieve DataForSEO API credentials from the configuration.
-     *
-     * This method fetches the username and password stored in the `services.dataforseo`
-     * configuration. If either credential is missing, it throws an exception.
-     *
-     * @throws \Exception If the DataForSEO credentials are not configured.
-     *
-     * @return array      An associative array containing 'username' and 'password'.
-     */
-    //todo create function-helper and use it across project
-    private function getCredentials(): array
-    {
-        $username = config('services.dataforseo.username');
-        $password = config('services.dataforseo.password');
-
-        if (!$username || !$password) {
-            throw new \RuntimeException('Missing DataForSEO credentials.');
-        }
-
-        return compact('username', 'password');
     }
 
 
@@ -282,7 +259,7 @@ class DataForSeoResultService
      */
     public function pollSingleTask(DataForSeoTask $task, bool $nonBlocking = false): bool
     {
-        $credentials = $this->getCredentials();
+        $credentials = CredentialsService::get();
         $projectUrl  = $task->keyword->project->url;
 
         $items = $this->fetchTaskResult($task->task_id, $credentials);

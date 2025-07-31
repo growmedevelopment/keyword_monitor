@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Enums\DataForSeoTaskStatus;
+use App\Services\DataForSeo\CredentialsService;
 use Illuminate\Console\Command;
 use App\Models\Keyword;
 use App\Models\DataForSeoTask;
@@ -18,8 +19,7 @@ class SubmitKeywordToDataForSeo extends Command
      */
     public function handle(): void {
         $keywords = Keyword::whereDoesntHave('dataForSeoTasks')->get();
-        $username = config('services.dataforseo.username');
-        $password = config('services.dataforseo.password');
+        ['username' => $username, 'password' => $password] = CredentialsService::get();
 
         if (!$username || !$password) {
             $this->error('Missing DataForSEO credentials in config/services.php or .env');

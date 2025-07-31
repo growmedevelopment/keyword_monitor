@@ -6,6 +6,7 @@ use App\Enums\DataForSeoTaskStatus;
 use App\Models\Keyword;
 use App\Models\DataForSeoTask;
 use App\Models\Project;
+use App\Services\DataForSeo\CredentialsService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -28,7 +29,7 @@ class KeywordSubmissionService
      */
     public function submitKeyword(Project $project, string $newKeyword): Keyword
     {
-        $credentials = $this->getCredentials();
+        $credentials = CredentialsService::get();
         $keyword = $this->createAndAttachKeyword($project, $newKeyword);
         $payload = $this->buildPayload($keyword, $project);
 
@@ -36,28 +37,6 @@ class KeywordSubmissionService
         usleep(200000); // Respect API rate limits
 
         return $keyword;
-    }
-
-    /**
-     * Retrieve DataForSEO API credentials from the configuration.
-     *
-     * This method fetches the username and password stored in the `services.dataforseo`
-     * configuration. If either credential is missing, it throws an exception.
-     *
-     * @throws \Exception If the DataForSEO credentials are not configured.
-     *
-     * @return array      An associative array containing 'username' and 'password'.
-     */
-    public function getCredentials(): array
-    {
-        $username = config('services.dataforseo.username');
-        $password = config('services.dataforseo.password');
-
-        if (!$username || !$password) {
-            throw new \Exception('Missing DataForSEO credentials.');
-        }
-
-        return compact('username', 'password');
     }
 
     /**
