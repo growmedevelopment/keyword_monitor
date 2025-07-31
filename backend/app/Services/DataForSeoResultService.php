@@ -126,13 +126,16 @@ class DataForSeoResultService
 
         $json = $response->json();
 
-        Log::info('Polling DataForSEO task result', [
+        $this->log('info', 'Polling DataForSEO task result', [
             'task_id' => $taskId,
+            'keyword' => $task->keyword->keyword ?? null,
+            'project_id' => $task->keyword->project_id ?? null,
             'response' => $json,
         ]);
 
         if (!$response->successful()) {
-            Log::warning('Failed to fetch DataForSEO task result', [
+
+            $this->log('warning', 'Failed to fetch DataForSEO task result', [
                 'task_id' => $taskId,
                 'status'  => $response->status(),
                 'body'    => $response->body(),
@@ -158,7 +161,7 @@ class DataForSeoResultService
      */
     private function extractBestRanked(array $items, string $projectUrl): array
     {
-        Log::info('Extracting best ranked', [
+        $this->log('info','Extracting best ranked', [
             'project_url' => $projectUrl,
             'items_count' => count($items),
             'first_item_url' => $items[0]['url'] ?? null
@@ -333,7 +336,8 @@ class DataForSeoResultService
      */
     private function saveResults(DataForSeoTask $task, array $bestRanked): DataForSeoResult
     {
-        Log::info('saveResults', [$bestRanked]);
+        $this->log('info','saveResults', [$bestRanked]);
+
         $result = $this->storeResult($task->id, $bestRanked);
         $this->storeKeywordRank($task, $bestRanked);
         $task->update([
@@ -341,5 +345,10 @@ class DataForSeoResultService
             'completed_at' => now()->toDateString(),
          ]);
         return $result;
+    }
+
+    private function log(string $level, string $message, array $context = []): void
+    {
+        Log::$level('[DataForSEO] ' . $message, $context);
     }
 }
