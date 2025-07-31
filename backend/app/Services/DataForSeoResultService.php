@@ -103,6 +103,8 @@ class DataForSeoResultService
 
         $json = $response->json();
 
+        $task = DataForSeoTask::where('task_id', $taskId)->with('keyword.project')->first();
+
         $this->log('info', 'Polling DataForSEO task result', [
             'task_id' => $taskId,
             'keyword' => $task->keyword->keyword ?? null,
