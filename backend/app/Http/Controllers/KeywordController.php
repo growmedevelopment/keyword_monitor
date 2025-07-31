@@ -9,6 +9,7 @@ use App\Services\DataForSeoResultService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Services\KeywordSubmissionService;
+use App\Enums\DataForSeoTaskStatus;
 
 class KeywordController extends Controller
 {
@@ -23,6 +24,24 @@ class KeywordController extends Controller
         $this->seoResultService = $seoResultService;
     }
 
+
+
+    /**
+     * Add a new keyword to a project and submit it to the DataForSEO API for tracking.
+     *
+     * This method validates the incoming request, associates the keyword with the project,
+     * submits it to DataForSEO for SERP analysis, and immediately attempts to fetch
+     * initial results. If results are unavailable, the keyword is queued for
+     * background polling.
+     *
+     * @param \Illuminate\Http\Request $request     The HTTP request containing the keyword input.
+     * @param string                   $project_id  The ID of the project to which the keyword will be added.
+     *
+     * @return \Illuminate\Http\JsonResponse        JSON response with keyword details and status.
+     *
+     * @throws \Illuminate\Validation\ValidationException If the keyword validation fails.
+     * @throws \Exception                                 If keyword submission or processing fails.
+     */
     public function addKeywordToProject(Request $request, string $project_id): JsonResponse
     {
         try {
@@ -50,7 +69,7 @@ class KeywordController extends Controller
             $keyword->makeHidden('dataForSeoResults');
 
             // 5. Add status to response object
-            $keyword->status = $results->isNotEmpty() ? 'Completed' : 'Queued';
+            $keyword->status = $results->isNotEmpty() ? DataForSeoTaskStatus::COMPLETED : DataForSeoTaskStatus::QUEUED;
 
             return response()->json([
                 'message' => $results->isNotEmpty()

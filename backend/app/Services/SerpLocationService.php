@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Services\DataForSeo\CredentialsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -19,7 +20,7 @@ class SerpLocationService
      */
     private function fetchAPI(): array
     {
-        ['username' => $username, 'password' => $password] = $this->getCredentials();
+        ['username' => $username, 'password' => $password] = CredentialsService::get();
 
         $response = Http::withBasicAuth($username, $password)
             ->get($this->apiUrl);
@@ -29,18 +30,6 @@ class SerpLocationService
         }
 
         throw new \Exception('Failed to fetch locations from external API');
-    }
-
-    private function getCredentials(): array
-    {
-        $username = config('services.dataforseo.username');
-        $password = config('services.dataforseo.password');
-
-        if (!$username || !$password) {
-            throw new \RuntimeException('Missing DataForSEO credentials.');
-        }
-
-        return compact('username', 'password');
     }
 
     private function getCountries(): JsonResponse {

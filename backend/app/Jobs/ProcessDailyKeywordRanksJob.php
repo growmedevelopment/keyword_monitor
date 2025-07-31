@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\Keyword;
+use App\Services\DataForSeo\CredentialsService;
 use App\Services\DataForSeoResultService;
 use App\Services\KeywordSubmissionService;
 use Illuminate\Bus\Queueable;
@@ -33,7 +34,7 @@ class ProcessDailyKeywordRanksJob implements ShouldQueue
 
                         // Build payload
                         $payload = $submissionService->buildPayload($keyword, $keyword->project);
-                        $credentials = $submissionService->getCredentials();
+                        $credentials = CredentialsService::get();
 
                         // Submit new task
                         $submissionService->submitToDataForSeo($payload, $keyword, $keyword->project, $credentials);
