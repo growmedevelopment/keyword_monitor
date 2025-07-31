@@ -10,6 +10,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 class PollDataForSeoTaskJob implements ShouldQueue
 {
@@ -62,8 +63,14 @@ class PollDataForSeoTaskJob implements ShouldQueue
                     return;
                 }
 
-                // Delay increases with each attempt: e.g., 10s → 20s → 40s
-                $delay = $subsequentDelay * pow($backoffFactor, $this->attemptCount - 1);
+
+                $delay = min($subsequentDelay * pow($backoffFactor, $this->attemptCount - 1), 60);
+
+                Log::info("[DataForSEO] Retry scheduled", [
+                    'task_id' => $this->taskId,
+                    'attempt' => $this->attemptCount,
+                    'next_delay' => $delay
+                ]);
 
                 self::dispatch($this->taskId, $this->attemptCount)
                     ->delay(now()->addSeconds($delay));
