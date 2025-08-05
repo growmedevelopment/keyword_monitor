@@ -1,9 +1,8 @@
 'use client';
-
 import { Box, Typography } from '@mui/material';
 
-export default function Dashboard() {
 
+export default function Dashboard() {
     return (
         <Box sx={{ p: 3 }}>
             <Typography variant="h4" gutterBottom>
@@ -17,7 +16,7 @@ export default function Dashboard() {
                     gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
                 }}
             >
-                <p>Listening for WebSocket events...</p>
+                <p>Something could be here</p>
             </Box>
         </Box>
     );
