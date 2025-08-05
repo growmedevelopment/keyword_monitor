@@ -1,4 +1,5 @@
 export interface KeywordResult {
+    type: string;
     rank_absolute: number;
     rank_group: number;
     url: string;
@@ -29,6 +30,8 @@ export interface Keyword {
     id: number;
     keyword: string;
     status: 'Queued' | 'Completed' | 'Submitted';
-    results: KeywordResult[];
+    results: KeywordResult;
     keywords_rank : KeywordRank[];
 }
+
+
