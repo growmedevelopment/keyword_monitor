@@ -5,8 +5,7 @@ import type {Keyword} from "../../types/keywordTypes.ts";
 
 type NonNullableCellParams = ICellRendererParams<Keyword, string> & { data: Keyword };
 
-const today = dayjs().format("DD MMMM");
-const yesterday = dayjs().subtract(1, "day").format("DD MMMM");
+
 const twoDaysAgo = dayjs().subtract(2, "day").format("DD MMMM");
 const treeDaysAgo = dayjs().subtract(3, "day").format("DD MMMM");
 
@@ -58,7 +57,7 @@ export const columnDefs: ColDef<Keyword>[] = [
             return (
                 <a href={params.value as string} target="_blank" rel="noopener noreferrer">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-                        <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+                        <g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2">
                             <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
                             <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
                         </g>
@@ -70,13 +69,13 @@ export const columnDefs: ColDef<Keyword>[] = [
 
     // Position column
     {
-        headerName: today,
+        headerName: 'Today',
         width: 130,
         valueGetter: (params) => params.data?.results.rank_group,
     },
 
     {
-        headerName: yesterday,
+        headerName: 'Yesterday',
         width: 130,
         valueGetter: (params) => params.data?.results.rank_group,
     },

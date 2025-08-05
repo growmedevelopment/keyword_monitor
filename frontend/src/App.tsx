@@ -29,6 +29,7 @@ export default function App() {
                             <Route path="/keywords/:id" element={<KeywordShowPage />} />
                             <Route path="/register" element={<UserRegisterPage />} />
                             <Route path="/login" element={<Dashboard />} />
+                            <Route path="/dashboard" element={<Dashboard />} />
                         </Routes>
                     </Box>
                 </Box>
