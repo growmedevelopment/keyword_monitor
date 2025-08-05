@@ -1,9 +1,22 @@
 import { Paper, Stack, Typography, Button } from '@mui/material';
 import KeywordTable from '../Tables/KeywordTable/KeywordTable';
-import type { Keyword } from '../types/keywordTypes';
+
+interface projectKeyword{
+    id: number;
+    keyword: string;
+    status: 'Queued' | 'Completed' | 'Submitted';
+    results: {
+        type: string;
+        rank_absolute: number;
+        rank_group: number;
+        url: string;
+        title: string;
+    };
+
+}
 
 interface ProjectKeywordsSectionProps {
-    keywords: Keyword[];
+    keywords: projectKeyword[];
     onAddKeyword: () => void;
 }
 
