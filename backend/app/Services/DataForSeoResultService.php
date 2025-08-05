@@ -13,6 +13,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Enums\DataForSeoTaskStatus;
+use App\Events\KeywordUpdatedEvent;
 
 class DataForSeoResultService
 {
@@ -315,14 +316,19 @@ class DataForSeoResultService
      */
     private function saveResults(DataForSeoTask $task, array $bestRanked): DataForSeoResult
     {
-        $this->log('info','saveResults', [$bestRanked]);
 
+        $this->log('info','saveResults', [$bestRanked]);
         $result = $this->storeResult($task->id, $bestRanked);
         $this->storeKeywordRank($task, $bestRanked);
+
         $task->update([
             'status' => DataForSeoTaskStatus::COMPLETED,
             'completed_at' => now()->toDateString(),
          ]);
+
+        //send data to the front-end via broadcasting
+        event(new KeywordUpdatedEvent($task, $result));
+
         return $result;
     }
 

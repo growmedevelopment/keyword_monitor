@@ -8,5 +8,7 @@ backend/.env.production
 backend/node_modules
 backend/*.log
 frontend/.env
+frontend/.env.production
+
 
 

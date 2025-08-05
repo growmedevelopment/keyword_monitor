@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
-import { Box, Typography } from "@mui/material";
-
+import {Box, Typography} from "@mui/material";
+import pusher from "../pusher";
 import projectService from "../services/projectService";
 import keywordService from "../services/keywordService.ts";
 import AddKeywordDialog from "../components/Dialogs/AddKeywordDialog/AddKeywordDialog.tsx";
@@ -9,6 +9,7 @@ import type { Project } from "../components/types/projectTypes";
 import ProjectDetails from "../components/Project/ProjectDetails.tsx";
 import ProjectKeywordsSection from "../components/Project/ProjectKeywordsSection.tsx";
 import DataStateHandler from "../components/Common/DataStateHandler.tsx";
+
 
 export default function ProjectShowPage() {
     const { id } = useParams<{ id: string }>();
@@ -30,19 +31,53 @@ export default function ProjectShowPage() {
 
     useEffect(() => {
         loadProject();
-
-        const interval = setInterval(() => {
-            setProject((prev) => {
-                if (!prev || prev.keywords.every((k) => k.status === "Completed")) {
-                    return prev;
-                }
-                loadProject();
-                return prev;
-            });
-        }, 10000);
-
-        return () => clearInterval(interval);
     }, [loadProject]);
+
+    // WebSocket subscription
+    useEffect(() => {
+        if (!id) return;
+
+        // Subscribe to project-specific channel
+        const channelName = `project-${id}`;
+        const channel = pusher.subscribe(channelName);
+
+        // Event handler for keyword updates
+        const handleKeywordUpdate = (data: any) => {
+            console.log("Keyword updated:", data);
+
+            const updatedKeyword = data.keyword;
+
+            // Extract title and position from first result if available
+            const firstResult = updatedKeyword.data_for_seo_results?.[0] || {};
+            const enrichedKeyword = {
+                ...updatedKeyword,
+                title: firstResult.title || "-",
+                position: firstResult.rank_group || "-",
+            };
+
+            setProject((prevProject) => {
+                if (!prevProject) return prevProject;
+
+                const updatedKeywords = prevProject.keywords.map((k) =>
+                    k.id === enrichedKeyword.id ? { ...k, ...enrichedKeyword } : k
+                );
+
+                return {
+                    ...prevProject,
+                    keywords: updatedKeywords,
+                };
+            });
+        };
+
+        // Bind to event
+        channel.bind("keyword-updated", handleKeywordUpdate);
+
+        // Cleanup on unmount
+        return () => {
+            channel.unbind("keyword-updated", handleKeywordUpdate);
+            pusher.unsubscribe(channelName);
+        };
+    }, [id]);
 
     const handleAddKeyword = (newKeywords: string[]) => {
         if (!project || !id) return;
@@ -67,6 +102,9 @@ export default function ProjectShowPage() {
         setDialogOpen(false);
     };
 
+
+
+
     return (
         <Box p={3}>
             <DataStateHandler<Project>
@@ -75,6 +113,8 @@ export default function ProjectShowPage() {
                 data={project}
                 emptyMessage="No project found"
             >
+
+
                 {(projectData: Project) => (
                     <>
                         {/* Project Title */}
@@ -85,7 +125,7 @@ export default function ProjectShowPage() {
                         {/* Project Details */}
                         <ProjectDetails project={projectData} />
 
-                        {/* Keywords Section */}
+                        {/*/!* Keywords Section *!/*/}
                         <ProjectKeywordsSection
                             keywords={projectData.keywords}
                             onAddKeyword={() => setDialogOpen(true)}

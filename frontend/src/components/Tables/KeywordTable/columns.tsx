@@ -1,22 +1,34 @@
 import type { ColDef, ICellRendererParams } from 'ag-grid-community';
-import type { Keyword } from '../../types/keywordTypes';
 
-export const columnDefs: ColDef<Keyword>[] = [
+interface ProjectKeyword {
+    id: number;
+    keyword: string;
+    status: 'Queued' | 'Completed' | 'Submitted';
+    results: {
+        type: string;
+        rank_absolute: number;
+        rank_group: number;
+        url: string;
+        title: string;
+    };
+}
+
+type NonNullableCellParams = ICellRendererParams<ProjectKeyword, string> & { data: ProjectKeyword };
+
+export const columnDefs: ColDef<ProjectKeyword>[] = [
     // Keyword column
     {
         field: 'keyword',
         headerName: 'Keyword',
         width: 200,
-        cellRenderer: (params: ICellRendererParams) => {
-            return (
-                <a
-                    href={`/keywords/${params.data?.id}`}
-                    style={{ color: '#1976d2', textDecoration: 'none' }}
-                >
-                    {params.value}
-                </a>
-            );
-        },
+        cellRenderer: (params: NonNullableCellParams) => (
+            <a
+                href={`/keywords/${params.data.id}`}
+                style={{ color: '#1976d2', textDecoration: 'none' }}
+            >
+                {params.value}
+            </a>
+        ),
         sort: 'asc',
     },
 
@@ -25,45 +37,36 @@ export const columnDefs: ColDef<Keyword>[] = [
         field: 'status',
         headerName: 'Status',
         width: 120,
-        cellRenderer: (params: ICellRendererParams) => {
+        cellRenderer: (params: NonNullableCellParams) => {
             const isLoading = params.value !== 'Completed';
             const color = isLoading ? '#ff9800' : '#2e7d32'; // warning or success
             return <span style={{ color }}>{params.value}</span>;
         },
     },
 
-    // Position column using valueGetter
+    // Position column
     {
         headerName: 'Position',
         width: 100,
-        valueGetter: (params) => {
-            if (params.data?.status !== 'Completed') return '-';
-            return params.data?.results?.[0]?.rank_group ?? '-';
-        },
+        valueGetter: (params) => params.data?.results.rank_group,
     },
 
-    // Title column using valueGetter
+    // Title column
     {
         headerName: 'Title',
         width: 300,
-        valueGetter: (params) => {
-            if (params.data?.status !== 'Completed') return '-';
-            return params.data?.results?.[0]?.title ?? '-';
-        },
+        valueGetter: (params) => params.data?.results.title,
     },
 
-    // URL column using valueGetter + custom link
+    // URL column
     {
         headerName: 'URL',
         width: 400,
-        valueGetter: (params) => {
-            if (params.data?.status !== 'Completed') return '-';
-            return params.data?.results?.[0]?.url ?? '-';
-        },
+        valueGetter: (params) => params.data?.results.url,
         cellRenderer: (params: ICellRendererParams) => {
-            if (!params.value || params.value === '-') return '-';
+            if (!params.value) return null;
             return (
-                <a href={params.value} target="_blank" rel="noopener noreferrer" style={{ color: '#1976d2' }}>
+                <a href={params.value as string} target="_blank" rel="noopener noreferrer">
                     {params.value}
                 </a>
             );
