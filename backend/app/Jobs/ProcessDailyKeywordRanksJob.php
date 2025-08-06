@@ -22,6 +22,8 @@ class ProcessDailyKeywordRanksJob implements ShouldQueue
      */
     public function handle(DataForSeoResultService $seoService, KeywordSubmissionService $submissionService): void
     {
+        Log::info('ProcessDailyKeywordRanksJob started at: ' . now());
+
         Keyword::with('project')
             ->where('is_active', 1)
             ->chunk(100, function ($keywords) use ($seoService, $submissionService) {
