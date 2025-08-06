@@ -13,6 +13,9 @@ class Keyword extends Model
 {
     use HasFactory;
 
+    protected $casts = [
+        'last_submitted_at' => 'datetime',
+    ];
     protected $guarded = [];
 
 

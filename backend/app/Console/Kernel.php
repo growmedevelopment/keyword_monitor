@@ -8,18 +8,11 @@ use App\Jobs\ProcessDailyKeywordRanksJob;
 
 class Kernel extends ConsoleKernel
 {
-    /**
-     * Define the application's command schedule.
-     */
     protected function schedule(Schedule $schedule): void
     {
-        // Run the keyword rank processing job daily at 01:00
-        $schedule->job(new ProcessDailyKeywordRanksJob())->dailyAt('01:00');
+        $schedule->job(new ProcessDailyKeywordRanksJob)->everyMinute();
     }
 
-    /**
-     * Register the commands for the application.
-     */
     protected function commands(): void
     {
         $this->load(__DIR__.'/Commands');

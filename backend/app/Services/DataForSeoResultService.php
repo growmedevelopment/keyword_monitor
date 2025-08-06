@@ -17,8 +17,6 @@ use App\Events\KeywordUpdatedEvent;
 
 class DataForSeoResultService
 {
-
-
     /**
      * Fetch SEO results for all submitted DataForSEO tasks associated with a specific keyword.
      *
@@ -67,7 +65,6 @@ class DataForSeoResultService
         return collect();
 
     }
-
 
     /**
      * Retrieve all submitted DataForSEO tasks for the given keyword.
@@ -126,7 +123,6 @@ class DataForSeoResultService
         return $json['tasks'][0]['result'][0]['items'] ?? [];
     }
 
-
     /**
      * Extract the best-ranked search result for the given project URL from a list of SERP items.
      *
@@ -178,7 +174,6 @@ class DataForSeoResultService
 
         return $results;
     }
-
 
     /**
      * Store the best-ranked result data into the database.
@@ -278,7 +273,6 @@ class DataForSeoResultService
 
         return false;
     }
-
 
     /**
      * Store the keyword ranking information for a DataForSEO task.

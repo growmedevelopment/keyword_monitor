@@ -1,4 +1,3 @@
-// src/main.tsx
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
@@ -7,29 +6,7 @@ import { AuthProvider } from './context/AuthContext.tsx';
 import CssBaseline from '@mui/material/CssBaseline';
 import App from './App';
 import theme from './theme';
-import {
-    ModuleRegistry,
-    ClientSideRowModelModule,
-    TextFilterModule,
-    PaginationModule,
-} from 'ag-grid-community';
-import {
-    RowGroupingModule,
-    RowGroupingPanelModule,
-    GroupFilterModule,
-    ValidationModule,
-} from 'ag-grid-enterprise';
-
-ModuleRegistry.registerModules([
-    ClientSideRowModelModule,
-    RowGroupingModule,
-    RowGroupingPanelModule,
-    TextFilterModule,
-    GroupFilterModule,
-    ValidationModule,
-    PaginationModule,
-]);
-
+import './agGridModules';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
      <React.StrictMode>
