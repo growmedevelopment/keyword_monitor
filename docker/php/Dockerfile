@@ -13,14 +13,17 @@ RUN apk add --no-cache \
     libzip-dev \
     mysql-client \
     libpq \
-    mysql-dev
+    mysql-dev \
+    $PHPIZE_DEPS
 
 # Install PHP extensions
-RUN docker-php-ext-install pdo pdo_mysql zip \
-    && echo "memory_limit = 512M" > /usr/local/etc/php/conf.d/memory-limit.ini \
+RUN docker-php-ext-install pdo pdo_mysql zip
 
-# Install Xdebug (dev only)
-RUN pecl install xdebug && docker-php-ext-enable xdebug || true
+# Set memory_limit correctly
+RUN echo "memory_limit = 512M" > /usr/local/etc/php/conf.d/memory-limit.ini
+
+# Install and enable Xdebug (dev only)
+RUN pecl install xdebug && docker-php-ext-enable xdebug
 
 # Configure Xdebug
 RUN echo "zend_extension=$(find /usr/local/lib/php/extensions/ -name xdebug.so)" > /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
