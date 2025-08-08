@@ -42,6 +42,10 @@ services:
       - "./backend:/var/www/laravel"
     working_dir: /var/www/laravel
     entrypoint: [ "php", "artisan" ]
+    depends_on:
+      - mysql
+    networks:
+      - default
 
   frontend:
     image: node:current-alpine
