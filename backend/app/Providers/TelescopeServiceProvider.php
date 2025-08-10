@@ -3,55 +3,36 @@
 namespace App\Providers;
 
 use Illuminate\Support\Facades\Gate;
-use Laravel\Telescope\IncomingEntry;
 use Laravel\Telescope\Telescope;
 use Laravel\Telescope\TelescopeApplicationServiceProvider;
 
 class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
         Telescope::night();
-
         $this->hideSensitiveRequestDetails();
-
-        Telescope::filter(function ()  {
-            return true;
-        });
+        Telescope::filter(fn () => true);
     }
 
-    /**
-     * Prevent sensitive request details from being logged by Telescope.
-     */
+    // 🔓 Open to everyone (remove when done!)
+    public function boot(): void
+    {
+        parent::boot();
+        Telescope::auth(fn () => true);
+    }
+
     protected function hideSensitiveRequestDetails(): void
     {
-        if ($this->app->environment('local')) {
-            return;
-        }
+        if ($this->app->environment('local')) return;
 
         Telescope::hideRequestParameters(['_token']);
-
-        Telescope::hideRequestHeaders([
-            'cookie',
-            'x-csrf-token',
-            'x-xsrf-token',
-        ]);
+        Telescope::hideRequestHeaders(['cookie','x-csrf-token','x-xsrf-token']);
     }
 
-    /**
-     * Register the Telescope gate.
-     *
-     * This gate determines who can access Telescope in non-local environments.
-     */
+    // Irrelevant when we force-allow, can keep or delete
     protected function gate(): void
     {
-        Gate::define('viewTelescope', function ($user) {
-            return in_array($user->email, [
-                //
-            ]);
-        });
+        Gate::define('viewTelescope', fn () => false);
     }
 }
