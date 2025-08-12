@@ -14,6 +14,7 @@ class DataForSeoResultResource extends JsonResource
             'rank_absolute' => $this->rank_absolute,
             'url' => $this->url,
             'title' => $this->title,
+            'date' => $this->created_at
         ];
     }
 }
