@@ -188,17 +188,19 @@ class DataForSeoResultService
      */
     private function storeResult(int $taskId, array $data): DataForSeoResult
     {
-        return DataForSeoResult::create([
-            'data_for_seo_task_id' => $taskId,
-            'type'                 => $data['type'] ?? null,
-            'rank_group'           => $data['rank_group'] ?? null,
-            'rank_absolute'        => $data['rank_absolute'] ?? null,
-            'domain'               => $data['domain'] ?? null,
-            'title'                => $data['title'] ?? null,
-            'description'          => $data['description'] ?? null,
-            'url'                  => $data['url'] ?? null,
-            'breadcrumb'           => $data['breadcrumb'] ?? null,
-        ]);
+        return DataForSeoResult::firstOrCreate(
+            ['data_for_seo_task_id' => $taskId],
+            [
+                'type'                 => $data['type'] ?? null,
+                'rank_group'           => $data['rank_group'] ?? null,
+                'rank_absolute'        => $data['rank_absolute'] ?? null,
+                'domain'               => $data['domain'] ?? null,
+                'title'                => $data['title'] ?? null,
+                'description'          => $data['description'] ?? null,
+                'url'                  => $data['url'] ?? null,
+                'breadcrumb'           => $data['breadcrumb'] ?? null,
+            ]
+        );
     }
 
     /**
@@ -235,8 +237,8 @@ class DataForSeoResultService
 
             $task->update(['status' => DataForSeoTaskStatus::QUEUED]);
             // Queue for async polling
-            $initialDelay = config('dataforseo.polling.initial_delay');
-            PollDataForSeoTaskJob::dispatch($task->id)->delay(now()->addSeconds($initialDelay));
+//            $initialDelay = config('dataforseo.polling.initial_delay');
+//            PollDataForSeoTaskJob::dispatch($task->id)->delay(now()->addSeconds($initialDelay));
 
         }
 

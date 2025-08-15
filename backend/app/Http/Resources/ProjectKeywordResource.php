@@ -12,7 +12,8 @@ class ProjectKeywordResource extends JsonResource
         return [
             'id' => $this->id,
             'keyword' => $this->keyword,
-            'status' => optional($this->dataForSeoTasks()->latest()->first())->status ?? 'Queued',
+            'status_message' => $this->status_message,
+            'status_code' => $this->status_code,
 
             // Rename lowestDataForSeoResults to "results"
             'results' => KeywordRankResultResource::collection(

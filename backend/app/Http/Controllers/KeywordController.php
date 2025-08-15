@@ -52,30 +52,41 @@ class KeywordController extends Controller
             // 1. Find project
             $project = Project::findOrFail($project_id);
 
-            // 2. Submit keyword & create DataForSeoTask
+            // 2. Check if keyword already exists for this project
+            $existingKeyword = $project->keywords()
+                ->where('keyword', $request->input('keyword'))
+                ->first();
+
+            // 2a. If it exists and has a pending task without result, return 202
+            if ($existingKeyword) {
+                $hasPendingTask = $existingKeyword->dataForSeoTasks()
+                    ->where('status', DataForSeoTaskStatus::SUBMITTED)
+                    ->whereDoesntHave('result')
+                    ->exists();
+
+                if ($hasPendingTask) {
+                    return response()->json([
+                        'message' => 'Keyword already submitted and waiting for results.',
+                        'keyword' => $existingKeyword->load('dataForSeoResults'),
+                    ], 202);
+                }
+
+                return response()->json([
+                    'message' => 'Keyword already exists in the project.',
+                    'keyword' => $existingKeyword->load('dataForSeoResults'),
+                ], 200);
+            }
+
+            // 3. Submit keyword & create DataForSeoTask
             $keyword = $this->keywordSubmissionService->submitKeyword(
                 $project,
                 $request->input('keyword')
             );
 
-            // 3. Try hybrid fetch (immediate first, otherwise queued job)
-            $results = $this->seoResultService->fetchSEOResultsByKeyword($keyword);
-
-            // 4. Attach results for response
-            $keyword->setRelation('dataForSeoResults', $results);
-
-            //normalize to 'results' key for API
-            $keyword->results = $results; // rename for frontend
-            $keyword->makeHidden('dataForSeoResults');
-
-            // 5. Add status to response object
-            $keyword->status = $results->isNotEmpty() ? DataForSeoTaskStatus::COMPLETED : DataForSeoTaskStatus::QUEUED;
-
             return response()->json([
-                'message' => $results->isNotEmpty()
-                    ? 'Keyword added and results ready.'
-                    : 'Keyword added and queued for background processing.',
+                'message' => 'Keyword added and queued for background processing.',
                 'keyword' => $keyword,
+                'status' => DataForSeoTaskStatus::QUEUED,
             ], 201);
 
         } catch (\Exception $e) {

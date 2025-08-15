@@ -2,90 +2,89 @@
 
 namespace App\Jobs;
 
-use App\Enums\DataForSeoTaskStatus;
+use App\Events\KeywordUpdatedEvent;
+use App\Models\DataForSeoResult;
 use App\Models\DataForSeoTask;
-use App\Services\DataForSeoResultService;
 use Illuminate\Bus\Queueable;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Log;
 
 class PollDataForSeoTaskJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $taskId;
-    public int $attemptCount;
+    protected DataForSeoTask $task;
 
-    public function __construct(int $taskId, int $attemptCount = 0)
+    public function __construct(DataForSeoTask $task)
     {
-        $this->taskId = $taskId;
-        $this->attemptCount = $attemptCount;
+        $this->task = $task;
     }
 
-
-    /**
-     * Handle the polling job for a DataForSEO task.
-     *
-     * This method retrieves the task by its ID, checks its status, and polls the
-     * DataForSEO API via the service. If the task is not yet ready, it re-dispatches
-     * itself with a delay until either results are obtained or the maximum retry
-     * count is reached. If polling fails or max retries are exceeded, the task is
-     * marked as `Failed`.
-     *
-     * @param DataForSeoResultService $service  The service responsible for polling DataForSEO results.
-     *
-     * @return void
-     */
-    public function handle(DataForSeoResultService $service): void
+    public function handle(): void
     {
-        $task = DataForSeoTask::find($this->taskId);
-
-        if (!$task || $task->status === DataForSeoTaskStatus::COMPLETED) {
-            return;
-        }
+        sleep(15); // Initial wait before polling
 
         try {
-            $ready = $service->pollSingleTask($task, true);
+            $credentials = [
+                'username' => config('services.dataforseo.username'),
+                'password' => config('services.dataforseo.password'),
+            ];
 
-            if (!$ready) {
-                $this->attemptCount++;
+            Log::info('task', [
+                 'task'=> $this->task,
+            ]);
 
-                $maxRetries = config('dataforseo.polling.max_retries');
-                $subsequentDelay = config('dataforseo.polling.subsequent_delay');
-                $backoffFactor = config('dataforseo.polling.backoff_factor');
+            $response = Http::withBasicAuth($credentials['username'], $credentials['password'])
+                ->get("https://api.dataforseo.com/v3/serp/google/organic/task_get/regular/{$this->task->task_id}");
 
-                if ($this->attemptCount >= $maxRetries) {
-                    $task->update(['status' => DataForSeoTaskStatus::FAILED]);
-                    $this->fail(new \Exception("Task {$this->taskId} exceeded max retries."));
-                    return;
-                }
+            $json = $response->json();
 
+            Log::info('DataForSEO result response', ['response' => $json]);
 
-                $totalElapsed = $this->attemptCount * $subsequentDelay; // approx elapsed time
-
-                if ($totalElapsed < 120) {
-                    // Fast polling: every 5 seconds for first 2 minutes
-                    $delay = 5;
-                } else {
-                    // Switch to exponential backoff
-                    $delay = min($subsequentDelay * ($backoffFactor ** ($this->attemptCount - 1)), 60);
-                }
-                Log::info("[DataForSEO] Retry scheduled", [
-                    'task_id' => $this->taskId,
-                    'attempt' => $this->attemptCount,
-                    'next_delay' => $delay
-                ]);
-
-
-                self::dispatch($this->taskId, $this->attemptCount)
-                    ->delay(now()->addSeconds($delay));
+            if (!isset($json['tasks'][0]['result'][0])) {
+                Log::warning('No result data found for task', ['task_id' => $this->task->task_id]);
+                return;
             }
+
+            $taskData = $json['tasks'][0];
+            $resultData = $taskData['result'][0]['items'][0] ?? null;
+
+            if (!$resultData) {
+                Log::warning('No items found in result', ['task_id' => $this->task->task_id]);
+                return;
+            }
+
+            // Update task status and store raw response
+            $this->task->update([
+                'status_message' => $taskData['status_message'],
+                'status_code' => $taskData['status_code'],
+                'completed_at' => now(),
+                'raw_response' => json_encode($taskData),
+            ]);
+
+            // Save result
+            $result = DataForSeoResult::create([
+                'data_for_seo_task_id' => $this->task->id,
+                'type' => $resultData['type'] ?? null,
+                'rank_group' => $resultData['rank_group'] ?? null,
+                'rank_absolute' => $resultData['rank_absolute'] ?? null,
+                'domain' => $resultData['domain'] ?? null,
+                'url' => $resultData['url'] ?? null,
+                'title' => $resultData['title'] ?? null,
+            ]);
+
+            // Notify frontend
+            broadcast(new KeywordUpdatedEvent($this->task, $result));
+
         } catch (\Throwable $e) {
-            \Log::error("Polling failed for Task {$this->taskId}: {$e->getMessage()}");
-            $task->update(['status' => DataForSeoTaskStatus::FAILED]);
+            Log::error('Failed to fetch DataForSEO result', [
+                'task_id' => $this->task->task_id,
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 }
