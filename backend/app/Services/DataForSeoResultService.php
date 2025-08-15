@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\DataForSeoTaskStatus;
 use App\Models\Keyword;
 use App\Models\DataForSeoResult;
 use App\Models\KeywordRank;
@@ -11,11 +12,8 @@ use App\Events\KeywordUpdatedEvent;
 
 class DataForSeoResultService
 {
-
     public function fetchResults(Keyword $keyword): ?array
     {
-        sleep(15); // Delay before polling
-
         $credentials = [
             'username' => config('services.dataforseo.username'),
             'password' => config('services.dataforseo.password'),
@@ -25,23 +23,32 @@ class DataForSeoResultService
             ->get("https://api.dataforseo.com/v3/serp/google/organic/task_get/regular/{$keyword->task->task_id}");
 
         $json = $response->json();
+        $task = $json['tasks'][0] ?? null;
 
-        Log::info('DataForSEO result response', ['response' => $json]);
+        Log::info('DataForSEO fetch response', ['response' => $json]);
 
-        if (!isset($json['tasks'][0]['result'][0]['items'][0])) {
-            Log::warning('No result data found for task', ['task_id' => $keyword->task->task_id]);
-            return null;
+        $keyword->task->update([
+            'status_message' => $task['status_message'],
+            'status_code' => $task['status_code'],
+        ]);
+
+        if (!$task || (int) $task['status_code'] === DataForSeoTaskStatus::QUEUED) {
+            return null; // Task still in queue
         }
 
-        return $json['tasks'][0]['result'][0]['items'] ?? [];
-    }
+        $items = $task['result'][0]['items'] ?? [];
+        $matchedResult = filterDataForSeoItemsByHost($items, $keyword->project->url);
 
+        return $matchedResult ? [
+            'taskData' => $task,
+            'resultData' => $matchedResult,
+        ] : null;
+    }
 
     public function storeResults(Keyword $keyword, array $data): void
     {
         $taskData = $data['taskData'];
         $resultData = $data['resultData'];
-
         $task = $keyword->task;
 
         $task->update([
@@ -70,15 +77,5 @@ class DataForSeoResultService
         ]);
 
         broadcast(new KeywordUpdatedEvent($task, $result));
-    }
-
-
-
-
-
-
-    private function log(string $level, string $message, array $context = []): void
-    {
-        Log::$level('[DataForSEO] ' . $message, $context);
     }
 }

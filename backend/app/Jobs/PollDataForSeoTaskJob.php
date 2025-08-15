@@ -2,18 +2,19 @@
 
 namespace App\Jobs;
 
+use App\Enums\DataForSeoTaskStatus;
 use App\Events\KeywordUpdatedEvent;
 use App\Models\DataForSeoResult;
 use App\Models\DataForSeoTask;
 use App\Models\KeywordRank;
 use Illuminate\Bus\Queueable;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-
 
 class PollDataForSeoTaskJob implements ShouldQueue
 {
@@ -36,9 +37,7 @@ class PollDataForSeoTaskJob implements ShouldQueue
                 'password' => config('services.dataforseo.password'),
             ];
 
-            Log::info('task', [
-                 'task'=> $this->task,
-            ]);
+            Log::info('Polling DataForSEO task', ['task_id' => $this->task->task_id]);
 
             $response = Http::withBasicAuth($credentials['username'], $credentials['password'])
                 ->get("https://api.dataforseo.com/v3/serp/google/organic/task_get/regular/{$this->task->task_id}");
@@ -47,23 +46,50 @@ class PollDataForSeoTaskJob implements ShouldQueue
 
             Log::info('DataForSEO result response', ['response' => $json]);
 
-            if (!isset($json['tasks'][0]['result'][0])) {
+            $this->task->update([
+                'status_message' => $json['tasks'][0]['status_message'],
+                'status_code' => $json['tasks'][0]['status_code'],
+            ]);
+
+            $taskData = $json['tasks'][0] ?? null;
+
+            if (!$taskData) {
+                Log::warning('No task data found in response', ['task_id' => $this->task->task_id]);
+                return;
+            }
+
+            // Handle "Task In Queue" response
+            if ((int) $taskData['status_code'] === DataForSeoTaskStatus::QUEUED) {
+                Log::info('Task still in queue, retrying...', ['task_id' => $this->task->task_id]);
+
+                $attempts = Cache::increment("seo_retries:{$this->task->task_id}");
+                if ($attempts <= 5) {
+                    self::dispatch($this->task)->delay(now()->addSeconds(10));
+                } else {
+                    Log::warning('Max retries reached for task', ['task_id' => $this->task->task_id]);
+                }
+
+                return;
+            }
+
+            if (!isset($taskData['result'][0])) {
                 Log::warning('No result data found for task', ['task_id' => $this->task->task_id]);
                 return;
             }
 
-            $taskData = $json['tasks'][0];
+            // Clear retry count on success
+            Cache::forget("seo_retries:{$this->task->task_id}");
+
             $projectHost = $this->task->keyword->project->url;
             $items = $taskData['result'][0]['items'] ?? [];
             $resultData = filterDataForSeoItemsByHost($items, $projectHost);
 
-
             if (!$resultData) {
-                Log::warning('No items found in result', ['task_id' => $this->task->task_id]);
+                Log::warning('No matching SEO item found', ['task_id' => $this->task->task_id]);
                 return;
             }
 
-            // Update task status and store raw response
+            // Update task with response
             $this->task->update([
                 'status_message' => $taskData['status_message'],
                 'status_code' => $taskData['status_code'],
@@ -71,17 +97,18 @@ class PollDataForSeoTaskJob implements ShouldQueue
                 'raw_response' => json_encode($taskData, JSON_THROW_ON_ERROR),
             ]);
 
-            // Save result
+            // Store result
             $result = DataForSeoResult::create([
                 'data_for_seo_task_id' => $this->task->id,
                 'type' => $resultData['type'],
                 'rank_group' => $resultData['rank_group'],
                 'rank_absolute' => $resultData['rank_absolute'],
-                'domain' => $resultData['domain'] ,
+                'domain' => $resultData['domain'],
                 'url' => $resultData['url'],
                 'title' => $resultData['title'],
             ]);
 
+            // Save keyword position
             KeywordRank::create([
                 'keyword_id' => $this->task->keyword_id,
                 'position' => $resultData['rank_group'],

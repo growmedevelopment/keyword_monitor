@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Enums\DataForSeoTaskStatus;
 use App\Jobs\PollDataForSeoTaskJob;
 use App\Models\DataForSeoTask;
 
@@ -9,8 +10,8 @@ class DataForSeoTaskObserver
 {
     public function created(DataForSeoTask $task): void
     {
-        // Proceed only if task was successfully submitted or queued
-        if (!in_array((int) $task->status_code, [20100, 20000])) {
+        // Proceed only if task was successfully submitted
+        if ((int) $task->status_code !== DataForSeoTaskStatus::SUBMITTED) {
             return;
         }
 
