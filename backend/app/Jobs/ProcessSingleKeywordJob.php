@@ -1,7 +1,5 @@
 <?php
 
-// ProcessSingleKeywordJob.php
-
 namespace App\Jobs;
 
 use App\Models\Keyword;
@@ -43,7 +41,13 @@ class ProcessSingleKeywordJob implements ShouldQueue
         $credentials = CredentialsService::get();
 
         $submissionService->submitToDataForSeo($payload, $keyword, $keyword->project, $credentials);
-        $seoService->fetchSEOResultsByKeyword($keyword);
+
+        $results = $seoService->fetchResults($keyword);
+        $matchedResult = filterDataForSeoItemsByHost($results, $keyword->project->url);
+
+        if ($matchedResult) {
+            $seoService->storeResults($keyword, $matchedResult);
+        }
 
         $keyword->update(['last_submitted_at' => now()]);
 

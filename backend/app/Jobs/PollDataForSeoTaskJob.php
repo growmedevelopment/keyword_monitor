@@ -13,6 +13,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 
+
 class PollDataForSeoTaskJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
@@ -51,7 +52,10 @@ class PollDataForSeoTaskJob implements ShouldQueue
             }
 
             $taskData = $json['tasks'][0];
-            $resultData = $taskData['result'][0]['items'][0] ?? null;
+            $projectHost = $this->task->keyword->project->url;
+            $items = $taskData['result'][0]['items'] ?? [];
+            $resultData = filterDataForSeoItemsByHost($items, $projectHost);
+
 
             if (!$resultData) {
                 Log::warning('No items found in result', ['task_id' => $this->task->task_id]);
@@ -63,7 +67,7 @@ class PollDataForSeoTaskJob implements ShouldQueue
                 'status_message' => $taskData['status_message'],
                 'status_code' => $taskData['status_code'],
                 'completed_at' => now(),
-                'raw_response' => json_encode($taskData),
+                'raw_response' => json_encode($taskData, JSON_THROW_ON_ERROR),
             ]);
 
             // Save result
