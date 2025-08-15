@@ -2,8 +2,6 @@
 
 namespace App\Services;
 
-use App\Http\Resources\ProjectViewResource;
-use App\Jobs\PollDataForSeoTaskJob;
 use App\Models\DataForSeoTask;
 use App\Models\Keyword;
 use App\Models\DataForSeoResult;
@@ -37,34 +35,6 @@ class DataForSeoResultService
         return $this->processTasks($tasks, $projectUrl, $credentials);
     }
 
-    /**
-     * Fetch SEO results for all submitted DataForSEO tasks associated with a project.
-     *
-     * This method retrieves all `Submitted` tasks related to the given project’s keywords,
-     * polls the DataForSEO API for results, and processes them. If no submitted tasks
-     * are found, an empty collection is returned.
-     *
-     * @param ProjectViewResource $project The project resource containing project details (including URL).
-     *
-     * @return \Illuminate\Support\Collection  A collection of processed results for the project’s submitted tasks.
-     * @throws \Exception
-     */
-    public function fetchSEOResultsBySubmittedTasks(ProjectViewResource $project): Collection
-    {
-        $credentials = CredentialsService::get();
-        $projectUrl = $project->url;
-
-        $tasks = DataForSeoTask::whereHas('keyword', function ($query) use ($project) {
-            $query->where('project_id', $project->id);
-        })->where('status', DataForSeoTaskStatus::SUBMITTED)->get();
-
-        if($tasks->isNotEmpty()){
-            return $this->processTasks($tasks, $projectUrl, $credentials);
-        };
-
-        return collect();
-
-    }
 
     /**
      * Retrieve all submitted DataForSEO tasks for the given keyword.
