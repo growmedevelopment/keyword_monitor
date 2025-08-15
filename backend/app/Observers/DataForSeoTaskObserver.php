@@ -5,25 +5,26 @@ namespace App\Observers;
 use App\Enums\DataForSeoTaskStatus;
 use App\Jobs\PollDataForSeoTaskJob;
 use App\Models\DataForSeoTask;
-use App\Services\DataForSeoResultService;
 
 class DataForSeoTaskObserver
 {
     public function created(DataForSeoTask $task): void
     {
-        // Only trigger polling for Submitted tasks
-        if ($task->status === DataForSeoTaskStatus::SUBMITTED) {
-            $service = app(DataForSeoResultService::class);
-
-            // Try immediate fetch first (blocking, short retries)
-            $immediateResult = $service->fetchSEOResultsByKeyword($task->keyword);
-
-            if ($immediateResult->isEmpty()) {
-                // Queue non-blocking polling
-                $initialDelay = config('dataforseo.polling.initial_delay');
-                PollDataForSeoTaskJob::dispatch($task->id)
-                    ->delay(now()->addSeconds($initialDelay));
-            }
+        // Proceed only if task was successfully submitted
+        if ((int) $task->status_code !== DataForSeoTaskStatus::SUBMITTED) {
+            return;
         }
+
+        $this->queuePollingJob($task);
+    }
+
+    protected function queuePollingJob(DataForSeoTask $task): void
+    {
+        $delaySeconds = config('dataforseo.polling.initial_delay', 30);
+
+        PollDataForSeoTaskJob::dispatch($task, [
+            'username' => config('services.dataforseo.username'),
+            'password' => config('services.dataforseo.password'),
+        ])->delay(now()->addSeconds($delaySeconds));
     }
 }

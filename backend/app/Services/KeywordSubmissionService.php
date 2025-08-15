@@ -31,8 +31,8 @@ class KeywordSubmissionService
     {
         $credentials = CredentialsService::get();
         $keyword = $this->createAndAttachKeyword($project, $newKeyword);
-        $payload = $this->buildPayload($keyword, $project);
 
+        $payload = $this->buildPayload($keyword, $project);
         $this->submitToDataForSeo($payload, $keyword, $project, $credentials);
         usleep(200000); // Respect API rate limits
 
@@ -59,7 +59,6 @@ class KeywordSubmissionService
 
         return $keyword->refresh();
     }
-
     /**
      * Build the payload array for submitting a keyword task to the DataForSEO API.
      *
@@ -97,9 +96,8 @@ class KeywordSubmissionService
      *
      * @throws \Exception           Throws an exception if the API submission fails or returns an invalid response.
      *
-     * @return void
      */
-    public function submitToDataForSeo(array $payload, Keyword $keyword, Project $project, array $credentials): void
+    public function submitToDataForSeo(array $payload, Keyword $keyword, Project $project, array $credentials): array
     {
         try {
             $response = Http::withBasicAuth($credentials['username'], $credentials['password'])
@@ -107,37 +105,51 @@ class KeywordSubmissionService
 
             $json = $response->json();
 
-            Log::info('DataForSEO response after submit keyword ToDataForSeo and create a task', [
-                'data' => $response->json(),
-            ]);
+            Log::info('DataForSEO response after submitting keyword', ['data' => $json]);
 
             if ($response->successful() && isset($json['tasks'][0]['id'])) {
                 $task = $json['tasks'][0];
 
-                DataForSeoTask::create([
+                $taskModel = DataForSeoTask::create([
                     'keyword_id'   => $keyword->id,
                     'project_id'   => $project->id,
                     'task_id'      => $task['id'],
-                    'status'       => DataForSeoTaskStatus::SUBMITTED,
+                    'status_message' => $task['status_message'],
+                    'status_code' => $task['status_code'],
                     'cost'         => $task['cost'],
                     'submitted_at' => now(),
                     'raw_response' => json_encode($task),
                 ]);
-            } else {
-                Log::warning('Invalid DataForSEO response.', [
-                    'keyword'  => $keyword->keyword,
-                    'response' => $json,
-                ]);
 
-                throw new \Exception('Failed to submit keyword: ' . json_encode($json));
+                return [
+                    'success' => true,
+                    'message' => 'Task created successfully.',
+                    'task'    => $taskModel,
+                    'api_response' => $task,
+                ];
             }
+
+            Log::warning('Invalid DataForSEO response.', [
+                'keyword'  => $keyword->keyword,
+                'response' => $json,
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Invalid response from DataForSEO.',
+                'errors'  => $json,
+            ];
         } catch (\Throwable $e) {
-            Log::error('Failed to submit keyword', [
+            Log::error('Failed to submit keyword to DataForSEO.', [
                 'keyword' => $keyword->keyword,
                 'error'   => $e->getMessage(),
             ]);
 
-            throw new \Exception($e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Exception occurred during submission.',
+                'errors'  => $e->getMessage(),
+            ];
         }
     }
 }

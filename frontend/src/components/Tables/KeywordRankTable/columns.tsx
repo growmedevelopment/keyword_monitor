@@ -19,15 +19,15 @@ export const columnDefs: ColDef[] = [
             new Date(params.value).toISOString().slice(0, 10),
     },
     {
-        field: 'position',
+        field: 'rank_group',
         headerName: 'Position',
         sortable: true,
-        width: 120, // fixed width
+        width: 60, // fixed width
     },
     {
         field: 'url',
         headerName: 'URL',
-        width: 400, // fixed width for long URLs
+        width: 500, // fixed width for long URLs
         cellRenderer: (params: ICellRendererParams) => {
             if (!params.value) return null;
             return (

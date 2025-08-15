@@ -48,8 +48,6 @@ class ProjectController extends Controller
     {
         $project = $this->projectService->show($id);
 
-        $this->seoResultService->fetchSEOResultsBySubmittedTasks($project);
-
         return response()->json($project);
     }
 

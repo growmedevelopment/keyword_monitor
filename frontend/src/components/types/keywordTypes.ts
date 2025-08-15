@@ -29,7 +29,8 @@ export interface KeywordRank {
 export interface Keyword {
     id: number;
     keyword: string;
-    status: 'Queued' | 'Completed' | 'Submitted';
+    status_code: number;
+    status_message: string;
     results: KeywordResult;
     keywords_rank : KeywordRank[];
 }
