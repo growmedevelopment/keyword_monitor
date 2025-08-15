@@ -9,6 +9,7 @@ use App\Models\KeywordRank;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Events\KeywordUpdatedEvent;
+use function filterDataForSeoItemsByHost;
 
 class DataForSeoResultService
 {
