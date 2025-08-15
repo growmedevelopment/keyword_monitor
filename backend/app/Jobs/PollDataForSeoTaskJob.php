@@ -117,6 +117,9 @@ class PollDataForSeoTaskJob implements ShouldQueue
                 'tracked_at' => now()->toDateString(),
             ]);
 
+            // Update keyword last_submitted_at
+            $this->task->keyword->update(['last_submitted_at' => now()]);
+
             // Notify frontend
             broadcast(new KeywordUpdatedEvent($this->task, $result));
 
