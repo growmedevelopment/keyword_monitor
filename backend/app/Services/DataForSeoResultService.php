@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Keyword;
 use App\Models\DataForSeoResult;
+use App\Models\KeywordRank;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Events\KeywordUpdatedEvent;
@@ -52,12 +53,20 @@ class DataForSeoResultService
 
         $result = DataForSeoResult::create([
             'data_for_seo_task_id' => $task->id,
-            'type' => $resultData['type'] ?? null,
-            'rank_group' => $resultData['rank_group'] ?? null,
-            'rank_absolute' => $resultData['rank_absolute'] ?? null,
-            'domain' => $resultData['domain'] ?? null,
-            'url' => $resultData['url'] ?? null,
-            'title' => $resultData['title'] ?? null,
+            'type' => $resultData['type'],
+            'rank_group' => $resultData['rank_group'],
+            'rank_absolute' => $resultData['rank_absolute'],
+            'domain' => $resultData['domain'],
+            'url' => $resultData['url'],
+            'title' => $resultData['title'],
+        ]);
+
+        KeywordRank::create([
+            'keyword_id' => $task->keyword_id,
+            'position' => $resultData['rank_group'],
+            'url' => $resultData['url'],
+            'raw' => $resultData,
+            'tracked_at' => now()->toDateString(),
         ]);
 
         broadcast(new KeywordUpdatedEvent($task, $result));

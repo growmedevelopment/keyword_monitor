@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Events\KeywordUpdatedEvent;
 use App\Models\DataForSeoResult;
 use App\Models\DataForSeoTask;
+use App\Models\KeywordRank;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -73,12 +74,20 @@ class PollDataForSeoTaskJob implements ShouldQueue
             // Save result
             $result = DataForSeoResult::create([
                 'data_for_seo_task_id' => $this->task->id,
-                'type' => $resultData['type'] ?? null,
-                'rank_group' => $resultData['rank_group'] ?? null,
-                'rank_absolute' => $resultData['rank_absolute'] ?? null,
-                'domain' => $resultData['domain'] ?? null,
-                'url' => $resultData['url'] ?? null,
-                'title' => $resultData['title'] ?? null,
+                'type' => $resultData['type'],
+                'rank_group' => $resultData['rank_group'],
+                'rank_absolute' => $resultData['rank_absolute'],
+                'domain' => $resultData['domain'] ,
+                'url' => $resultData['url'],
+                'title' => $resultData['title'],
+            ]);
+
+            KeywordRank::create([
+                'keyword_id' => $this->task->keyword_id,
+                'position' => $resultData['rank_group'],
+                'url' => $resultData['url'],
+                'raw' => $resultData,
+                'tracked_at' => now()->toDateString(),
             ]);
 
             // Notify frontend

@@ -10,7 +10,6 @@ interface Props {
 }
 
 export default function KeywordTable({ keywords }: Props) {
-    console.log(keywords);
 
     const defaultColDef = useMemo(
         () => ({

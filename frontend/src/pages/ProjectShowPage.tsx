@@ -43,7 +43,6 @@ export default function ProjectShowPage() {
 
         // Event handler for keyword updates
         const handleKeywordUpdate = (data: any) => {
-            console.log("Keyword updated:", data);
 
             const updatedKeyword = data.keyword;
 
@@ -88,8 +87,6 @@ export default function ProjectShowPage() {
                 .then((response) => {
                     const createdKeyword = {
                         ...response.keyword,
-                        status: response.keyword.status ?? "Queued",
-                        data_for_seo_results: response.keyword.data_for_seo_results ?? [],
                     };
 
                     setProject((prev) =>
