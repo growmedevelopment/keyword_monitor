@@ -29,14 +29,14 @@ class SerpLocationService
             return $response->json()['tasks'][0]['result'];
         }
 
-        throw new \Exception('Failed to fetch locations from external API');
+        throw new \RuntimeException('Failed to fetch locations from external API');
     }
 
     private function getCountries(): JsonResponse {
         return response()->json(
-            Cache::rememberForever('countries_list', function () {
+            Cache::rememberForever('countries_list', static function () {
                 $json = Storage::get('countries.json');
-                return json_decode($json, true);
+                return json_decode($json, true, 512, JSON_THROW_ON_ERROR);
             })
         );
     }
@@ -48,7 +48,7 @@ class SerpLocationService
 
         $api_response = $this->fetchAPI();
 
-        $this->cities = array_filter($api_response, function ($location) {
+        $this->cities = array_filter($api_response, static function ($location) {
             return $location['location_type'] === 'City';
         });
     }
@@ -58,11 +58,11 @@ class SerpLocationService
     }
 
     private function filteredCity(string $country_iso_code): array {
-        $filtered = array_filter($this->getCities(), function ($item) use ($country_iso_code) {
+        $filtered = array_filter($this->getCities(), static function ($item) use ($country_iso_code) {
             return $item['country_iso_code'] === $country_iso_code;
         });
 
-        return array_map(function ($item) {
+        return array_map(static function ($item) {
             return [
                 'value' => $item['location_code'],
                 'label' => explode(',', $item['location_name'])[0],

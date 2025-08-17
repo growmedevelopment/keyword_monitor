@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::create('keyword_ranks', function (Blueprint $table) {
+        Schema::create('keyword_ranks', static function (Blueprint $table) {
             $table->id();
             $table->foreignId('keyword_id')->constrained()->onDelete('cascade');
             $table->integer('position')->nullable(); // e.g., 3rd place in Google

@@ -1,5 +1,4 @@
-// src/context/AuthContext.tsx
-import { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import axios from 'axios';
 import userService from '../services/userService';
 

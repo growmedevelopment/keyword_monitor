@@ -14,20 +14,23 @@ class ProjectViewResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        /** @var \App\Models\Project $rank */
+        $rank = $this->resource;
+
         return [
-            'id' => $this->id,
-            'name' => $this->name,
-            'url' => $this->url,
+            'id' => $rank->id,
+            'name' => $rank->name,
+            'url' => $rank->url,
             'user' =>[
-                'id' => $this->user->id,
-                'name' => $this->user->name,
-                'email' => $this->user->email,
+                'id' => $rank->user->id,
+                'name' => $rank->user->name,
+                'email' => $rank->user->email,
             ],
             'keywords' => ProjectKeywordResource::collection($this->whenLoaded('keywords')),
-            'created_at' => $this->created_at,
-            'location_code' => $this->location_code,
-            'location_name' => $this->location_name,
-            'country' =>$this->country,
+            'created_at' => $rank->created_at,
+            'location_code' => $rank->location_code,
+            'location_name' => $rank->location_name,
+            'country' =>$rank->country,
         ];
     }
 }

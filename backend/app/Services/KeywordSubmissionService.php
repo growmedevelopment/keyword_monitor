@@ -118,7 +118,7 @@ class KeywordSubmissionService
                     'status_code' => $task['status_code'],
                     'cost'         => $task['cost'],
                     'submitted_at' => now(),
-                    'raw_response' => json_encode($task),
+                    'raw_response' => json_encode($task, JSON_THROW_ON_ERROR),
                 ]);
 
                 return [

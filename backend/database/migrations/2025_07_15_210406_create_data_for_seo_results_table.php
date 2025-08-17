@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('data_for_seo_results', function (Blueprint $table) {
+        Schema::create('data_for_seo_results', static function (Blueprint $table) {
             $table->id();
             $table->foreignId('data_for_seo_task_id')->constrained()->onDelete('cascade');
             $table->string('type')->nullable();

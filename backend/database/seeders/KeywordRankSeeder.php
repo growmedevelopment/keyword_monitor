@@ -15,11 +15,13 @@ class KeywordRankSeeder extends Seeder
         $keywords = Keyword::all();
 
         foreach ($keywords as $keyword) {
-            $resultUrls = DataForSeoResult::whereHas('task', function ($query) use ($keyword) {
+            $resultUrls = DataForSeoResult::whereHas('task', static function ($query) use ($keyword) {
                 $query->where('keyword_id', $keyword->id);
             })->pluck('url')->filter()->values();
 
-            if ($resultUrls->isEmpty()) continue;
+            if ($resultUrls->isEmpty()) {
+                continue;
+            }
 
             for ($monthOffset = 0; $monthOffset < 9; $monthOffset++) {
                 $monthStart = Carbon::now()->subMonths($monthOffset)->startOfMonth();

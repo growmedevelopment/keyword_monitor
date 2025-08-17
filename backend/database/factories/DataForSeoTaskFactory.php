@@ -19,7 +19,7 @@ class DataForSeoTaskFactory extends Factory
             'status' => 'Completed',
             'submitted_at' => $this->faker->dateTimeThisYear(),
             'completed_at' => $this->faker->optional()->dateTimeThisYear(),
-            'raw_response' => json_encode(['example' => 'response']),
+            'raw_response' => json_encode(['example' => 'response'], JSON_THROW_ON_ERROR),
         ];
     }
 }
