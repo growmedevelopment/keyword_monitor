@@ -42,17 +42,6 @@ class ProcessSingleKeywordJob implements ShouldQueue
 
         $submissionService->submitToDataForSeo($payload, $keyword, $keyword->project, $credentials);
 
-        $taskData = $seoService->fetchResults($keyword);
-
-        if (!$taskData) {
-            Log::warning("⚠️ No task result yet — will retry for Keyword ID {$keyword->id}");
-            self::dispatch($keyword)->delay(now()->addSeconds(20));
-            return;
-        }
-
-        $seoService->storeResults($keyword, $taskData);
-        $keyword->update(['last_submitted_at' => now()]);
-
         Log::info("✅ Done for Keyword ID {$keyword->id}");
     }
 }
