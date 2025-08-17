@@ -12,19 +12,21 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
     {
         Telescope::night();
         $this->hideSensitiveRequestDetails();
-        Telescope::filter(fn () => true);
+        Telescope::filter(static fn () => true);
     }
 
     // 🔓 Open to everyone (remove when done!)
     public function boot(): void
     {
         parent::boot();
-        Telescope::auth(fn () => true);
+        Telescope::auth(static fn () => true);
     }
 
     protected function hideSensitiveRequestDetails(): void
     {
-        if ($this->app->environment('local')) return;
+        if ($this->app->environment('local')) {
+            return;
+        }
 
         Telescope::hideRequestParameters(['_token']);
         Telescope::hideRequestHeaders(['cookie','x-csrf-token','x-xsrf-token']);
@@ -33,6 +35,6 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
     // Irrelevant when we force-allow, can keep or delete
     protected function gate(): void
     {
-        Gate::define('viewTelescope', fn () => false);
+        Gate::define('viewTelescope', static fn () => false);
     }
 }

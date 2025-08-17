@@ -14,10 +14,13 @@ class ProjectsResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        /** @var \App\Models\Project $rank */
+        $rank = $this->resource;
+
         return [
-            'id' => $this->id,
-            'name' => $this->name,
-            'created_at' => $this->created_at,
+            'id' => $rank->id,
+            'name' => $rank->name,
+            'created_at' => $rank->created_at,
         ];
     }
 }

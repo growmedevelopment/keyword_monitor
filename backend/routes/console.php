@@ -3,7 +3,7 @@
 use App\Jobs\ProcessDailyKeywordRanksJob;
 use Illuminate\Support\Facades\Schedule;
 
-Schedule::call(function () {
+Schedule::call(static function () {
     ProcessDailyKeywordRanksJob::dispatch();
 })
     ->dailyAt('01:00')

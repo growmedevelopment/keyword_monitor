@@ -13,7 +13,7 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/user', function (Request $request) {
+    Route::get('/user', static function (Request $request) {
         return response()->json($request->user());
     });
     Route::get('/logout', [AuthController::class, 'logout']);

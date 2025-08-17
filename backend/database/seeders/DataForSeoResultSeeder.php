@@ -16,7 +16,9 @@ class DataForSeoResultSeeder extends Seeder
 
         foreach ($keywords as $keyword) {
             $tasks = DataForSeoTask::where('keyword_id', $keyword->id)->with('project')->get();
-            if ($tasks->isEmpty()) continue;
+            if ($tasks->isEmpty()) {
+                continue;
+            }
 
             $projectUrl = $tasks->first()->project->url;
 

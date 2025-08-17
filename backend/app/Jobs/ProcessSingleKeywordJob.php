@@ -4,7 +4,6 @@ namespace App\Jobs;
 
 use App\Models\Keyword;
 use App\Services\DataForSeo\CredentialsService;
-use App\Services\DataForSeoResultService;
 use App\Services\KeywordSubmissionService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -24,10 +23,7 @@ class ProcessSingleKeywordJob implements ShouldQueue
         $this->keyword = $keyword;
     }
 
-    public function handle(
-        DataForSeoResultService $seoService,
-        KeywordSubmissionService $submissionService
-    ): void {
+    public function handle(KeywordSubmissionService $submissionService): void {
         $keyword = $this->keyword;
 
         if ($keyword->last_submitted_at && $keyword->last_submitted_at->isToday()) {

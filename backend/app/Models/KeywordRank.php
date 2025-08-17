@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class KeywordRank extends Model
 {
@@ -16,8 +17,7 @@ class KeywordRank extends Model
         'tracked_at' => 'date',
     ];
 
-    public function keyword()
-    {
+    public function keyword(): BelongsTo {
         return $this->belongsTo(Keyword::class);
     }
 }

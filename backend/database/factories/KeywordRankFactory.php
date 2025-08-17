@@ -20,7 +20,7 @@ class KeywordRankFactory extends Factory
             'keyword_id' => 1, // overridden in seeder
             'position' => $this->faker->numberBetween(1, 100),
             'url' => null,// overridden in seeder
-            'raw' => json_encode(['example' => 'rank data']),
+            'raw' => json_encode(['example' => 'rank data'], JSON_THROW_ON_ERROR),
             'tracked_at' => null,// overridden in seeder
         ];
     }

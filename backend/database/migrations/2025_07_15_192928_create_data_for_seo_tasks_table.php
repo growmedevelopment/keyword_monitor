@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::create('data_for_seo_tasks', function (Blueprint $table) {
+        Schema::create('data_for_seo_tasks', static function (Blueprint $table) {
             $table->id();
             $table->foreignId('keyword_id')->constrained()->onDelete('cascade');
             $table->foreignId('project_id')->constrained()->onDelete('cascade');

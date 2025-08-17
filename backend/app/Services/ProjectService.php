@@ -19,7 +19,7 @@ class ProjectService
     public function getAllByUser(?User $user): AnonymousResourceCollection
     {
         if (!$user) {
-            throw new \Exception('Unauthenticated');
+            throw new \RuntimeException('Unauthenticated');
         }
         $projects = Project::where('user_id', $user->id)->get();
 
@@ -31,8 +31,7 @@ class ProjectService
         return Project::all();
     }
 
-    public function create(array $data)
-    {
+    public function create(array $data): Project {
         return Project::create([
             'name' => $data['name'],
             'user_id' => Auth::id(),

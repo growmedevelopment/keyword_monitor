@@ -8,13 +8,16 @@ class DataForSeoResultResource extends JsonResource
 {
     public function toArray($request): array
     {
+        /** @var \App\Models\DataForSeoResult $rank */
+        $rank = $this->resource;
+
         return [
-            'type' => $this->type,
-            'rank_group' => $this->rank_group,
-            'rank_absolute' => $this->rank_absolute,
-            'url' => $this->url,
-            'title' => $this->title,
-            'date' => $this->created_at
+            'type' => $rank->type,
+            'rank_group' => $rank->rank_group,
+            'rank_absolute' => $rank->rank_absolute,
+            'url' => $rank->url,
+            'title' => $rank->title,
+            'date' => $rank->created_at
         ];
     }
 }

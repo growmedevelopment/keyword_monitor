@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Resources\KeywordRankResultResource;
 use App\Models\Keyword;
 use App\Models\Project;
-use App\Services\DataForSeoResultService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Services\KeywordSubmissionService;
@@ -14,17 +13,10 @@ use App\Enums\DataForSeoTaskStatus;
 class KeywordController extends Controller
 {
     protected KeywordSubmissionService $keywordSubmissionService;
-    protected DataForSeoResultService $seoResultService;
 
-    public function __construct(
-        KeywordSubmissionService $keywordSubmissionService,
-        DataForSeoResultService $seoResultService
-    ) {
+    public function __construct(KeywordSubmissionService $keywordSubmissionService) {
         $this->keywordSubmissionService = $keywordSubmissionService;
-        $this->seoResultService = $seoResultService;
     }
-
-
 
     /**
      * Add a new keyword to a project and submit it to the DataForSEO API for tracking.
