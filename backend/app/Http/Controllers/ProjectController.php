@@ -6,15 +6,12 @@ use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Services\ProjectService;
-use App\Services\DataForSeoResultService;
 
 class ProjectController extends Controller
 {
-    protected DataForSeoResultService $seoResultService;
     protected ProjectService $projectService;
 
-    public function __construct(ProjectService $projectService, DataForSeoResultService $seoResultService) {
-        $this->seoResultService = $seoResultService;
+    public function __construct(ProjectService $projectService) {
         $this->projectService = $projectService;
     }
 
