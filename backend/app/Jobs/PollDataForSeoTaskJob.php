@@ -15,7 +15,6 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use function filterDataForSeoItemsByHost;
 
 class PollDataForSeoTaskJob implements ShouldQueue
 {
@@ -26,6 +25,36 @@ class PollDataForSeoTaskJob implements ShouldQueue
     public function __construct(DataForSeoTask $task)
     {
         $this->task = $task;
+    }
+
+    private function filterDataForSeoItemsByHost(array $items, string $project_url): ?array
+    {
+        $projectDomain = parse_url($project_url, PHP_URL_HOST);
+        $projectDomain = str_ireplace('www.', '', $projectDomain); // Normalize
+
+        $result = collect($items)
+            ->filter(function ($item) use ($projectDomain) {
+                if (!isset($item['domain'], $item['rank_group'])) {
+                    return false;
+                }
+
+                $itemDomain = str_ireplace('www.', '', $item['domain']);
+
+                return $itemDomain === $projectDomain;
+            })
+            ->sortBy('rank_group')
+            ->first();
+
+        return $result ?? [
+            "type"          => "no results",
+            "rank_group"    => 0,
+            "rank_absolute" => 0,
+            "domain"        => "",
+            "title"         => "no results",
+            "description"   => "no results",
+            "url"           => "",
+            "breadcrumb"    => "",
+        ];
     }
 
     public function handle(): void
@@ -83,7 +112,7 @@ class PollDataForSeoTaskJob implements ShouldQueue
 
             $projectHost = $this->task->keyword->project->url;
             $items = $taskData['result'][0]['items'] ?? [];
-            $resultData = filterDataForSeoItemsByHost($items, $projectHost);
+            $resultData = $this->filterDataForSeoItemsByHost($items, $projectHost);
 
             if (!$resultData) {
                 Log::warning('No matching SEO item found', ['task_id' => $this->task->task_id]);
