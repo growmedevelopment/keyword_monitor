@@ -1,44 +1,73 @@
-import { CssBaseline, Box } from '@mui/material'
-import {Routes, Route } from 'react-router-dom'
-import Sidebar from './components/Sidebar'
-import Dashboard from './pages/Dashboard'
-import ProjectsPage from './pages/ProjectsPage'
-import UserRegisterPage from "./pages/UserRegisterPage.tsx";
-import { Navigate } from 'react-router-dom';
+import { CssBaseline, Box, CircularProgress } from '@mui/material';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import Dashboard from './pages/Dashboard';
+import ProjectsPage from './pages/ProjectsPage';
+import ProjectShowPage from './pages/ProjectShowPage';
+import KeywordShowPage from './pages/KeywordShowPage';
+import UserRegisterPage from './pages/UserRegisterPage';
+import UserLoginPage from './pages/UserLoginPage';
+
 import { useAuth } from './context/AuthContext';
-import UserLoginPage from "./pages/UserLoginPage.tsx";
-import ProjectShowPage from "./pages/ProjectShowPage.tsx";
-import KeywordShowPage from "./pages/KeywordShowPage.tsx";
+import AppLayout from "./layouts/AppLayout.tsx";
 
 export default function App() {
     const { user, loading } = useAuth();
 
-    if (loading) return <p>Loading...</p>;
+    if (loading) {
+        return (
+            <Box
+                sx={{
+                    display: 'grid',
+                    placeItems: 'center',
+                    height: '100svh',
+                    bgcolor: (t) =>
+                        t.palette.mode === 'light' ? t.palette.grey[50] : t.palette.background.default,
+                }}
+            >
+                <CircularProgress size={48} thickness={4} />
+            </Box>
+        );
+    }
 
     return (
         <>
             <CssBaseline />
+
             {user ? (
-                <Box sx={{ display: 'flex' }}>
-                    <Sidebar />
-                    <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-                        <Routes>
-                            <Route path="/" element={<Dashboard />} />
-                            <Route path="/projects" element={<ProjectsPage />} />
-                            <Route path="/projects/:id" element={<ProjectShowPage />} />
-                            <Route path="/keywords/:id" element={<KeywordShowPage />} />
-                            <Route path="/register" element={<UserRegisterPage />} />
-                            <Route path="/login" element={<Dashboard />} />
-                            <Route path="/dashboard" element={<Dashboard />} />
-                        </Routes>
-                    </Box>
-                </Box>
+                // AUTHENTICATED AREA — wrapped by our dedicated layout (AppBar + Sidebar)
+                <AppLayout>
+                    <Routes>
+                        <Route path="/" element={<Dashboard />} />
+                        <Route path="/dashboard" element={<Dashboard />} />
+                        <Route path="/projects" element={<ProjectsPage />} />
+                        <Route path="/projects/:id" element={<ProjectShowPage />} />
+                        <Route path="/keywords/:id" element={<KeywordShowPage />} />
+                        <Route path="/register" element={<UserRegisterPage />} />
+                        {/* Already authenticated: redirect away from /login */}
+                        <Route path="/login" element={<Navigate to="/dashboard" replace />} />
+                        {/* Catch-all to dashboard */}
+                        <Route path="/*" element={<Navigate to="/dashboard" replace />} />
+                    </Routes>
+                </AppLayout>
             ) : (
-                <Routes>
-                    <Route path="/*" element={<Navigate to="/login" replace/>} />
-                    <Route path="/login" element={<UserLoginPage/>} />
-                    <Route path="/register" element={<UserRegisterPage />} />
-                </Routes>
+                // PUBLIC (UNAUTHENTICATED) AREA — centered, soft background
+                <Box
+                    sx={{
+                        display: 'grid',
+                        placeItems: 'center',
+                        minHeight: '100svh',
+                        bgcolor: (t) =>
+                            t.palette.mode === 'light' ? t.palette.grey[50] : t.palette.background.default,
+                        p: { xs: 2, md: 4 },
+                    }}
+                >
+                    <Routes>
+                        <Route path="/login" element={<UserLoginPage />} />
+                        <Route path="/register" element={<UserRegisterPage />} />
+                        {/* Send everything else to login */}
+                        <Route path="/*" element={<Navigate to="/login" replace />} />
+                    </Routes>
+                </Box>
             )}
         </>
     );
