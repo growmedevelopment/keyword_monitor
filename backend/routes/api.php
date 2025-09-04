@@ -29,6 +29,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/projects/{project}/keywords/create', [KeywordController::class, 'addKeywordToProject']);
 
     Route::get('/keywords/{keyword}', [KeywordController::class, 'show']);
+
+    Route::delete('/keywords/{keyword}', [KeywordController::class, 'destroy']);
+
 });
 
 

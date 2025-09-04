@@ -4,6 +4,7 @@ import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 import type { Keyword } from '../../types/keywordTypes';
+import RemoveKeywordCell from "./RemoveKeywordCell.tsx";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -123,6 +124,7 @@ export const columnDefs: ColDef<Keyword>[] = [
     {
         headerName: 'URL',
         width: 90,
+        filter: false,
         valueGetter: urlForToday,
         cellRenderer: (p: ICellRendererParams) => {
             const value = p.value;
@@ -150,4 +152,13 @@ export const columnDefs: ColDef<Keyword>[] = [
     { headerName: 'Yesterday', width: 130, valueGetter: p => positionOn(p, 1), comparator: posComparator, cellRenderer: PositionWithTrend(1) },
     { headerName: twoDaysAgo, width: 130, valueGetter: p => positionOn(p, 2), comparator: posComparator, cellRenderer: PositionWithTrend(2) },
     { headerName: threeDaysAgo, width: 130, valueGetter: p => positionOn(p, 3), comparator: posComparator, cellRenderer: PositionWithTrend(3) },
+    {
+        headerName: 'Remove',
+        width: 110,
+        sortable: false,
+        filter: false,
+        suppressNavigable: true,
+        cellRenderer: RemoveKeywordCell,
+        cellStyle: { display: 'flex', alignItems: 'center' },
+    }
 ];

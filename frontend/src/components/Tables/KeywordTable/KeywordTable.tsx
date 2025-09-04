@@ -4,7 +4,6 @@ import {columnDefs} from "./columns.tsx";
 import type {Keyword} from "../../types/keywordTypes.ts";
 
 
-
 interface Props {
     keywords: Keyword[];
 }

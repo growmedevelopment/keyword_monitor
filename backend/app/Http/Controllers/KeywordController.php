@@ -99,4 +99,23 @@ class KeywordController extends Controller
         ]);
     }
 
+    public function destroy (Request $request, string $id):JsonResponse {
+
+        try {
+            $keyword = Keyword::findOrFail($id);
+
+            $this->keywordSubmissionService->removeKeyword($keyword);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'keyword and all related results has been deleted'
+            ]);
+        }catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()]
+                , 500);
+        }
+    }
+
 }

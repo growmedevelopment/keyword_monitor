@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import keywordService from "../services/keywordService.ts";
 import KeywordRankGrid from "../components/Tables/KeywordRankTable/KeywordRankGrid.tsx";
-import DataStateHandler from "../components/Common/DataStateHandler.tsx"; // Reusable component
+import DataStateHandler from "../components/Common/DataStateHandler.tsx";
 
 export default function KeywordShowPage() {
     const { id } = useParams<{ id: string }>();

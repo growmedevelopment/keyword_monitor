@@ -24,6 +24,7 @@
     "pusher-js": "^8.4.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-hot-toast": "^2.6.0",
     "react-router-dom": "^7.7.1",
     "react-select": "^5.10.2"
   },

@@ -14,6 +14,7 @@ import {
 import MenuIcon from '@mui/icons-material/Menu';
 import Sidebar from "../components/Sidebar.tsx";
 import GrowMeLogo from "../components/Common/GrowMeLogo.tsx";
+import {Toaster} from "react-hot-toast";
 
 /**
  * AppLayout
@@ -31,6 +32,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
     return (
         <Box sx={{display: 'flex', minHeight: '100svh', bgcolor: (t) => t.palette.background.default}}>
+            <Toaster
+                position="top-center"
+                reverseOrder={false}
+            />
+
             {/* Left Navigation (your existing component). If it supports temporary mode, pass mobileOpen + onClose */}
             <Sidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)}/>
 

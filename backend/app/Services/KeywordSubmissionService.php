@@ -2,13 +2,15 @@
 
 namespace App\Services;
 
-use App\Enums\DataForSeoTaskStatus;
+use App\Models\DataForSeoResult;
 use App\Models\Keyword;
 use App\Models\DataForSeoTask;
+use App\Models\KeywordRank;
 use App\Models\Project;
 use App\Services\DataForSeo\CredentialsService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class KeywordSubmissionService
 {
@@ -152,4 +154,38 @@ class KeywordSubmissionService
             ];
         }
     }
+
+    public function removeKeyword(Keyword $keyword): void
+    {
+
+        DB::transaction(static function () use ($keyword) {
+            // Collect task IDs for this keyword
+            $taskIds = DataForSeoTask::query()
+                ->where('keyword_id', $keyword->id)
+                ->pluck('id');
+
+            // 1) Delete results for those tasks
+            if ($taskIds->isNotEmpty()) {
+                DataForSeoResult::query()
+                    ->whereIn('data_for_seo_task_id', $taskIds)
+                    ->delete();
+            }
+
+            // 2) Delete tasks
+            DataForSeoTask::query()
+                ->where('keyword_id', $keyword->id)
+                ->delete();
+
+            // 3) Delete ranks
+            KeywordRank::query()
+                ->where('keyword_id', $keyword->id)
+                ->delete();
+
+            // 4) Finally, delete the keyword (hard delete)
+            $keyword->forceDelete();
+        });
+
+    }
+
+
 }

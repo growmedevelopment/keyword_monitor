@@ -9,6 +9,7 @@ import type { Project } from "../components/types/projectTypes";
 import ProjectDetails from "../components/Project/ProjectDetails.tsx";
 import ProjectKeywordsSection from "../components/Project/ProjectKeywordsSection.tsx";
 import DataStateHandler from "../components/Common/DataStateHandler.tsx";
+import toast from "react-hot-toast";
 
 
 export default function ProjectShowPage() {
@@ -92,8 +93,15 @@ export default function ProjectShowPage() {
                     setProject((prev) =>
                         prev ? { ...prev, keywords: [...prev.keywords, createdKeyword] } : prev
                     );
+
+                    toast.success(response.message);
                 })
-                .catch(() => console.error("Failed to create keyword"));
+                .catch((error) => {
+                    console.error("Failed to create keyword", error);
+                    toast.error(
+                        error?.response?.data?.message || error.message || "Failed to create keyword."
+                    );
+                });
         });
 
         setDialogOpen(false);
