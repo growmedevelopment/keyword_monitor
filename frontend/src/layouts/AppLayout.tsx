@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import Sidebar from "../components/Sidebar.tsx";
+import GrowMeLogo from "../components/Common/GrowMeLogo.tsx";
 
 /**
  * AppLayout
@@ -45,6 +46,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 }}
             >
                 <Toolbar sx={{gap: 1}}>
+
+                    <GrowMeLogo/>
                     {/* Mobile-only button to open Sidebar */}
                     <IconButton
                         color="inherit"
