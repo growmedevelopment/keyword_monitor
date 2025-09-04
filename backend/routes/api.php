@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\KeywordController;
 use App\Http\Controllers\SerpLocationController;
 use Illuminate\Support\Facades\Route;
@@ -13,6 +14,9 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('auth:sanctum')->group(function () {
+
+    Route::get('/dashboard', [DashboardController::class, 'index']);
+
     Route::get('/user', static function (Request $request) {
         return response()->json($request->user());
     });
@@ -25,6 +29,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/projects/{project}/keywords/create', [KeywordController::class, 'addKeywordToProject']);
 
     Route::get('/keywords/{keyword}', [KeywordController::class, 'show']);
+
+    Route::delete('/keywords/{keyword}', [KeywordController::class, 'destroy']);
+
 });
 
 
