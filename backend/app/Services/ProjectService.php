@@ -58,6 +58,12 @@ class ProjectService
         $project->delete();
     }
 
+    public function restore(int $project_id): void {
+        $project = Project::withTrashed()->where('user_id', auth()->id())->findOrFail($project_id);
+
+        $project->restore();
+    }
+
     public function show(string $project_id): ProjectViewResource {
 
         $project = Project::with('keywords.keywordsRank')->findOrFail($project_id);

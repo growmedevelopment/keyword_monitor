@@ -50,17 +50,6 @@ class ProjectController extends Controller
         return response()->json($project);
     }
 
-//    public function update(Request $request, Project $project): JsonResponse
-//    {
-//        $data = $request->validate([
-//            'name' => 'required|string|max:255',
-//        ]);
-//
-//        $updatedProject = $this->projectService->update($project, $data);
-//
-//        return response()->json($updatedProject);
-//    }
-
     public function destroy(int $project_id): JsonResponse
     {
         $this->projectService->delete($project_id);
@@ -72,5 +61,13 @@ class ProjectController extends Controller
         $user = auth()->user();
         return response()->json($this->projectService->getAllArchivedByUser($user));
     }
+
+    public function restore(int $project_id): JsonResponse
+    {
+        $this->projectService->restore($project_id);
+
+        return response()->json(['message' => 'Project has been restored successfully.']);
+    }
+
 
 }

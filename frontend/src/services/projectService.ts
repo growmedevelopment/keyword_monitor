@@ -33,6 +33,11 @@ const projectService = {
         const response = await axios.delete(`${API}/api/projects/${id}`);
         return response.data;
     },
+
+    async restore (id: number) {
+        const res = await axios.patch(`${API}/api/projects/${id}/restore`);
+        return res.data;
+    }
 };
 
 export default projectService

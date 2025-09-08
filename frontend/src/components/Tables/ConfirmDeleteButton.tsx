@@ -47,6 +47,8 @@ export type ConfirmDeleteButtonProps = {
 
     /** If variant = button, children is the trigger label; if absent uses confirmLabel */
     children?: React.ReactNode;
+
+    icon?: React.ReactElement;
 };
 
 export default function ConfirmDeleteButton({
@@ -62,6 +64,7 @@ export default function ConfirmDeleteButton({
                                                 onError,
                                                 ariaLabel = 'remove',
                                                 children,
+                                                icon,
                                             }: ConfirmDeleteButtonProps) {
     const [open, setOpen] = React.useState(false);
     const [loading, setLoading] = React.useState(false);
@@ -88,7 +91,7 @@ export default function ConfirmDeleteButton({
             <Tooltip title={tooltip}>
         <span>
           <IconButton color={color} size="small" onClick={handleOpen} disabled={disabled || loading} aria-label={ariaLabel}>
-            {loading ? <CircularProgress size={18} /> : <DeleteOutlineIcon fontSize="small" />}
+            {loading ? <CircularProgress size={18} /> : (icon ?? <DeleteOutlineIcon fontSize="small" />)}
           </IconButton>
         </span>
             </Tooltip>
@@ -98,7 +101,7 @@ export default function ConfirmDeleteButton({
                 variant="outlined"
                 onClick={handleOpen}
                 disabled={disabled || loading}
-                startIcon={loading ? <CircularProgress size={18} /> : <DeleteOutlineIcon />}
+                startIcon={loading ? <CircularProgress size={18} /> : (icon ?? <DeleteOutlineIcon />)}
                 sx={{ textTransform: 'none' }}
             >
                 {children ?? confirmLabel}

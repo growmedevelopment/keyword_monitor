@@ -11,4 +11,5 @@ export interface Project {
     keywords: Keyword[];
     created_at: string;
     archived_at: string;
+    deleted_at: string;
 }
