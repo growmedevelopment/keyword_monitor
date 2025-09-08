@@ -23,6 +23,7 @@ export default function CreateProjectDialog({ isOpen, onClose, onCreate }: Props
         location_code: 0,
         created_at: '',
         location_name: '',
+        deleted_at: '',
     });
     const [selectedCountry, setSelectedCountry] = useState<CountryOption | null>(null);
     const [loading, setLoading] = useState(false);
