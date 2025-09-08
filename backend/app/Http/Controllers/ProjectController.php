@@ -6,6 +6,8 @@ use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Services\ProjectService;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ProjectController extends Controller
 {
@@ -48,22 +50,27 @@ class ProjectController extends Controller
         return response()->json($project);
     }
 
-    public function update(Request $request, Project $project): JsonResponse
+//    public function update(Request $request, Project $project): JsonResponse
+//    {
+//        $data = $request->validate([
+//            'name' => 'required|string|max:255',
+//        ]);
+//
+//        $updatedProject = $this->projectService->update($project, $data);
+//
+//        return response()->json($updatedProject);
+//    }
+
+    public function destroy(int $project_id): JsonResponse
     {
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-        ]);
-
-        $updatedProject = $this->projectService->update($project, $data);
-
-        return response()->json($updatedProject);
-    }
-
-    public function destroy(Project $project): JsonResponse
-    {
-        $this->projectService->delete($project);
+        $this->projectService->delete($project_id);
 
         return response()->json(['message' => 'Project deleted successfully.']);
+    }
+
+    public function archived(): JsonResponse{
+        $user = auth()->user();
+        return response()->json($this->projectService->getAllArchivedByUser($user));
     }
 
 }

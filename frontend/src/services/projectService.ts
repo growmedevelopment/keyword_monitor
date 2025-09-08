@@ -12,6 +12,11 @@ const projectService = {
         return response.data;
     },
 
+    async getArchived() {
+        const response = await axios.get<Project[]>(`${API}/api/projects/archived`);
+        return response.data;
+    },
+
     async getById(id: string) {
         const response = await axios.get<Project>(`${API}/api/projects/${id}` );
         return response.data;
@@ -20,12 +25,6 @@ const projectService = {
     async create(data: Project) {
         await ensureCsrfCookie();
         const response = await axios.post(`${API}/api/projects`, data );
-        return response.data;
-    },
-
-    async update(id: number | string, data: any) {
-        await ensureCsrfCookie();
-        const response = await axios.put(`${API}/api/projects/${id}`, data);
         return response.data;
     },
 

@@ -1,27 +1,21 @@
 import * as React from 'react';
 import {
-    Drawer,
-    List,
-    ListItemButton,
-    ListItemIcon,
-    ListItemText,
-    Toolbar,
-    Divider,
-    Box,
-    Tooltip,
+    Drawer, List, ListItemButton, ListItemIcon, ListItemText, Toolbar,
+    Divider, Box, Tooltip, Collapse
 } from '@mui/material';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import FolderIcon from '@mui/icons-material/Folder';
 import LogoutIcon from '@mui/icons-material/Logout';
+import ExpandLess from '@mui/icons-material/ExpandLess';
+import ExpandMore from '@mui/icons-material/ExpandMore';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const drawerWidth = 240;
 
 type SidebarProps = {
-    /** Controls the mobile (temporary) drawer open state */
     mobileOpen?: boolean;
-    /** Closes the mobile drawer (passed from layout) */
     onClose?: () => void;
 };
 
@@ -37,16 +31,21 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
         onClose?.();
     };
 
+    const isSelected = (to: string) =>
+        pathname === to || (to !== '/' && pathname.startsWith(to));
+
     const NavItem = ({
                          to,
                          icon,
                          label,
+                         inset = false,
                      }: {
         to: string;
         icon: React.ReactElement;
         label: string;
+        inset?: boolean;
     }) => {
-        const selected = pathname === to || (to !== '/' && pathname.startsWith(to));
+        const selected = isSelected(to);
         return (
             <Tooltip title={label} placement="right" enterDelay={800}>
                 <ListItemButton
@@ -59,10 +58,11 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
                         borderRadius: 1,
                         mx: 1,
                         my: 0.5,
+                        pl: inset ? 6 : 2,
                         '&.Mui-selected': (t) => ({
                             backgroundColor:
                                 t.palette.mode === 'light'
-                                    ? t.palette.primary.light + '30' // subtle tint
+                                    ? t.palette.primary.light + '30'
                                     : t.palette.primary.dark + '50',
                         }),
                     }}
@@ -74,20 +74,71 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
         );
     };
 
+    // --- Projects collapsible state (open if you're anywhere under /projects)
+    const [projectsOpen, setProjectsOpen] = React.useState(
+        pathname === '/projects' || pathname.startsWith('/projects/')
+    );
+    React.useEffect(() => {
+        if (pathname.startsWith('/projects')) setProjectsOpen(true);
+    }, [pathname]);
+
+    const ProjectsGroup = () => {
+        const parentSelected = isSelected('/projects');
+
+        return (
+            <>
+                {/* Parent row */}
+                <ListItemButton
+                    onClick={() => setProjectsOpen((v) => !v)}
+                    aria-expanded={projectsOpen ? 'true' : 'false'}
+                    aria-controls="projects-nav-children"
+                    sx={{
+                        borderRadius: 1,
+                        mx: 1,
+                        my: 0.5,
+                        '&.Mui-selected': (t) => ({
+                            backgroundColor:
+                                t.palette.mode === 'light'
+                                    ? t.palette.primary.light + '30'
+                                    : t.palette.primary.dark + '50',
+                        }),
+                    }}
+                    selected={parentSelected}
+                >
+                    <ListItemIcon sx={{ minWidth: 40 }}>
+                        <FolderIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Projects" />
+                    {projectsOpen ? <ExpandLess /> : <ExpandMore />}
+                </ListItemButton>
+
+                {/* Children */}
+                <Collapse in={projectsOpen} timeout="auto" unmountOnExit>
+                    <List id="projects-nav-children" component="div" disablePadding sx={{ px: 0.5 }}>
+                        <NavItem
+                            to="/projects"
+                            icon={<ChevronRightIcon fontSize="small" />}
+                            label="All Projects"
+                            inset
+                        />
+                        <NavItem
+                            to="/projects/archived"
+                            icon={<ChevronRightIcon fontSize="small" />}
+                            label="Archived"
+                            inset
+                        />
+                    </List>
+                </Collapse>
+            </>
+        );
+    };
+
     const content = (
-        <Box
-            sx={{
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-            }}
-            role="navigation"
-            aria-label="Primary"
-        >
+        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }} role="navigation" aria-label="Primary">
             <Toolbar />
             <List sx={{ px: 0.5 }}>
                 <NavItem to="/dashboard" icon={<DashboardIcon />} label="Dashboard" />
-                <NavItem to="/projects" icon={<FolderIcon />} label="Projects" />
+                <ProjectsGroup />
             </List>
 
             <Box sx={{ flexGrow: 1 }} />
@@ -95,10 +146,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
             <Divider sx={{ my: 1 }} />
             <List sx={{ px: 0.5 }}>
                 <Tooltip title="Log out" placement="right" enterDelay={800}>
-                    <ListItemButton
-                        onClick={handleLogout}
-                        sx={{ mx: 1, my: 0.5, borderRadius: 1 }}
-                    >
+                    <ListItemButton onClick={handleLogout} sx={{ mx: 1, my: 0.5, borderRadius: 1 }}>
                         <ListItemIcon sx={{ minWidth: 40 }}>
                             <LogoutIcon />
                         </ListItemIcon>
@@ -111,24 +159,19 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
 
     return (
         <>
-            {/* Temporary drawer for mobile */}
             <Drawer
                 variant="temporary"
                 open={mobileOpen}
                 onClose={onClose}
-                ModalProps={{ keepMounted: true }} // better performance on mobile
+                ModalProps={{ keepMounted: true }}
                 sx={{
                     display: { xs: 'block', md: 'none' },
-                    '& .MuiDrawer-paper': {
-                        width: drawerWidth,
-                        boxSizing: 'border-box',
-                    },
+                    '& .MuiDrawer-paper': { width: drawerWidth, boxSizing: 'border-box' },
                 }}
             >
                 {content}
             </Drawer>
 
-            {/* Permanent drawer for md+ */}
             <Drawer
                 variant="permanent"
                 open
@@ -139,12 +182,9 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
                     '& .MuiDrawer-paper': {
                         width: drawerWidth,
                         boxSizing: 'border-box',
-                        borderRight: (t) =>
-                            `1px solid ${
-                                t.palette.mode === 'light'
-                                    ? t.palette.grey[200]
-                                    : t.palette.divider
-                            }`,
+                        borderRight: (t) => `1px solid ${
+                            t.palette.mode === 'light' ? t.palette.grey[200] : t.palette.divider
+                        }`,
                     },
                 }}
             >

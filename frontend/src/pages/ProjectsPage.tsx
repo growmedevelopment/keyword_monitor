@@ -1,5 +1,5 @@
 import { startTransition, Suspense, useEffect, useOptimistic, useState } from 'react';
-import { Button, Stack } from '@mui/material';
+import { Button, Stack, Typography } from '@mui/material';
 import projectService from '../services/projectService';
 import CreateProjectDialog from '../components/Dialogs/ProjectDialog/CreateProjectDialog';
 import type { Project } from '../components/types/projectTypes';
@@ -47,6 +47,8 @@ export default function ProjectsPage() {
     return (
         <Suspense fallback={<p>Loading...</p>}>
             <Stack spacing={2}>
+                <Typography variant="h4" sx={{ fontWeight: 700, letterSpacing: 0.2 }}>Projects</Typography>
+
                 <ProjectsTable projects={optimisticProjects}/>
 
                 <Button variant="contained" onClick={handleDialog}>

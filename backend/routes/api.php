@@ -24,6 +24,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/serp/locations', [SerpLocationController::class, 'index']);
 
+    Route::get('/projects/archived', [ProjectController::class, 'archived'])->name('projects.archived');
+
     Route::apiResource('projects', ProjectController::class);
 
     Route::post('/projects/{project}/keywords/create', [KeywordController::class, 'addKeywordToProject']);

@@ -27,8 +27,12 @@ class ProjectService
 
     }
 
-    public function getAll(): Collection {
-        return Project::all();
+    public function getAllArchivedByUser(User $user): Collection {
+
+        if (!$user) {
+            throw new \RuntimeException('Unauthenticated');
+        }
+        return Project::where('user_id', $user->id)->onlyTrashed()->get();
     }
 
     public function create(array $data): Project {
@@ -47,9 +51,11 @@ class ProjectService
         return $project;
     }
 
-    public function delete(Project $project): true {
+    public function delete(int $project_id): void {
+
+        $project = Project::where('user_id', auth()->id())->findOrFail($project_id);
+
         $project->delete();
-        return true;
     }
 
     public function show(string $project_id): ProjectViewResource {
