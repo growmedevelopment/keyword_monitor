@@ -2,93 +2,107 @@
 
 namespace App\Services;
 
-use App\Services\DataForSeo\CredentialsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 
 class SerpLocationService
 {
-    private string $apiUrl = 'https://api.dataforseo.com/v3/serp/google/locations';
     private array $cities = [];
 
     /**
-     * @throws \Illuminate\Http\Client\ConnectionException
-     * @throws \Exception
+     * Load locations from local JSON (storage/app/dataforseo/locations.json) and cache them.
+     * Supports either a plain array or the DataForSEO envelope (tasks[0].result).
      */
-    private function fetchAPI(): array
+    private function loadLocationsFromFile(): array
     {
-        ['username' => $username, 'password' => $password] = CredentialsService::get();
+        $disk = Storage::disk('local');
+        $path = 'locations.json';
 
-        $response = Http::withBasicAuth($username, $password)
-            ->get($this->apiUrl);
-
-        if ($response->successful()) {
-            return $response->json()['tasks'][0]['result'];
+        if (!$disk->exists($path)) {
+            throw new \RuntimeException("Locations file not found at storage/app/{$path}");
         }
 
-        throw new \RuntimeException('Failed to fetch locations from external API');
+        $data = json_decode(
+            $disk->get($path),
+            true,
+            512,
+            JSON_THROW_ON_ERROR
+        );
+
+        // Safely navigate into the structure
+        return $data['tasks'][0]['result'] ?? [];
     }
 
-    private function getCountries(): JsonResponse {
+    private function getCountries(): JsonResponse
+    {
         return response()->json(
             Cache::rememberForever('countries_list', static function () {
-                $json = Storage::get('countries.json');
-                return json_decode($json, true, 512, JSON_THROW_ON_ERROR);
+                $disk = Storage::disk('local');
+                $path = 'countries.json';
+                if (!$disk->exists($path)) {
+                    throw new \RuntimeException("Countries file not found at storage/app/{$path}");
+                }
+                return json_decode($disk->get($path), true, 512, JSON_THROW_ON_ERROR);
             })
         );
     }
 
-    /**
-     * @throws \Illuminate\Http\Client\ConnectionException
-     */
-    private function setCities(): void {
+    private function setCities(): void
+    {
+        $this->cities = Cache::rememberForever('serp_locations_cities', function () {
 
-        $api_response = $this->fetchAPI();
+            $all = $this->loadLocationsFromFile();
 
-        $this->cities = array_filter($api_response, static function ($location) {
-            return $location['location_type'] === 'City';
+            return array_values(array_filter($all, static function ($loc) {
+                return ($loc['location_type'] ?? null) === 'City';
+            }));
         });
     }
 
-    private function getCities(): array {
+    private function getCities(): array
+    {
         return $this->cities;
     }
 
-    private function filteredCity(string $country_iso_code): array {
-        $filtered = array_filter($this->getCities(), static function ($item) use ($country_iso_code) {
-            return $item['country_iso_code'] === $country_iso_code;
-        });
+    private function filteredCity(string $countryIso): array
+    {
+        // Cache per-country result for speed
+        return Cache::rememberForever("serp_locations_cities_{$countryIso}", function () use ($countryIso) {
+            $filtered = array_filter($this->getCities(), static function ($item) use ($countryIso) {
+                return ($item['country_iso_code'] ?? null) === $countryIso;
+            });
 
-        return array_map(static function ($item) {
-            return [
-                'value' => $item['location_code'],
-                'label' => explode(',', $item['location_name'])[0],
-            ];
-        }, $filtered);
+            return array_values(array_map(static function ($item) {
+                return [
+                    'value' => $item['location_code'] ?? null,
+                    'label' => explode(',', $item['location_name'] ?? '')[0],
+                ];
+            }, $filtered));
+        });
     }
 
-    /**
-     * @throws \Illuminate\Http\Client\ConnectionException
-     */
-    public function fetchLocations(Request $request): JsonResponse {
+    public function fetchLocations(Request $request): JsonResponse
+    {
 
-        if ($request->input('request_type') === 'county') {
+        $type = (string) $request->input('request_type');
+
+        if ($type === 'country') {
             return $this->getCountries();
         }
 
-        if ($request->input('request_type') === 'cities') {
+        if ($type === 'cities') {
+            $countryIso = (string) $request->input('country_iso_code', '');
+            if ($countryIso === '') {
+                return response()->json(['message' => 'country_iso_code is required'], 422);
+            }
+
             $this->setCities();
 
-            $filteredCity = $this->filteredCity($request->input('country_iso_code'));
-            return response()->json(array_values($filteredCity));
+            return response()->json($this->filteredCity($countryIso));
         }
 
         return response()->json([]);
     }
-
-
-
 }

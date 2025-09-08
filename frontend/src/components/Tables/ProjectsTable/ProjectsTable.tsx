@@ -1,4 +1,3 @@
-// src/components/projects/ProjectGrid.tsx
 import { AgGridReact } from 'ag-grid-react';
 import { useMemo } from 'react';
 import { columnDefs } from './columns';

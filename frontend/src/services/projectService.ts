@@ -33,7 +33,7 @@ const projectService = {
         return response.data;
     },
 
-    async delete(id: number | string) {
+    async delete(id: number) {
         await ensureCsrfCookie();
         const response = await axios.delete(`${API}/api/projects/${id}`);
         return response.data;

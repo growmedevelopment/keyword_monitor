@@ -1,52 +1,75 @@
 import React from 'react';
 import { Autocomplete, TextField, Box } from '@mui/material';
-import type {CountryOption} from '../../types/locationTypes.ts';
+import type { CountryOption } from '../../types/locationTypes';
+import locationService from '../../../services/locationService';
 
 interface Props {
     value: CountryOption | null;
     onChange: (val: CountryOption | null) => void;
 }
 
-const countries: CountryOption[] = [
-    { label: 'Canada', value: 'CA' },
-    { label: 'United States', value: 'US' }
-];
+const CountrySelect: React.FC<Props> = ({ value, onChange }) => {
+    const [open, setOpen] = React.useState(false);
+    const [options, setOptions] = React.useState<CountryOption[]>([]);
+    const [loading, setLoading] = React.useState(false);
 
-const CountrySelect: React.FC<Props> = ({ value, onChange }) => (
-    <Autocomplete
-        options={countries}
-        value={value}
-        onChange={(_, newVal) => onChange(newVal)}
-        getOptionLabel={(option) => option.label}
-        isOptionEqualToValue={(option, val) => option.value === val.value}
-        renderOption={(props, option) => {
-            const { key, ...rest } = props; // remove key from props
+    const handleOpen = async () => {
+        setOpen(true);
+        if (options.length) return; // avoid refetch on every open
+        setLoading(true);
+        try {
+            const res = await locationService.getCountries();
+            // adjust if your service returns {data: CountryOption[]}
+            setOptions(Array.isArray(res) ? res : res.data);
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-            return (
-                <Box key={key} component="li" {...rest}>
-                    <img
-                        loading="lazy"
-                        width="20"
-                        src={`https://flagcdn.com/w20/${option.value.toLowerCase()}.png`}
-                        srcSet={`https://flagcdn.com/w40/${option.value.toLowerCase()}.png 2x`}
-                        alt=""
-                        style={{ marginRight: 8 }}
-                    />
-                    {option.label} ({option.value})
-                </Box>
-            );
-        }}
-        renderInput={(params) => (
-            <TextField
-                {...params}
-                label="Country"
-                inputProps={{
-                    ...params.inputProps,
-                    autoComplete: 'new-password'
-                }}
-            />
-        )}
-    />
-);
+    const handleClose = () => {
+        setOpen(false);
+        // optional: keep options to avoid refetch; remove next line if you want caching
+        // setOptions([]);
+    };
+
+    return (
+        <Autocomplete
+            open={open}
+            onOpen={handleOpen}
+            onClose={handleClose}
+            options={options}
+            loading={loading}
+            value={value}
+            onChange={(_, newVal) => onChange(newVal)}
+            getOptionLabel={(option) => option.label ?? ''}
+            isOptionEqualToValue={(option, val) => option.value === (val?.value ?? '')}
+            renderOption={(props, option) => {
+                const { key, ...rest } = props;
+                return (
+                    <Box key={key} component="li" {...rest}>
+                        <img
+                            loading="lazy"
+                            width="20"
+                            src={`https://flagcdn.com/w20/${option.value.toLowerCase()}.png`}
+                            srcSet={`https://flagcdn.com/w40/${option.value.toLowerCase()}.png 2x`}
+                            alt=""
+                            style={{ marginRight: 8 }}
+                        />
+                        {option.label} ({option.value})
+                    </Box>
+                );
+            }}
+            renderInput={(params) => (
+                <TextField
+                    {...params}
+                    label="Country"
+                    inputProps={{ ...params.inputProps, autoComplete: 'new-password' }}
+                />
+            )}
+        />
+    );
+};
 
 export default CountrySelect;
