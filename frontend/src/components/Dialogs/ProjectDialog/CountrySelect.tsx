@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import { Autocomplete, TextField, Box } from '@mui/material';
 import type { CountryOption } from '../../types/locationTypes';
 import locationService from '../../../services/locationService';
@@ -9,9 +9,9 @@ interface Props {
 }
 
 const CountrySelect: React.FC<Props> = ({ value, onChange }) => {
-    const [open, setOpen] = React.useState(false);
-    const [options, setOptions] = React.useState<CountryOption[]>([]);
-    const [loading, setLoading] = React.useState(false);
+    const [open, setOpen] = useState(false);
+    const [options, setOptions] = useState<CountryOption[]>([]);
+    const [loading, setLoading] = useState(false);
 
     const handleOpen = async () => {
         setOpen(true);
@@ -30,8 +30,7 @@ const CountrySelect: React.FC<Props> = ({ value, onChange }) => {
 
     const handleClose = () => {
         setOpen(false);
-        // optional: keep options to avoid refetch; remove next line if you want caching
-        // setOptions([]);
+        setOptions([]);
     };
 
     return (
@@ -65,7 +64,9 @@ const CountrySelect: React.FC<Props> = ({ value, onChange }) => {
                 <TextField
                     {...params}
                     label="Country"
-                    inputProps={{ ...params.inputProps, autoComplete: 'new-password' }}
+                    slotProps={{
+                        htmlInput : {...params.inputProps, autoComplete: 'new-password'}
+                    }}
                 />
             )}
         />

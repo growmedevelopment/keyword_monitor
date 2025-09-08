@@ -1,10 +1,6 @@
 import axios from '../axios';
 import type {Project} from "../components/types/projectTypes.ts";
-
 const API = import.meta.env.VITE_API_BACKEND_ENDPOINT
-
-
-
 
 async function ensureCsrfCookie() {
     await axios.get(`${API}/sanctum/csrf-cookie`);
