@@ -9,6 +9,7 @@ import UserLoginPage from './pages/UserLoginPage';
 
 import { useAuth } from './context/AuthContext';
 import AppLayout from "./layouts/AppLayout.tsx";
+import ProjectsArchivedPage from "./pages/ProjectsArchivedPage.tsx";
 
 export default function App() {
     const { user, loading } = useAuth();
@@ -40,6 +41,7 @@ export default function App() {
                         <Route path="/" element={<Dashboard />} />
                         <Route path="/dashboard" element={<Dashboard />} />
                         <Route path="/projects" element={<ProjectsPage />} />
+                        <Route path="/projects/archived" element={<ProjectsArchivedPage />} />
                         <Route path="/projects/:id" element={<ProjectShowPage />} />
                         <Route path="/keywords/:id" element={<KeywordShowPage />} />
                         <Route path="/register" element={<UserRegisterPage />} />

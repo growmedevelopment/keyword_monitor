@@ -24,6 +24,9 @@ class ProcessDailyKeywordRanksJob implements ShouldQueue
 
         Keyword::with('project')
             ->where('is_active', 1)
+            ->whereHas('project', function ($q) {
+                $q->whereNull('deleted_at');
+            })
             ->chunk(100, function ($keywords) use (&$processed, &$skipped) {
                 foreach ($keywords as $keyword) {
                     if ($keyword->last_submitted_at && $keyword->last_submitted_at->isToday()) {

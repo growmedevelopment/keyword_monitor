@@ -10,4 +10,6 @@ export interface Project {
     location_name: string;
     keywords: Keyword[];
     created_at: string;
+    archived_at: string;
+    deleted_at: string;
 }

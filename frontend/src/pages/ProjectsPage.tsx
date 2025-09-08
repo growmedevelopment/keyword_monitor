@@ -1,19 +1,14 @@
 import { startTransition, Suspense, useEffect, useOptimistic, useState } from 'react';
-import { Button, Stack, Alert } from '@mui/material';
+import { Button, Stack, Typography } from '@mui/material';
 import projectService from '../services/projectService';
 import CreateProjectDialog from '../components/Dialogs/ProjectDialog/CreateProjectDialog';
 import type { Project } from '../components/types/projectTypes';
 import ProjectsTable from "../components/Tables/ProjectsTable/ProjectsTable.tsx";
+import toast from "react-hot-toast";
 
-interface ProjectError {
-    message: string;
-    errors: Record<string, string[]>;
-}
 
 export default function ProjectsPage() {
     const [dialogOpen, setDialogOpen] = useState<boolean>(false);
-    const [errors, setErrors] = useState<ProjectError>({ message: '', errors: {} });
-
     const [realProjects, setRealProjects] = useState<Project[]>([]);
 
     useEffect(() => {
@@ -21,7 +16,7 @@ export default function ProjectsPage() {
             .getAll()
             .then(setRealProjects)
             .catch((err) => {
-                console.error('Failed to fetch projects', err);
+                toast.error(err.response.data.message || "Failed to fetch projects.");
             });
     }, []);
 
@@ -45,22 +40,20 @@ export default function ProjectsPage() {
             const createdProject = await projectService.create(data);
             setRealProjects((prev) => [...prev, createdProject]);
         } catch (error: any) {
-            setErrors(error?.response?.data || { message: 'Unknown error', errors: {} });
+            toast.error(error.response.data.message || "Failed to create project.");
         }
     };
 
     return (
         <Suspense fallback={<p>Loading...</p>}>
             <Stack spacing={2}>
+                <Typography variant="h4" sx={{ fontWeight: 700, letterSpacing: 0.2 }}>Projects</Typography>
+
                 <ProjectsTable projects={optimisticProjects}/>
 
                 <Button variant="contained" onClick={handleDialog}>
                     Create New Project
                 </Button>
-
-                {!!errors.message && (
-                    <Alert severity="warning">{errors.message}</Alert>
-                )}
 
                 {dialogOpen && (
                     <CreateProjectDialog
