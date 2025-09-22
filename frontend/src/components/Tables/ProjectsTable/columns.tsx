@@ -2,6 +2,7 @@ import type { ColDef, ICellRendererParams } from 'ag-grid-community';
 import ConfirmDeleteButton from "../ConfirmDeleteButton.tsx";
 import projectService from "../../../services/projectService.ts";
 import toast from "react-hot-toast";
+import ArchiveIcon from '@mui/icons-material/Archive';
 
 export const columnDefs: ColDef[] = [
     {
@@ -32,27 +33,28 @@ export const columnDefs: ColDef[] = [
 
             return (
                 <ConfirmDeleteButton
-                    title="Delete project?"
+                    title="Archive project?"
                     description={
-                        <>Are you sure you want to delete <strong>{name}</strong>? Keyword progress will be saved, but no new results will be collected. You can restore this project later if needed.</>
+                        <>Are you sure you want to archive <strong>{name}</strong>? Keyword progress will be saved, but no new results will be collected. You can restore this project later if needed.</>
                     }
-                    confirmLabel="Delete"
-                    color="error"
-                    tooltip="Delete project"
+                    confirmLabel="Archive"
+                    color="primary"
+                    tooltip="Archive project"
                     onConfirm={async () => {
                         await projectService.delete(id);
 
                         // remove row from grid (client-side row model)
                         params.api.applyTransaction({ remove: [params.data] });
 
-                        toast.success('Project deleted successfully');
+                        toast.success('Project archived successfully');
                     }}
                     onError={(err) => {
                         const message =
                             err instanceof Error ? err.message : String(err);
                         toast.error(`Something went wrong: ${message}`);
                     }}
-                    ariaLabel="delete project"
+                    ariaLabel="Archive project"
+                    icon={<ArchiveIcon fontSize="small" />}
                 />
             );
         },
