@@ -15,12 +15,14 @@ import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import KeyIcon from '@mui/icons-material/Key';
 import AddIcon from '@mui/icons-material/Add';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import { Link as RouterLink } from 'react-router-dom';
-
 import dashboardService from '../services/dashboardService';
 import type { Dashboard } from '../components/types/dashboardTypes';
+import type {UserAPIDetailsType} from '../components/types/userAPIDetailsType.ts';
 import StatCard from '../components/Dashboard/StatCard';
 import {useCallback, useEffect, useState} from "react";
+import userService from "../services/userService.ts";
 
 type LoadState = 'idle' | 'loading' | 'success' | 'error';
 
@@ -29,6 +31,7 @@ export default function Dashboard() {
     const [state, setState] = useState<LoadState>('idle');
     const [data, setData] = useState<Dashboard | null>(null);
     const [error, setError] = useState<string>('');
+    const [userAPI, setUserAPI] = useState<null|UserAPIDetailsType>(null);
 
     const fetchData = useCallback(async () => {
         setState('loading');
@@ -43,8 +46,16 @@ export default function Dashboard() {
         }
     }, []);
 
+    const getUserAPIData = async ()=>{
+        return await userService.fetchUserAPIData();
+    }
+
     useEffect(() => {
-        void fetchData(); // fire-and-forget; no cleanup needed
+
+        void fetchData();
+
+        getUserAPIData().then(user => setUserAPI(user))
+
     }, [fetchData]);
 
     const loading = state === 'loading';
@@ -97,6 +108,17 @@ export default function Dashboard() {
                         subtitle="All keywords across your projects"
                     />
                 </Grid>
+
+                <Grid size={{ xs: 12, md: 4 }} >
+                    <StatCard
+                        title="Balance Remaining"
+                        value={userAPI?.money?.balance?? 0}
+                        loading={loading || !userAPI}
+                        icon={<MonetizationOnIcon />}
+                        color={theme.palette.success.main}
+                        subtitle="Available funds in your account"
+                    />
+                </Grid>
             </Grid>
 
             <Grid container spacing={2}>
@@ -147,7 +169,13 @@ export default function Dashboard() {
                         </CardContent>
                     </Card>
                 </Grid>
+
+
             </Grid>
+
+
+
+
         </Box>
     );
 }

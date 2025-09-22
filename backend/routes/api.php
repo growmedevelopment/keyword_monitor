@@ -20,6 +20,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', static function (Request $request) {
         return response()->json($request->user());
     });
+
+    Route::get('/user/api-data', [AuthController::class, 'getAPIUserData']);
+
     Route::get('/logout', [AuthController::class, 'logout']);
 
     Route::post('/serp/locations', [SerpLocationController::class, 'index']);
