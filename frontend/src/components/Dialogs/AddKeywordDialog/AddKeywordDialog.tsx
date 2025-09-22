@@ -43,7 +43,7 @@ export default function AddKeywordDialog({ isOpen, onClose, onSubmit }: Props) {
                     minRows={10}
                     fullWidth
                     value={input}
-                    onChange={(e) => setInput(e.target.value)}
+                    onChange={(e) => setInput(e.target.value.toLowerCase())}
                 />
             </DialogContent>
             <DialogActions>

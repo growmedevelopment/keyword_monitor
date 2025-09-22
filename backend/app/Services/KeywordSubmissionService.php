@@ -11,6 +11,7 @@ use App\Services\DataForSeo\CredentialsService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class KeywordSubmissionService
 {
@@ -55,7 +56,7 @@ class KeywordSubmissionService
     private function createAndAttachKeyword(Project $project, string $newKeyword): Keyword
     {
         $keyword = $project->keywords()->create([
-            'keyword'  => $newKeyword,
+            'keyword'  => Str::lower($newKeyword),
             'location' => $project->location_code,
         ]);
 
