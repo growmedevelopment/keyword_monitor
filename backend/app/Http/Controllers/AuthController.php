@@ -2,27 +2,35 @@
 
 namespace App\Http\Controllers;
 
+use AllowDynamicProperties;
 use App\Models\User;
+use App\Services\DataForSeo\AccountService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
 
-class AuthController extends Controller
-{
+
+class AuthController extends Controller {
+
+    protected AccountService $accountService;
+
+    public function __construct(AccountService $accountService) {
+        $this->accountService = $accountService;
+    }
+
     public function register(Request $request)
     {
         $fields = $request->validate([
             'name' => 'required|string',
             'email' => 'required|string|email|unique:users,email',
-            'password' => 'required|string|confirmed'
+            'password' => 'required|string|confirmed',
         ]);
 
         $user = User::create([
             'name' => $fields['name'],
             'email' => $fields['email'],
-            'password' => bcrypt($fields['password']),
+            'password' => Hash::make($fields['password']),
         ]);
 
         $token = $user->createToken('myapptoken')->plainTextToken;
@@ -31,7 +39,7 @@ class AuthController extends Controller
 
         return response([
             'user' => $user,
-            'token' => $token
+            'token' => $token,
         ], 201);
     }
 
@@ -46,7 +54,7 @@ class AuthController extends Controller
 
         if (!$user || !Hash::check($fields['password'], $user->password)) {
             return response([
-                'message' => 'Invalid credentials'
+                'message' => 'Invalid credentials',
             ], 401);
         }
 
@@ -54,12 +62,19 @@ class AuthController extends Controller
 
         return response([
             'user' => $user,
-            'token' => $token
+            'token' => $token,
         ], 200);
     }
 
     public function logout(Request $request): JsonResponse {
         $request->user()->tokens()->delete();
         return response()->json(['message' => 'Logged out']);
+    }
+
+    public function getAPIUserData(): JsonResponse {
+
+        $api_user = $this->accountService::getAccountDetails();
+
+        return response()->json($api_user);
     }
 }
