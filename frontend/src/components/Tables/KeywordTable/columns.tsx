@@ -5,6 +5,8 @@ import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 import type { Keyword } from '../../types/keywordTypes';
 import RemoveKeywordCell from "./RemoveKeywordCell.tsx";
+import {Box, Chip, Link} from '@mui/material';
+import tinycolor from "tinycolor2";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -115,11 +117,41 @@ export const columnDefs: ColDef<Keyword>[] = [
         headerName: 'Keyword',
         width: 200,
         sort: 'asc',
-        cellRenderer: (p: LinkCellParams) => (
-            <a href={`/keywords/${p.data.id}`} style={{ color: '#1976d2', textDecoration: 'none' }}>
-                {p.value}
-            </a>
-        ),
+        cellRenderer: (p: LinkCellParams) => {
+            const color = p.data.keyword_group_color || '#ccc';
+            const textColor = tinycolor(color).isLight() ? '#000' : '#fff';
+
+            return (
+                <Box className="keyword-item" sx={{display: 'flex', alignItems: 'center', gap: 1}}>
+                    <Link
+                        href={`/keywords/${p.data.id}`}
+                        underline="none"
+                        sx={{
+                            color: '#1976d2',
+                            fontWeight: 500,
+                            textDecoration: 'none',
+                            '&:hover': {textDecoration: 'underline'},
+                        }}
+                    >
+                        {p.value}
+                    </Link>
+
+                    {p.data.keyword_group_name && (
+                        <Chip
+                            label={p.data.keyword_group_name}
+                            sx={{
+                                backgroundColor: color,
+                                color: textColor,
+                                fontWeight: 500,
+                                borderRadius: 1,
+                                boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                            }}
+                            size="small"
+                        />
+                    )}
+                </Box>
+            );
+        },
     },
     {
         headerName: 'URL',

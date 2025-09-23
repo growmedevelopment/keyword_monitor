@@ -39,6 +39,7 @@ class KeywordController extends Controller
         try {
             $request->validate([
                 'keyword' => 'required|string|max:255',
+                'keyword_group_id' => 'nullable|exists:keyword_groups,id',
             ]);
 
             // 1. Find project
@@ -72,12 +73,19 @@ class KeywordController extends Controller
             // 3. Submit keyword & create DataForSeoTask
             $keyword = $this->keywordSubmissionService->submitKeyword(
                 $project,
-                $request->input('keyword')
+                $request['keyword'],
+                $request['keyword_group_id'] ?? null
             );
 
             return response()->json([
                 'message' => 'Keyword added and queued for background processing.',
-                'keyword' => $keyword,
+                'keyword' => array_merge(
+                    $keyword->toArray(),
+                    [
+                        'keyword_group_name' => $keyword->group?->name,
+                        'keyword_group_color' => $keyword->group?->color,
+                        ]
+                ),
                 'status' => DataForSeoTaskStatus::QUEUED,
             ], 201);
 

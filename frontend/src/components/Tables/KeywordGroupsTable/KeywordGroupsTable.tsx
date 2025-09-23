@@ -1,14 +1,14 @@
 import { AgGridReact } from 'ag-grid-react';
 import { useMemo } from 'react';
 import {columnDefs} from "./columns.tsx";
-import type {Keyword} from "../../types/keywordTypes.ts";
+import type {KeywordGroup} from "../../types/keywordTypes.ts";
 import '../../../style/keywordTable.css';
 
 interface Props {
-    keywords: Keyword[];
+    keywordGroups: KeywordGroup[];
 }
 
-export default function KeywordTable({ keywords }: Props) {
+export default function KeywordGroupsTable({ keywordGroups }: Props) {
 
     const defaultColDef = useMemo(
         () => ({
@@ -20,14 +20,14 @@ export default function KeywordTable({ keywords }: Props) {
         []
     );
 
-    if (!keywords || keywords.length === 0) {
+    if (!keywordGroups || keywordGroups.length === 0) {
         return <p>No keywords added yet.</p>;
     }
 
     return (
         <div className="ag-theme-alpine" style={{ height: 500, width: '100%' }}>
             <AgGridReact
-                rowData={keywords}
+                rowData={keywordGroups}
                 columnDefs={columnDefs}
                 defaultColDef={defaultColDef}
                 pagination={true}

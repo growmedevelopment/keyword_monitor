@@ -52,4 +52,9 @@ class Keyword extends Model
             'id'                     // Local key on data_for_seo_tasks table
         )->orderBy('rank_absolute', 'asc');
     }
+
+    public function group(): BelongsTo
+    {
+        return $this->belongsTo(KeywordGroup::class, 'keyword_group_id');
+    }
 }

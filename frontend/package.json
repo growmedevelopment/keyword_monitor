@@ -21,12 +21,14 @@
     "dayjs": "^1.11.13",
     "js-cookie": "^3.0.5",
     "laravel-echo": "^2.1.7",
+    "mui-color-input": "^7.0.0",
     "pusher-js": "^8.4.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-hot-toast": "^2.6.0",
     "react-router-dom": "^7.7.1",
-    "react-select": "^5.10.2"
+    "react-select": "^5.10.2",
+    "tinycolor2": "^1.6.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
@@ -34,6 +36,7 @@
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@types/react-router-dom": "^5.3.3",
+    "@types/tinycolor2": "^1.4.6",
     "@vitejs/plugin-react": "^4.7.0",
     "eslint": "^9.32.0",
     "eslint-plugin-react-hooks": "^5.2.0",

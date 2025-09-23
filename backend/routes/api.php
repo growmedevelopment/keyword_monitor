@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\KeywordController;
+use App\Http\Controllers\KeywordGroupController;
 use App\Http\Controllers\SerpLocationController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProjectController;
@@ -39,6 +40,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::delete('/keywords/{keyword}', [KeywordController::class, 'destroy']);
 
+    Route::get('/keyword-groups', [KeywordGroupController::class, 'index']);
+
+    Route::post('/keyword-groups', [KeywordGroupController::class, 'store']);
+
+    Route::delete('/keyword-groups/{id}', [KeywordGroupController::class, 'destroy']);
 });
 
 

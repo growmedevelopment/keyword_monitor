@@ -14,8 +14,9 @@ class ProjectKeywordResource extends JsonResource
             'keyword' => $this->keyword,
             'status_message' => $this->status_message,
             'status_code' => $this->status_code,
-
-            // Rename lowestDataForSeoResults to "results"
+            'keyword_group_id' => $this->group?->id,
+            'keyword_group_name' => $this->group?->name,
+            'keyword_group_color' => $this->group?->color,
             'results' => KeywordRankResultResource::collection(
                 $this->whenLoaded('keywordsRank')
             ),

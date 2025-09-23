@@ -127,6 +127,13 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
                             label="Archived"
                             inset
                         />
+
+                        <NavItem
+                            to="/keyword-groups"
+                            icon={<ChevronRightIcon fontSize="small" />}
+                            label="KeywordGroups"
+                            inset
+                        />
                     </List>
                 </Collapse>
             </>
@@ -139,6 +146,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
             <List sx={{ px: 0.5 }}>
                 <NavItem to="/dashboard" icon={<DashboardIcon />} label="Dashboard" />
                 <ProjectsGroup />
+
             </List>
 
             <Box sx={{ flexGrow: 1 }} />

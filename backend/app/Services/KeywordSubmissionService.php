@@ -30,10 +30,10 @@ class KeywordSubmissionService
      *
      * @throws \Exception          If credentials are missing or API submission fails.
      */
-    public function submitKeyword(Project $project, string $newKeyword): Keyword
+    public function submitKeyword(Project $project, string $newKeyword, ?int $keywordGroupId = null): Keyword
     {
         $credentials = CredentialsService::get();
-        $keyword = $this->createAndAttachKeyword($project, $newKeyword);
+        $keyword = $this->createAndAttachKeyword($project, $newKeyword, $keywordGroupId);
 
         $payload = $this->buildPayload($keyword, $project);
         $this->submitToDataForSeo($payload, $keyword, $project, $credentials);
@@ -53,11 +53,12 @@ class KeywordSubmissionService
      *
      * @return Keyword             The newly created and refreshed Keyword model instance.
      */
-    private function createAndAttachKeyword(Project $project, string $newKeyword): Keyword
+    private function createAndAttachKeyword(Project $project, string $newKeyword,  ?int $keywordGroupId = null): Keyword
     {
         $keyword = $project->keywords()->create([
             'keyword'  => Str::lower($newKeyword),
             'location' => $project->location_code,
+            'keyword_group_id'  => $keywordGroupId,
         ]);
 
         return $keyword->refresh();
