@@ -89,7 +89,7 @@ class PollDataForSeoTaskJob implements ShouldQueue
             }
 
             // Handle "Task In Queue" response
-            if ((int) $taskData['status_code'] === DataForSeoTaskStatus::QUEUED) {
+            if ((int) $taskData['status_code'] === DataForSeoTaskStatus::QUEUED || (int) $taskData['status_code'] === DataForSeoTaskStatus::PROCESSING) {
                 Log::info('Task still in queue, retrying...', ['task_id' => $this->task->task_id]);
 
                 $attempts = Cache::increment("seo_retries:{$this->task->task_id}");
