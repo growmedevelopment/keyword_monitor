@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use AllowDynamicProperties;
+
 use App\Models\User;
 use App\Services\DataForSeo\AccountService;
 use Illuminate\Http\JsonResponse;

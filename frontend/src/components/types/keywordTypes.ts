@@ -26,6 +26,12 @@ export interface KeywordRank {
     updated_at: string;
 }
 
+export interface KeywordGroup {
+    id: number;
+    name: string;
+    color: string;
+}
+
 export interface Keyword {
     id: number;
     keyword: string;
@@ -33,6 +39,9 @@ export interface Keyword {
     status_message: string;
     results: KeywordResult;
     keywords_rank : KeywordRank[];
+    keyword_group_id: KeywordGroup['id'] | null;
+    keyword_group_name: KeywordGroup['name'] | null;
+    keyword_group_color : KeywordGroup['color'] | null;
 }
 
 

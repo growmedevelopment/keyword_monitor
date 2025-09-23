@@ -6,10 +6,11 @@ import ProjectShowPage from './pages/ProjectShowPage';
 import KeywordShowPage from './pages/KeywordShowPage';
 import UserRegisterPage from './pages/UserRegisterPage';
 import UserLoginPage from './pages/UserLoginPage';
-
+import KeywordGroupPage from './pages/KeywordGroupsPage.tsx';
+import ProjectsArchivedPage from "./pages/ProjectsArchivedPage";
 import { useAuth } from './context/AuthContext';
 import AppLayout from "./layouts/AppLayout.tsx";
-import ProjectsArchivedPage from "./pages/ProjectsArchivedPage.tsx";
+
 
 export default function App() {
     const { user, loading } = useAuth();
@@ -35,7 +36,6 @@ export default function App() {
             <CssBaseline />
 
             {user ? (
-                // AUTHENTICATED AREA — wrapped by our dedicated layout (AppBar + Sidebar)
                 <AppLayout>
                     <Routes>
                         <Route path="/" element={<Dashboard />} />
@@ -44,6 +44,7 @@ export default function App() {
                         <Route path="/projects/archived" element={<ProjectsArchivedPage />} />
                         <Route path="/projects/:id" element={<ProjectShowPage />} />
                         <Route path="/keywords/:id" element={<KeywordShowPage />} />
+                        <Route path="/keyword-groups/" element={<KeywordGroupPage />} />
                         <Route path="/register" element={<UserRegisterPage />} />
                         {/* Already authenticated: redirect away from /login */}
                         <Route path="/login" element={<Navigate to="/dashboard" replace />} />

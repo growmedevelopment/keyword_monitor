@@ -79,12 +79,12 @@ export default function ProjectShowPage() {
         };
     }, [id]);
 
-    const handleAddKeyword = (newKeywords: string[]) => {
+    const handleAddKeyword = (newKeywords: string[], groupId: number | null) => {
         if (!project || !id) return;
 
         newKeywords.forEach((keyword) => {
             keywordService
-                .create(id, keyword)
+                .create(id, keyword, groupId)
                 .then((response) => {
                     const createdKeyword = {
                         ...response.keyword,
@@ -106,9 +106,6 @@ export default function ProjectShowPage() {
 
         setDialogOpen(false);
     };
-
-
-
 
     return (
         <Box p={3}>
@@ -137,11 +134,13 @@ export default function ProjectShowPage() {
                         />
 
                         {/* Add Keyword Dialog */}
-                        <AddKeywordDialog
-                            isOpen={isDialogOpen}
-                            onClose={() => setDialogOpen(false)}
-                            onSubmit={handleAddKeyword}
-                        />
+                        {isDialogOpen &&
+                            <AddKeywordDialog
+                                onClose={() => setDialogOpen(false)}
+                                onSubmit={handleAddKeyword}
+                            />
+                        }
+
                     </>
                 )}
             </DataStateHandler>

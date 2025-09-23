@@ -139,7 +139,7 @@ From the root directory:
 ### 8. Run Laravel Commands
 
 ```bash
-    docker-compose run --rm artisan migrate
+     
     docker-compose run --rm artisan key:generate
 ```
 
