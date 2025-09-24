@@ -6,7 +6,7 @@ import ProjectShowPage from './pages/ProjectShowPage';
 import KeywordShowPage from './pages/KeywordShowPage';
 import UserRegisterPage from './pages/UserRegisterPage';
 import UserLoginPage from './pages/UserLoginPage';
-import KeywordGroupPage from './pages/KeywordGroupsPage.tsx';
+import KeywordGroupPage from './components/Project/KeywordGroups.tsx';
 import ProjectsArchivedPage from "./pages/ProjectsArchivedPage";
 import { useAuth } from './context/AuthContext';
 import AppLayout from "./layouts/AppLayout.tsx";

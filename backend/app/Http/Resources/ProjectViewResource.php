@@ -27,6 +27,7 @@ class ProjectViewResource extends JsonResource
                 'email' => $rank->user->email,
             ],
             'keywords' => ProjectKeywordResource::collection($this->whenLoaded('keywords')),
+            'keyword_groups' => ProjectKeywordGroupResource::collection($this->whenLoaded('keyword_groups')),
             'created_at' => $rank->created_at,
             'location_code' => $rank->location_code,
             'location_name' => $rank->location_name,

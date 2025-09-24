@@ -1,4 +1,4 @@
-import type {Keyword} from "./keywordTypes.ts";
+import type {Keyword, KeywordGroup} from "./keywordTypes.ts";
 
 
 export interface Project {
@@ -9,6 +9,7 @@ export interface Project {
     location_code: number;
     location_name: string;
     keywords: Keyword[];
+    keyword_groups: KeywordGroup[];
     created_at: string;
     deleted_at: string;
 }

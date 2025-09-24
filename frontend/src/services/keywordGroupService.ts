@@ -9,8 +9,13 @@ type DeleteResponse = {
 };
 
 const keywordGroupService = {
-    async create({name, color}: {name: string, color: string}): Promise<any> {
-        const response = await axios.post(`${API}/api/keyword-groups`, {name, color});
+    async create({name, color, project_id}: {name: string, color: string, project_id: number}): Promise<any> {
+        const response = await axios.post(`${API}/api/keyword-groups`, {name, color, project_id});
+        return response.data;
+    },
+
+    async getByProject(project_id: number): Promise<KeywordGroup[]> {
+        const response = await axios.get(`${API}/api/keyword-groups/project/${project_id}`);
         return response.data;
     },
 

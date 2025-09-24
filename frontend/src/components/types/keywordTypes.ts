@@ -30,6 +30,7 @@ export interface KeywordGroup {
     id: number;
     name: string;
     color: string;
+    project_id: number;
 }
 
 export interface Keyword {

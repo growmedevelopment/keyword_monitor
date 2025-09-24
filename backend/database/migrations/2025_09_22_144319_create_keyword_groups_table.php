@@ -10,6 +10,9 @@ class CreateKeywordGroupsTable extends Migration
     {
         Schema::create('keyword_groups', static function (Blueprint $table) {
             $table->id();
+            $table->foreignId('project_id')
+                ->constrained()
+                ->onDelete('cascade');
             $table->string('name');
             $table->string('color');
             $table->timestamps();
@@ -18,6 +21,9 @@ class CreateKeywordGroupsTable extends Migration
         Schema::table('keywords', static function (Blueprint $table) {
             $table->foreignId('keyword_group_id')->nullable()->constrained('keyword_groups');
         });
+
+
+
     }
 
     public function down(): void {

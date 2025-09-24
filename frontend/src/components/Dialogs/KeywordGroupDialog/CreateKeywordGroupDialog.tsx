@@ -1,8 +1,6 @@
 import { useState } from 'react';
-import {
-    Dialog, DialogTitle, DialogContent, DialogActions,
-    TextField, Button, Typography, Box, Stack
-} from '@mui/material';
+import { useParams } from 'react-router-dom';
+import {Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Typography, Box, Stack} from '@mui/material';
 import { MuiColorInput } from 'mui-color-input';
 import toast from 'react-hot-toast';
 import keywordGroupService from '../../../services/keywordGroupService.ts';
@@ -10,11 +8,19 @@ import keywordGroupService from '../../../services/keywordGroupService.ts';
 interface Props {
     isOpen: boolean;
     onClose: () => void;
-    onCreate?: () => void;
+    onCreate?: (data: {
+        name: string;
+        color: string;
+        project_id: number }) => void;
 }
 
 export default function CreateKeywordGroupDialog({ isOpen, onClose, onCreate }: Props) {
-    const [form, setForm] = useState({ name: '', color: '#ffffff' });
+    const { id } = useParams<{ id: string }>();
+    const [form, setForm] = useState<{ name: string; color: string; project_id: number }>({
+        name: '',
+        color: '#ffffff',
+        project_id: parseInt(id ?? '0', 10),
+    });
     const [loading, setLoading] = useState(false);
 
     const handleChange = (field: 'name' | 'color', value: string) => {
@@ -32,9 +38,10 @@ export default function CreateKeywordGroupDialog({ isOpen, onClose, onCreate }: 
         try {
             const response = await keywordGroupService.create(form);
             toast.success(response.message || 'Keyword group created');
-            setForm({ name: '', color: '#ffffff' });
+
+            setForm({ name: '', color: '#ffffff', project_id: parseInt(id ?? '0', 10) });
             onClose();
-            onCreate?.();
+            onCreate?.(form);
         } catch (err: any) {
             toast.error(err.response?.data?.details || 'Failed to create keyword group.');
         } finally {
@@ -70,12 +77,7 @@ export default function CreateKeywordGroupDialog({ isOpen, onClose, onCreate }: 
             </DialogContent>
             <DialogActions>
                 <Button onClick={onClose} disabled={loading}>Cancel</Button>
-                <Button
-                    onClick={handleSubmit}
-                    variant="contained"
-                    color="primary"
-                    disabled={loading}
-                >
+                <Button onClick={handleSubmit} variant="contained" color="primary" disabled={loading}>
                     Add Group
                 </Button>
             </DialogActions>

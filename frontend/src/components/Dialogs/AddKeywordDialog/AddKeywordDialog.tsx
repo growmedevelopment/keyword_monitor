@@ -15,6 +15,7 @@ import { useEffect, useState } from 'react';
 import keywordGroupService from "../../../services/keywordGroupService.ts";
 import type {KeywordGroup} from "../../types/keywordTypes.ts";
 import tinycolor from 'tinycolor2'
+import {useParams} from "react-router-dom";
 
 interface Props {
     onClose: () => void;
@@ -22,13 +23,14 @@ interface Props {
 }
 
 export default function AddKeywordDialog({ onClose, onSubmit }: Props) {
+    const {id} = useParams<{ id: string }>();
     const [input, setInput] = useState('');
     const [keywordGroups, setKeywordGroups] = useState<KeywordGroup[]>([]);
     const [selectedGroup, setSelectedGroup] = useState<number | null>(null);
 
     useEffect(() => {
         const fetchGroups = async () => {
-            const groups = await keywordGroupService.getAll();
+            const groups = await keywordGroupService.getByProject( parseInt(id ?? '0', 10));
             setKeywordGroups(groups);
         };
         fetchGroups().then();
