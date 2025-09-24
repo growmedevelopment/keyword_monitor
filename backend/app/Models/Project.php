@@ -26,4 +26,9 @@ class Project extends Model
     public function tasks(): HasMany {
         return $this->hasMany(DataForSeoTask::class);
     }
+
+    public function keyword_groups(): HasMany {
+        return $this->hasMany(KeywordGroup::class);
+    }
+
 }

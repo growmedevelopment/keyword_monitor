@@ -1,19 +1,20 @@
-import { useEffect, useState, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import {useEffect, useState, useCallback} from "react";
+import {useParams} from "react-router-dom";
 import {Box, Typography} from "@mui/material";
 import pusher from "../pusher";
 import projectService from "../services/projectService";
 import keywordService from "../services/keywordService.ts";
 import AddKeywordDialog from "../components/Dialogs/AddKeywordDialog/AddKeywordDialog.tsx";
-import type { Project } from "../components/types/projectTypes";
+import type {Project} from "../components/types/projectTypes";
 import ProjectDetails from "../components/Project/ProjectDetails.tsx";
 import ProjectKeywordsSection from "../components/Project/ProjectKeywordsSection.tsx";
 import DataStateHandler from "../components/Common/DataStateHandler.tsx";
 import toast from "react-hot-toast";
+import KeywordGroups from "../components/Project/KeywordGroups.tsx";
 
 
 export default function ProjectShowPage() {
-    const { id } = useParams<{ id: string }>();
+    const {id} = useParams<{ id: string }>();
     const [project, setProject] = useState<Project | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -59,7 +60,7 @@ export default function ProjectShowPage() {
                 if (!prevProject) return prevProject;
 
                 const updatedKeywords = prevProject.keywords.map((k) =>
-                    k.id === enrichedKeyword.id ? { ...k, ...enrichedKeyword } : k
+                    k.id === enrichedKeyword.id ? {...k, ...enrichedKeyword} : k
                 );
 
                 return {
@@ -86,12 +87,10 @@ export default function ProjectShowPage() {
             keywordService
                 .create(id, keyword, groupId)
                 .then((response) => {
-                    const createdKeyword = {
-                        ...response.keyword,
-                    };
+                    const createdKeyword = {...response.keyword,};
 
                     setProject((prev) =>
-                        prev ? { ...prev, keywords: [...prev.keywords, createdKeyword] } : prev
+                        prev ? {...prev, keywords: [...prev.keywords, createdKeyword]} : prev
                     );
 
                     toast.success(response.message);
@@ -125,13 +124,15 @@ export default function ProjectShowPage() {
                         </Typography>
 
                         {/* Project Details */}
-                        <ProjectDetails project={projectData} />
+                        <ProjectDetails project={projectData}/>
 
                         {/*/!* Keywords Section *!/*/}
                         <ProjectKeywordsSection
                             keywords={projectData.keywords}
                             onAddKeyword={() => setDialogOpen(true)}
                         />
+
+                        <KeywordGroups keywordGroups={projectData.keyword_groups}/>
 
                         {/* Add Keyword Dialog */}
                         {isDialogOpen &&

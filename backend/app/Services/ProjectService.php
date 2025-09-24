@@ -66,13 +66,13 @@ class ProjectService
 
     public function show(string $project_id): ProjectViewResource {
 
-        $project = Project::with('keywords.keywordsRank')->findOrFail($project_id);
+        $project = Project::with(['keywords.keywordsRank', 'keyword_groups'])->findOrFail($project_id);
 
         if ($project->user_id !== auth()->id()) {
             abort(403, 'Unauthorized');
         }
 
-        return new ProjectViewResource($project);
+       return new ProjectViewResource($project);
 
     }
 }
