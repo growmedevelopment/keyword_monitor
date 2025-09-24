@@ -126,13 +126,15 @@ export default function ProjectShowPage() {
                         {/* Project Details */}
                         <ProjectDetails project={projectData}/>
 
+                        <KeywordGroups keywordGroups={projectData.keyword_groups}/>
+
                         {/*/!* Keywords Section *!/*/}
                         <ProjectKeywordsSection
                             keywords={projectData.keywords}
                             onAddKeyword={() => setDialogOpen(true)}
                         />
 
-                        <KeywordGroups keywordGroups={projectData.keyword_groups}/>
+
 
                         {/* Add Keyword Dialog */}
                         {isDialogOpen &&

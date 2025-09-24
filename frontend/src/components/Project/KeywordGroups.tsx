@@ -1,22 +1,25 @@
-import { Suspense, useOptimistic, useState, startTransition } from 'react';
-import { Typography, Stack, Button, Paper } from '@mui/material';
-import KeywordGroupsTable from '../Tables/KeywordGroupsTable/KeywordGroupsTable.tsx';
-import CreateKeywordGroupDialog from '../Dialogs/KeywordGroupDialog/CreateKeywordGroupDialog.tsx';
-import type { KeywordGroup } from '../types/keywordTypes.ts';
-import keywordGroupService from "../../services/keywordGroupService.ts";
+import { Suspense, useOptimistic, useState, startTransition } from "react";
+import { Typography, Stack, Button, Paper, Chip } from "@mui/material";
+import tinycolor from "tinycolor2";
 import toast from "react-hot-toast";
+import type { KeywordGroup } from "../types/keywordTypes.ts";
+import keywordGroupService from "../../services/keywordGroupService.ts";
+import CreateKeywordGroupDialog from "../Dialogs/KeywordGroupDialog/CreateKeywordGroupDialog.tsx";
+import ConfirmDialog from "../Common/ConfirmDialog.tsx";
 
-interface KeywordGroupsProps {
-    keywordGroups: KeywordGroup[]
-}
-
-const KeywordGroups = ({ keywordGroups: initialKeywordGroups }: KeywordGroupsProps) => {
+const KeywordGroups = ({ keywordGroups: initialKeywordGroups }: { keywordGroups: KeywordGroup[] }) => {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [realKeywordGroups, setRealKeywordGroups] = useState<KeywordGroup[]>(initialKeywordGroups);
     const [tempIdCounter, setTempIdCounter] = useState(-1);
 
-    // optimistic state
-    const [optimisticKeywordGroups, addOptimisticKeywordGroup] = useOptimistic<KeywordGroup[], KeywordGroup>(realKeywordGroups, (prev, newGroup) => [...prev, newGroup]);
+    const [optimisticKeywordGroups, addOptimisticKeywordGroup] = useOptimistic<
+        KeywordGroup[],
+        KeywordGroup
+    >(realKeywordGroups, (prev, newGroup) => [...prev, newGroup]);
+
+
+    const [confirmOpen, setConfirmOpen] = useState(false);
+    const [groupToDelete, setGroupToDelete] = useState<KeywordGroup | null>(null);
 
     const handleCreate = async (newKeywordGroupData: Omit<KeywordGroup, "id">) => {
         setDialogOpen(false);
@@ -24,10 +27,9 @@ const KeywordGroups = ({ keywordGroups: initialKeywordGroups }: KeywordGroupsPro
         const tempId = tempIdCounter;
         const tempGroup: KeywordGroup = { ...newKeywordGroupData, id: tempId };
 
-
         startTransition(() => {
-            setTempIdCounter(prev => prev - 1);
-            setRealKeywordGroups(prev => [...prev, tempGroup]);
+            setTempIdCounter((prev) => prev - 1);
+            setRealKeywordGroups((prev) => [...prev, tempGroup]);
             addOptimisticKeywordGroup(tempGroup);
         });
 
@@ -35,29 +37,50 @@ const KeywordGroups = ({ keywordGroups: initialKeywordGroups }: KeywordGroupsPro
             const response = await keywordGroupService.create(newKeywordGroupData);
             const savedGroup = response.keyword_group;
 
-
             startTransition(() => {
-                setRealKeywordGroups(prev =>
-                    prev.map(group => (group.id === tempId ? savedGroup : group))
+                setRealKeywordGroups((prev) =>
+                    prev.map((group) => (group.id === tempId ? savedGroup : group))
                 );
             });
 
         } catch (error: any) {
-
             startTransition(() => {
-                setRealKeywordGroups(prev =>
-                    prev.filter(group => group.id !== tempId)
-                );
+                setRealKeywordGroups((prev) => prev.filter((group) => group.id !== tempId));
             });
-
             toast.error(error.response?.data?.error || "Network error");
+        }
+    };
 
+    const confirmDelete = (group: KeywordGroup) => {
+        setGroupToDelete(group);
+        setConfirmOpen(true);
+    };
+
+    const handleDeleteConfirmed = async () => {
+        if (!groupToDelete) return;
+
+        const id = groupToDelete.id;
+        const oldGroups = [...realKeywordGroups];
+
+        startTransition(() => {
+            setRealKeywordGroups((prev) => prev.filter((group) => group.id !== id));
+        });
+
+        try {
+            await keywordGroupService.delete(id);
+            toast.success("Keyword group deleted successfully");
+        } catch (error: any) {
+            setRealKeywordGroups(oldGroups);
+            toast.error(error.response?.data?.error || "Failed to delete keyword group");
+        } finally {
+            setConfirmOpen(false);
+            setGroupToDelete(null);
         }
     };
 
     return (
         <Suspense fallback={<p>Loading...</p>}>
-            <Paper sx={{ p: 2 }}>
+            <Paper sx={{ p: 2, mb: 3 }}>
                 <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
                     <Typography variant="h6">Keyword groups (tags)</Typography>
                     <Button variant="contained" size="small" onClick={() => setDialogOpen(true)}>
@@ -65,8 +88,27 @@ const KeywordGroups = ({ keywordGroups: initialKeywordGroups }: KeywordGroupsPro
                     </Button>
                 </Stack>
 
-                {/* show optimistic groups in the table */}
-                <KeywordGroupsTable keywordGroups={optimisticKeywordGroups} />
+                <Stack direction="row" flexWrap="wrap" gap={1}>
+                    {optimisticKeywordGroups.map((group) => {
+                        const textColor = tinycolor(group.color).isLight() ? "#000" : "#fff";
+                        return (
+                            <Chip
+                                key={group.id}
+                                label={group.name}
+                                onDelete={() => confirmDelete(group)} // ✅ open confirmation modal
+                                sx={{
+                                    boxShadow: "rgba(100, 100, 111, 0.2) 0px 7px 29px 0px",
+                                    backgroundColor: group.color,
+                                    color: textColor,
+                                    fontWeight: "bold",
+                                    "& .MuiChip-deleteIcon": {
+                                        color: textColor,
+                                    },
+                                }}
+                            />
+                        );
+                    })}
+                </Stack>
 
                 {dialogOpen && (
                     <CreateKeywordGroupDialog
@@ -79,6 +121,27 @@ const KeywordGroups = ({ keywordGroups: initialKeywordGroups }: KeywordGroupsPro
                                 project_id: data.project_id,
                             })
                         }
+                    />
+                )}
+
+
+                {confirmOpen && groupToDelete && (
+                    <ConfirmDialog
+                        open={confirmOpen}
+                        title="Delete keyword group?"
+                        description={
+                            <>
+                                Are you sure you want to delete <strong>{groupToDelete.name}</strong>?
+                                This action cannot be undone.
+                            </>
+                        }
+                        confirmLabel="Delete"
+                        cancelLabel="Cancel"
+                        onConfirm={handleDeleteConfirmed}
+                        onCancel={() => {
+                            setConfirmOpen(false);
+                            setGroupToDelete(null);
+                        }}
                     />
                 )}
             </Paper>
