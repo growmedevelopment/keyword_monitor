@@ -15,6 +15,7 @@ interface Props {
 export default function CreateProjectDialog({ isOpen, onClose, onCreate }: Props) {
 
     const [data, setData] = useState<Project>({
+        keyword_groups: [],
         keywords: [],
         id: Date.now(),
         name: '',
@@ -23,7 +24,7 @@ export default function CreateProjectDialog({ isOpen, onClose, onCreate }: Props
         location_code: 0,
         created_at: '',
         location_name: '',
-        deleted_at: '',
+        deleted_at: ''
     });
     const [selectedCountry, setSelectedCountry] = useState<CountryOption | null>(null);
     const [loading, setLoading] = useState(false);

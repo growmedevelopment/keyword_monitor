@@ -39,6 +39,7 @@ export default function ProjectsPage() {
         try {
             const createdProject = await projectService.create(data);
             setRealProjects((prev) => [...prev, createdProject]);
+            toast.success("Project created successfully.");
         } catch (error: any) {
             toast.error(error.response.data.message || "Failed to create project.");
         }

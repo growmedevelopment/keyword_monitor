@@ -6,7 +6,6 @@ import ProjectShowPage from './pages/ProjectShowPage';
 import KeywordShowPage from './pages/KeywordShowPage';
 import UserRegisterPage from './pages/UserRegisterPage';
 import UserLoginPage from './pages/UserLoginPage';
-import KeywordGroupPage from './components/Project/KeywordGroups.tsx';
 import ProjectsArchivedPage from "./pages/ProjectsArchivedPage";
 import { useAuth } from './context/AuthContext';
 import AppLayout from "./layouts/AppLayout.tsx";
@@ -44,7 +43,6 @@ export default function App() {
                         <Route path="/projects/archived" element={<ProjectsArchivedPage />} />
                         <Route path="/projects/:id" element={<ProjectShowPage />} />
                         <Route path="/keywords/:id" element={<KeywordShowPage />} />
-                        <Route path="/keyword-groups/" element={<KeywordGroupPage />} />
                         <Route path="/register" element={<UserRegisterPage />} />
                         {/* Already authenticated: redirect away from /login */}
                         <Route path="/login" element={<Navigate to="/dashboard" replace />} />
