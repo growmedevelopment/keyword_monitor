@@ -61,7 +61,7 @@ class ProjectService
     public function restore(int $project_id): void {
         $project = Project::withTrashed()->where('user_id', auth()->id())->findOrFail($project_id);
 
-        $project::restore();
+        $project->restore();
     }
 
     public function show(string $project_id): ProjectViewResource {

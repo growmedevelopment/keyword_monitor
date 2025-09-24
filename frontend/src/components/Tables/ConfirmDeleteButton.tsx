@@ -1,68 +1,41 @@
-import * as React from 'react';
+import * as React from "react";
 import {
     IconButton,
     Button,
     Tooltip,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
     CircularProgress,
-} from '@mui/material';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+} from "@mui/material";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import ConfirmDialog from "../Common/ConfirmDialog.tsx";
 
 export type ConfirmDeleteButtonProps = {
-    /** Called when user confirms. If it throws, the dialog stays open and loading stops. */
     onConfirm: () => Promise<void> | void;
-
-    /** Button label in dialog’s primary action (default: "Remove") */
     confirmLabel?: string;
-
-    /** Dialog title (default: "Remove item?") */
     title?: string;
-
-    /** Dialog content text (keep it short). */
     description?: React.ReactNode;
-
-    /** Tooltip over the trigger button (default: "Remove") */
     tooltip?: string;
-
-    /** Render as IconButton (default) or as text Button */
-    variant?: 'icon' | 'button';
-
-    /** Disable trigger */
+    variant?: "icon" | "button";
     disabled?: boolean;
-
-    /** Color for the action button (default: "error") */
-    color?: 'error' | 'primary' | 'secondary' | 'inherit';
-
-    /** Optional callback after successful deletion */
+    color?: "error" | "primary" | "secondary" | "inherit";
     onDeleted?: () => void;
-
-    /** Optional callback when deletion fails */
     onError?: (err: unknown) => void;
-
-    /** aria-label for the trigger button */
     ariaLabel?: string;
-
-    /** If variant = button, children is the trigger label; if absent uses confirmLabel */
     children?: React.ReactNode;
-
     icon?: React.ReactElement;
 };
 
 export default function ConfirmDeleteButton({
                                                 onConfirm,
-                                                confirmLabel = 'Remove',
-                                                title = 'Remove item?',
-                                                description = 'This action is permanent and cannot be undone.',
-                                                tooltip = 'Remove',
-                                                variant = 'icon',
+                                                confirmLabel = "Remove",
+                                                title = "Remove item?",
+                                                description = "This action is permanent and cannot be undone.",
+                                                tooltip = "Remove",
+                                                variant = "icon",
                                                 disabled,
-                                                color = 'error',
+                                                color = "error",
                                                 onDeleted,
                                                 onError,
-                                                ariaLabel = 'remove',
+                                                ariaLabel = "remove",
                                                 children,
                                                 icon,
                                             }: ConfirmDeleteButtonProps) {
@@ -87,11 +60,21 @@ export default function ConfirmDeleteButton({
     };
 
     const Trigger =
-        variant === 'icon' ? (
+        variant === "icon" ? (
             <Tooltip title={tooltip}>
         <span>
-          <IconButton color={color} size="small" onClick={handleOpen} disabled={disabled || loading} aria-label={ariaLabel}>
-            {loading ? <CircularProgress size={18} /> : (icon ?? <DeleteOutlineIcon fontSize="small" />)}
+          <IconButton
+              color={color}
+              size="small"
+              onClick={handleOpen}
+              disabled={disabled || loading}
+              aria-label={ariaLabel}
+          >
+            {loading ? (
+                <CircularProgress size={18} />
+            ) : (
+                icon ?? <DeleteOutlineIcon fontSize="small" />
+            )}
           </IconButton>
         </span>
             </Tooltip>
@@ -101,8 +84,10 @@ export default function ConfirmDeleteButton({
                 variant="outlined"
                 onClick={handleOpen}
                 disabled={disabled || loading}
-                startIcon={loading ? <CircularProgress size={18} /> : (icon ?? <DeleteOutlineIcon />)}
-                sx={{ textTransform: 'none' }}
+                startIcon={
+                    loading ? <CircularProgress size={18} /> : icon ?? <DeleteOutlineIcon />
+                }
+                sx={{ textTransform: "none" }}
             >
                 {children ?? confirmLabel}
             </Button>
@@ -112,18 +97,15 @@ export default function ConfirmDeleteButton({
         <>
             {Trigger}
 
-            <Dialog open={open} onClose={handleClose}>
-                <DialogTitle>{title}</DialogTitle>
-                <DialogContent>{description}</DialogContent>
-                <DialogActions>
-                    <Button onClick={handleClose} disabled={loading}>
-                        Cancel
-                    </Button>
-                    <Button onClick={handleConfirm} color={color} variant="contained" disabled={loading}>
-                        {loading ? 'Removing…' : confirmLabel}
-                    </Button>
-                </DialogActions>
-            </Dialog>
+            <ConfirmDialog
+                open={open}
+                title={title}
+                description={description}
+                confirmLabel={confirmLabel}
+                cancelLabel="Cancel"
+                onConfirm={handleConfirm}
+                onCancel={handleClose}
+            />
         </>
     );
 }
