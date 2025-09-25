@@ -11,6 +11,8 @@ import ProjectKeywordsSection from "../components/Project/ProjectKeywordsSection
 import DataStateHandler from "../components/Common/DataStateHandler.tsx";
 import toast from "react-hot-toast";
 import KeywordGroups from "../components/Project/KeywordGroups.tsx";
+import BackButton from "../components/Common/BackButton.tsx";
+
 
 
 export default function ProjectShowPage() {
@@ -108,6 +110,7 @@ export default function ProjectShowPage() {
 
     return (
         <Box p={3}>
+            <BackButton />
             <DataStateHandler<Project>
                 loading={loading}
                 error={error}
@@ -117,6 +120,7 @@ export default function ProjectShowPage() {
 
 
                 {(projectData: Project) => (
+
                     <>
                         {/* Project Title */}
                         <Typography variant="h4" gutterBottom>
@@ -131,10 +135,9 @@ export default function ProjectShowPage() {
                         {/*/!* Keywords Section *!/*/}
                         <ProjectKeywordsSection
                             keywords={projectData.keywords}
+                            keywordGroups={projectData.keyword_groups}
                             onAddKeyword={() => setDialogOpen(true)}
                         />
-
-
 
                         {/* Add Keyword Dialog */}
                         {isDialogOpen &&

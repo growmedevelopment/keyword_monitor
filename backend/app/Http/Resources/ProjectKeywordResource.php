@@ -14,9 +14,9 @@ class ProjectKeywordResource extends JsonResource
             'keyword' => $this->keyword,
             'status_message' => $this->status_message,
             'status_code' => $this->status_code,
-            'keyword_group_id' => $this->group?->id,
-            'keyword_group_name' => $this->group?->name,
-            'keyword_group_color' => $this->group?->color,
+            'keyword_group_id' => $this->keyword_groups?->id,
+            'keyword_group_name' => $this->keyword_groups?->name,
+            'keyword_group_color' => $this->keyword_groups?->color,
             'results' => KeywordRankResultResource::collection(
                 $this->whenLoaded('keywordsRank')
             ),

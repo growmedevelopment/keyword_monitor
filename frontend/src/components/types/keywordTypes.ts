@@ -38,8 +38,10 @@ export interface Keyword {
     keyword: string;
     status_code: number;
     status_message: string;
+    project_id: number;
     results: KeywordResult;
     keywords_rank : KeywordRank[];
+    keyword_groups: KeywordGroup;
     keyword_group_id: KeywordGroup['id'] | null;
     keyword_group_name: KeywordGroup['name'] | null;
     keyword_group_color : KeywordGroup['color'] | null;

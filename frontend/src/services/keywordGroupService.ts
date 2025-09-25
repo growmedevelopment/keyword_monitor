@@ -3,7 +3,7 @@ import type {KeywordGroup} from "../components/types/keywordTypes.ts";
 
 const API = import.meta.env.VITE_API_BACKEND_ENDPOINT;
 
-type DeleteResponse = {
+type Response = {
     status : string,
     message: string,
 };
@@ -24,10 +24,24 @@ const keywordGroupService = {
         return response.data;
     },
 
-    async delete(id: number): Promise<DeleteResponse> {
+    async delete(id: number): Promise<Response> {
         const response = await axios.delete(`${API}/api/keyword-groups/${id}`);
         return response.data;
     },
+
+    async setProjectKeywordGroup(keyword_id: number, keyword_groups_id: number): Promise<Response> {
+        const response = await axios.post(`${API}/api/keyword-groups/set-for-keyword`, {
+            keyword_id,
+            keyword_groups_id
+        });
+        return response.data;
+    },
+
+    async unsetProjectKeywordGroup(keyword_id: number): Promise<{status: string, message: string}> {
+        const response = await axios.post(`${API}/api/keyword-groups/unset-for-keyword/${keyword_id}`);
+        return response.data;
+    },
+
 };
 
 export default keywordGroupService;

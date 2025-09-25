@@ -1,13 +1,14 @@
 import { Paper, Stack, Typography, Button } from '@mui/material';
 import KeywordTable from '../Tables/KeywordTable/KeywordTable';
-import type {Keyword} from "../types/keywordTypes.ts";
+import type {Keyword, KeywordGroup} from "../types/keywordTypes.ts";
 
 interface ProjectKeywordsSectionProps {
     keywords: Keyword[];
     onAddKeyword: () => void;
+    keywordGroups: KeywordGroup[];
 }
 
-export default function ProjectKeywordsSection({keywords, onAddKeyword,}: ProjectKeywordsSectionProps) {
+export default function ProjectKeywordsSection({keywords, onAddKeyword, keywordGroups}: ProjectKeywordsSectionProps) {
     return (
         <Paper sx={{ p: 2 }}>
             <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
@@ -17,7 +18,7 @@ export default function ProjectKeywordsSection({keywords, onAddKeyword,}: Projec
                 </Button>
             </Stack>
 
-            <KeywordTable keywords={keywords} />
+            <KeywordTable keywords={keywords} keywordGroups={keywordGroups} />
         </Paper>
     );
 }

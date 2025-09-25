@@ -2,16 +2,22 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\KeywordGroup;
-use App\Models\Project;
+use App\Services\KeywordGroupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class KeywordGroupController extends Controller {
+class KeywordGroupController extends Controller
+{
+    protected KeywordGroupService $service;
 
-    public function index(): JsonResponse {
-        $groups = KeywordGroup::all();
-        return response()->json($groups);
+    public function __construct(KeywordGroupService $service)
+    {
+        $this->service = $service;
+    }
+
+    public function index(): JsonResponse
+    {
+        return response()->json($this->service->getAllGroups());
     }
 
     public function store(Request $request): JsonResponse
@@ -23,18 +29,13 @@ class KeywordGroupController extends Controller {
                 'color'      => ['required', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/'],
             ]);
 
-            $project = Project::findOrFail($data['project_id']);
-
-
-            $keywordGroup = $project->keyword_groups()->firstOrCreate(
-                ['name' => $data['name']],
-                ['color' => $data['color']]
-            );
+            $keywordGroup = $this->service->createGroup($data);
 
             return response()->json([
                 'keyword_group' => $keywordGroup,
                 'message'       => 'Keyword group created successfully',
             ], 201);
+
         } catch (\Exception $e) {
             return response()->json([
                 'error'   => 'Failed to create keyword group',
@@ -43,12 +44,9 @@ class KeywordGroupController extends Controller {
         }
     }
 
-    public function destroy(int $id): JsonResponse {
-        $group = KeywordGroup::findOrFail($id);
-
-        $group->keywords()->update(['keyword_group_id' => NULL]);
-
-        $group->delete();
+    public function destroy(int $id): JsonResponse
+    {
+        $this->service->deleteGroup($id);
 
         return response()->json([
             'status'  => 'success',
@@ -56,9 +54,47 @@ class KeywordGroupController extends Controller {
         ]);
     }
 
-    public function getProjectKeywordGroups(int $project_id): JsonResponse {
-        $groups = KeywordGroup::where('project_id', $project_id)->get();
-        return response()->json($groups);
+    public function getProjectKeywordGroups(int $project_id): JsonResponse
+    {
+        return response()->json($this->service->getProjectGroups($project_id));
     }
 
+    public function setProjectKeywordGroups(Request $request): JsonResponse
+    {
+        try {
+            $data = $request->validate([
+                'keyword_id'        => 'required|integer',
+                'keyword_groups_id' => 'required|integer',
+            ]);
+
+            $this->service->setKeywordGroup($data);
+
+            return response()->json([
+                'status'  => 'success',
+                'message' => 'Keyword group has been set for project',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error'   => 'Failed to set keyword group',
+                'details' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function unsetProjectKeywordGroup(int $keyword_id): JsonResponse
+    {
+        try {
+            $this->service->unsetKeywordGroup($keyword_id);
+
+            return response()->json([
+                'status'  => 'success',
+                'message' => 'Keyword group has been unset',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error'   => 'Failed to unset keyword group',
+                'details' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }
