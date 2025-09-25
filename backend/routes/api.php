@@ -46,6 +46,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/keyword-groups/project/{project_id}', [KeywordGroupController::class, 'getProjectKeywordGroups']);;
 
+    Route::post('/keyword-groups/set-for-keyword', [KeywordGroupController::class, 'setProjectKeywordGroups']);;
+
+    Route::post('/keyword-groups/unset-for-keyword/{keyword_id}', [KeywordGroupController::class, 'unsetProjectKeywordGroup']);
+
     Route::delete('/keyword-groups/{id}', [KeywordGroupController::class, 'destroy']);
 });
 

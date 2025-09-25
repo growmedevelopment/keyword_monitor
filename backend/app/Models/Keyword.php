@@ -53,7 +53,7 @@ class Keyword extends Model
         )->orderBy('rank_absolute', 'asc');
     }
 
-    public function group(): BelongsTo
+    public function keyword_groups(): BelongsTo
     {
         return $this->belongsTo(KeywordGroup::class, 'keyword_group_id');
     }

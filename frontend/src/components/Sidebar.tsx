@@ -128,12 +128,6 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
                             inset
                         />
 
-                        <NavItem
-                            to="/keyword-groups"
-                            icon={<ChevronRightIcon fontSize="small" />}
-                            label="KeywordGroups"
-                            inset
-                        />
                     </List>
                 </Collapse>
             </>
