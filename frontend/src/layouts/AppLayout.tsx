@@ -96,8 +96,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     flexGrow: 1,
                     display: 'flex',
                     flexDirection: 'column',
-                    // Leave space for AppBar
-                    mt: {xs: '64px', sm: '64px'}, // default AppBar height
+                    mt: {xs: '64px', sm: '64px'},
                     p: {xs: 2, sm: 3},
                     backgroundColor: (t) => (t.palette.mode === 'light' ? t.palette.grey[100] : t.palette.background.default),
                 }}

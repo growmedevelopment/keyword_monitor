@@ -8,6 +8,7 @@ import KeywordRankGrid from "../components/Tables/KeywordRankTable/KeywordRankGr
 import DataStateHandler from "../components/Common/DataStateHandler.tsx";
 import KeywordTagSelector from "../components/Common/KeywordTagSelector.tsx";
 import toast from "react-hot-toast";
+import BackButton from "../components/Common/BackButton.tsx";
 
 export default function KeywordShowPage() {
     const { id } = useParams<{ id: string }>();
@@ -70,22 +71,31 @@ export default function KeywordShowPage() {
         >
             {(keywordData) => (
                 <Box p={3}>
-                    {/* Keyword Title */}
-                    <Typography variant="h4" gutterBottom>
-                        {keywordData.keyword}
-                    </Typography>
 
-                    {/* Keyword Tag Selector */}
-                    <KeywordTagSelector
-                        groups={keywordGroups}
-                        selectedGroupId={selectedKeywordGroup}
-                        onChange={(groupId) => {
-                            setSelectedKeywordGroup(groupId);
-                            assignKeywordToGroup(Number(id), groupId).then();
-                        }}
-                    />
+                    <BackButton />
 
-                    {/* Keyword Ranks */}
+                    <Box
+                        display="flex"
+                        alignItems="center"
+                        gap={2}
+                        mb={2}
+                    >
+                        <Typography variant="h4" gutterBottom>
+                            {keywordData.keyword}
+                        </Typography>
+
+
+                        <KeywordTagSelector
+                            groups={keywordGroups}
+                            selectedGroupId={selectedKeywordGroup}
+                            onChange={(groupId) => {
+                                setSelectedKeywordGroup(groupId);
+                                assignKeywordToGroup(Number(id), groupId).then();
+                            }}
+                        />
+                    </Box>
+
+
                     <Paper sx={{ mt: 3 }}>
                         <KeywordRankGrid data={keywordData.keywords_rank ?? []} />
                     </Paper>
