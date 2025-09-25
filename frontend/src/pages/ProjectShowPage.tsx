@@ -117,6 +117,7 @@ export default function ProjectShowPage() {
 
 
                 {(projectData: Project) => (
+
                     <>
                         {/* Project Title */}
                         <Typography variant="h4" gutterBottom>

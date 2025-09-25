@@ -77,13 +77,14 @@ class KeywordController extends Controller
                 $request['keyword_group_id'] ?? null
             );
 
+
             return response()->json([
                 'message' => 'Keyword added and queued for background processing.',
                 'keyword' => array_merge(
                     $keyword->toArray(),
                     [
-                        'keyword_group_name' => $keyword->group?->name,
-                        'keyword_group_color' => $keyword->group?->color,
+                        'keyword_group_name' => $keyword->keyword_groups?->name,
+                        'keyword_group_color' => $keyword->keyword_groups?->color,
                         ]
                 ),
                 'status' => DataForSeoTaskStatus::QUEUED,
@@ -120,7 +121,7 @@ class KeywordController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'keyword and all related results has been deleted'
+                'message' => 'keyword and all related results have been deleted'
             ]);
         }catch (\Exception $e) {
             return response()->json([

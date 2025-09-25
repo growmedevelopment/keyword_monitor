@@ -28,10 +28,6 @@ class ProjectService
     }
 
     public function getAllArchivedByUser(User $user): Collection {
-
-        if (!$user) {
-            throw new \RuntimeException('Unauthenticated');
-        }
         return Project::where('user_id', $user->id)->onlyTrashed()->get();
     }
 
