@@ -94,7 +94,7 @@ class KeywordMetricsService
             $avg = $items->avg('position');
             return [
                 'date' => Carbon::parse($date)->format('M j'),
-                'avg_position' => round($avg, 1),
+                'avg_position' => round($avg),
             ];
         })->values();
     }

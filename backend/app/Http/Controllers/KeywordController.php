@@ -139,9 +139,6 @@ class KeywordController extends Controller
         }
     }
 
-    /**
-     * Handle SEO Metrics request.
-     */
     public function getSeoMetrics(Request $request, string $project_id): JsonResponse
     {
         try {
