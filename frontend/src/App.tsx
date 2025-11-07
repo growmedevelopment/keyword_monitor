@@ -10,7 +10,6 @@ import ProjectsArchivedPage from "./pages/ProjectsArchivedPage";
 import { useAuth } from './context/AuthContext';
 import AppLayout from "./layouts/AppLayout.tsx";
 
-
 export default function App() {
     const { user, loading } = useAuth();
 

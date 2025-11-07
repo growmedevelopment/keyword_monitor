@@ -12,6 +12,7 @@ import DataStateHandler from "../components/Common/DataStateHandler.tsx";
 import toast from "react-hot-toast";
 import KeywordGroups from "../components/Project/KeywordGroups.tsx";
 import BackButton from "../components/Common/BackButton.tsx";
+import SeoPerformanceRechart from "../components/Project/SeoPerformanceRechart.tsx";
 
 
 
@@ -129,6 +130,8 @@ export default function ProjectShowPage() {
 
                         {/* Project Details */}
                         <ProjectDetails project={projectData}/>
+
+                        <SeoPerformanceRechart projectId={Number(id)}/>
 
                         <KeywordGroups keywordGroups={projectData.keyword_groups}/>
 
