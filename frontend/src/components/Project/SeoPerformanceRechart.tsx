@@ -144,7 +144,11 @@ const SeoPerformanceRechart: React.FC<ComponentProps> = ({ projectId }) => {
 
                     {/* Date Range Picker */}
                     <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                        <DateRangePicker value={dateRange} onChange={(newValue) => setDateRange(newValue)} />
+                        <DateRangePicker
+                            value={dateRange}
+                            onChange={(newValue) => setDateRange(newValue)}
+                            shouldDisableDate={(date) => date.isAfter(dayjs(), "day")}
+                        />
                         <Button
                             onClick={() => {
                                 if (dateRange[0] && dateRange[1]) {
@@ -216,7 +220,7 @@ const SeoPerformanceRechart: React.FC<ComponentProps> = ({ projectId }) => {
                                 strokeWidth={2.5}
                                 fill="url(#colorPosition)"
                                 fillOpacity={1}
-                                dot={({ cx, cy, payload }) => {
+                                dot={({ cx, cy, payload, index }) => {
                                     const value = payload.avg_position;
                                     const values = metrics.chart_data.map((d) => d.avg_position);
                                     const min = Math.min(...values);
@@ -230,6 +234,7 @@ const SeoPerformanceRechart: React.FC<ComponentProps> = ({ projectId }) => {
 
                                     return (
                                         <circle
+                                            key={`dot-${index}`}
                                             cx={cx}
                                             cy={cy}
                                             r={4}
@@ -239,7 +244,7 @@ const SeoPerformanceRechart: React.FC<ComponentProps> = ({ projectId }) => {
                                         />
                                     );
                                 }}
-                                activeDot={({ cx, cy, payload }) => {
+                                activeDot={({ cx, cy, payload, index }) => {
                                     const value = payload.avg_position;
                                     const values = metrics.chart_data.map((d) => d.avg_position);
                                     const min = Math.min(...values);
@@ -253,6 +258,7 @@ const SeoPerformanceRechart: React.FC<ComponentProps> = ({ projectId }) => {
 
                                     return (
                                         <circle
+                                            key={`dot-${index}`}
                                             cx={cx}
                                             cy={cy}
                                             r={6}
