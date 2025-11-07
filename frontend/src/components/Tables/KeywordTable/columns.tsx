@@ -39,8 +39,8 @@ export const columnDefs: ColDef<Keyword>[] = [
     {
         headerName: "Group/Tag",
         width: 150,
+        valueGetter: (p) => p.data?.keyword_group_name,
         cellRenderer: GroupCell ,
-        filter: false,
     },
     {
         headerName: "URL",
