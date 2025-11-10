@@ -1,6 +1,6 @@
 import {useEffect, useState, useCallback} from "react";
 import {useParams} from "react-router-dom";
-import {Box, Typography} from "@mui/material";
+import {Box, Grid, Typography} from "@mui/material";
 import pusher from "../pusher";
 import projectService from "../services/projectService";
 import keywordService from "../services/keywordService.ts";
@@ -123,17 +123,48 @@ export default function ProjectShowPage() {
                 {(projectData: Project) => (
 
                     <>
-                        {/* Project Title */}
-                        <Typography variant="h4" gutterBottom>
-                            {projectData.name}
-                        </Typography>
+                        <Box
+                            sx={{
+                                display: "flex",
+                                justifyContent: "center",
+                                alignItems: "center",
+                                textAlign: "center",
+                                mb: 6,
+                            }}
+                        >
+                            <Typography
+                                variant="h1"
+                                sx={{
+                                    fontSize: { xs: "2rem", md: "3rem" },
+                                    fontWeight: 700,
+                                    color: "primary.main",
+                                    letterSpacing: 0.5,
+                                    textTransform: "capitalize",
+                                    borderBottom: "3px solid",
+                                    borderColor: "primary.main",
+                                    display: "inline-block",
+                                    pb: 0.5,
+                                    lineHeight: 1.2,
+                                }}
+                            >
+                                {projectData.name}
+                            </Typography>
+                        </Box>
 
-                        {/* Project Details */}
-                        <ProjectDetails project={projectData}/>
+                        <Grid container spacing={3} alignItems="stretch">
+                            {/* Project Details */}
+                            <Grid size={{ xs: 12, md: 4, lg: 3.5 }}>
+                                <ProjectDetails project={projectData} />
+                                <KeywordGroups keywordGroups={projectData.keyword_groups}/>
+                            </Grid>
 
-                        <SeoPerformanceRechart projectId={Number(id)}/>
+                            {/*SEO Performance Chart*/}
+                            <Grid size={{ xs: 12, md: 8, lg: 8.5 }}>
+                                <SeoPerformanceRechart projectId={Number(id)} />
+                            </Grid>
+                        </Grid>
 
-                        <KeywordGroups keywordGroups={projectData.keyword_groups}/>
+
 
                         {/*/!* Keywords Section *!/*/}
                         <ProjectKeywordsSection

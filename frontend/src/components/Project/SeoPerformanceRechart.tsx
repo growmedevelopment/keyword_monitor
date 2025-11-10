@@ -120,9 +120,9 @@ const SeoPerformanceRechart: React.FC<ComponentProps> = ({ projectId }) => {
     return (
         <LocalizationProvider dateAdapter={AdapterDayjs}>
             <Box sx={{ p: 3, bgcolor: "background.paper",
-                borderRadius: 2,
+                borderRadius: 1,
                 boxShadow: "0px 1px 3px rgba(0, 0, 0, 0.1)",
-                mt: 2, mb: 2}} >
+                mb: 3}} >
                 {/* Period Selector and Date Picker */}
                 <Box
                     sx={{
@@ -208,7 +208,7 @@ const SeoPerformanceRechart: React.FC<ComponentProps> = ({ projectId }) => {
                             </defs>
 
                             <XAxis dataKey="date" tick={{ fontSize: 12 }} stroke="#9e9e9e" />
-                            <YAxis domain={[0, "dataMax + 1"]} tick={{ fontSize: 12 }} stroke="#9e9e9e" />
+                            <YAxis domain={[0, "dataMax"]} tick={{ fontSize: 12 }} stroke="#9e9e9e" />
                             <Tooltip
                                 formatter={(value: number) => [`${value}`, "Avg Position"]}
                                 contentStyle={{ borderRadius: 8, borderColor: "#1976d2" }}
@@ -231,6 +231,8 @@ const SeoPerformanceRechart: React.FC<ComponentProps> = ({ projectId }) => {
                                     if (ratio < 0.33) fill = "#4caf50"; // good (green)
                                     else if (ratio < 0.66) fill = "#ffb300"; // average (yellow)
                                     else fill = "#f44336"; // poor (red)
+
+                                    if (value === 0) fill = "#f44336";
 
                                     return (
                                         <circle
@@ -255,6 +257,8 @@ const SeoPerformanceRechart: React.FC<ComponentProps> = ({ projectId }) => {
                                     if (ratio < 0.33) fill = "#4caf50";
                                     else if (ratio < 0.66) fill = "#ffb300";
                                     else fill = "#f44336";
+
+                                    if (value === 0) fill = "#f44336";
 
                                     return (
                                         <circle

@@ -11,7 +11,7 @@ interface ProjectDetailsProps {
 
 export default function ProjectDetails({ project }: ProjectDetailsProps) {
     return (
-        <Paper sx={{ mb: 3, p: 2 }}>
+        <Paper sx={{ mb: 3}}>
             <List dense>
                 <ListItem>
                     <ListItemIcon>
