@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Events;
 
 use App\Models\Keyword;
 use App\Models\KeywordGroup;

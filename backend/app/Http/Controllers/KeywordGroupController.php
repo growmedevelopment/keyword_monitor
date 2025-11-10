@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\KeywordGroupService;
+use App\Events\KeywordGroupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 

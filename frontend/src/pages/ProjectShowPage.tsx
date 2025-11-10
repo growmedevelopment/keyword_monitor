@@ -1,6 +1,6 @@
 import {useEffect, useState, useCallback} from "react";
 import {useParams} from "react-router-dom";
-import {Box, Typography} from "@mui/material";
+import {Box, Grid, Typography} from "@mui/material";
 import pusher from "../pusher";
 import projectService from "../services/projectService";
 import keywordService from "../services/keywordService.ts";
@@ -12,6 +12,7 @@ import DataStateHandler from "../components/Common/DataStateHandler.tsx";
 import toast from "react-hot-toast";
 import KeywordGroups from "../components/Project/KeywordGroups.tsx";
 import BackButton from "../components/Common/BackButton.tsx";
+import SeoPerformanceRechart from "../components/Project/SeoPerformanceRechart.tsx";
 
 
 
@@ -122,15 +123,48 @@ export default function ProjectShowPage() {
                 {(projectData: Project) => (
 
                     <>
-                        {/* Project Title */}
-                        <Typography variant="h4" gutterBottom>
-                            {projectData.name}
-                        </Typography>
+                        <Box
+                            sx={{
+                                display: "flex",
+                                justifyContent: "center",
+                                alignItems: "center",
+                                textAlign: "center",
+                                mb: 6,
+                            }}
+                        >
+                            <Typography
+                                variant="h1"
+                                sx={{
+                                    fontSize: { xs: "2rem", md: "3rem" },
+                                    fontWeight: 700,
+                                    color: "primary.main",
+                                    letterSpacing: 0.5,
+                                    textTransform: "capitalize",
+                                    borderBottom: "3px solid",
+                                    borderColor: "primary.main",
+                                    display: "inline-block",
+                                    pb: 0.5,
+                                    lineHeight: 1.2,
+                                }}
+                            >
+                                {projectData.name}
+                            </Typography>
+                        </Box>
 
-                        {/* Project Details */}
-                        <ProjectDetails project={projectData}/>
+                        <Grid container spacing={3} alignItems="stretch">
+                            {/* Project Details */}
+                            <Grid size={{ xs: 12, md: 4, lg: 3.5 }}>
+                                <ProjectDetails project={projectData} />
+                                <KeywordGroups keywordGroups={projectData.keyword_groups}/>
+                            </Grid>
 
-                        <KeywordGroups keywordGroups={projectData.keyword_groups}/>
+                            {/*SEO Performance Chart*/}
+                            <Grid size={{ xs: 12, md: 8, lg: 8.5 }}>
+                                <SeoPerformanceRechart id={Number(id)} mode={'project'}/>
+                            </Grid>
+                        </Grid>
+
+
 
                         {/*/!* Keywords Section *!/*/}
                         <ProjectKeywordsSection
@@ -146,7 +180,6 @@ export default function ProjectShowPage() {
                                 onSubmit={handleAddKeyword}
                             />
                         }
-
                     </>
                 )}
             </DataStateHandler>

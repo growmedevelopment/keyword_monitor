@@ -8,6 +8,14 @@ type DeleteResponse = {
     message: string,
 };
 
+export type SeoMetricsResponse = {
+    average_position: number;
+    chart_data: {
+        date: string;
+        avg_position: number;
+    }[];
+};
+
 const keywordService = {
     async create(projectId: string, keyword: string, groupId: number | null): Promise<any> {
         const response = await axios.post(`${API}/api/projects/${projectId}/keywords/create`, {
@@ -25,6 +33,16 @@ const keywordService = {
 
     async deleteFromProject(keywordId: number): Promise<DeleteResponse> {
         const response = await axios.delete(`${API}/api/keywords/${keywordId}`);
+        return response.data;
+    },
+
+    async getSeoMetrics(id: string, startDate: string, endDate: string, mode: string): Promise<SeoMetricsResponse> {
+        const payload = {
+            start_date: startDate,
+            end_date: endDate,
+            mode,
+        };
+        const response = await axios.post(`${API}/api/seo-metrics/${id}`, payload);
         return response.data;
     },
 };

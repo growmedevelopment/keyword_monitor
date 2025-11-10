@@ -1,5 +1,5 @@
 import { Suspense, useOptimistic, useState, startTransition } from "react";
-import { Typography, Stack, Button, Paper, Chip } from "@mui/material";
+import {Typography, Stack, Button, Paper, Chip, Box} from "@mui/material";
 import tinycolor from "tinycolor2";
 import toast from "react-hot-toast";
 import type { KeywordGroup } from "../types/keywordTypes.ts";
@@ -83,19 +83,16 @@ const KeywordGroups = ({ keywordGroups: initialKeywordGroups }: { keywordGroups:
             <Paper sx={{ p: 2, mb: 3 }}>
                 <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
                     <Typography variant="h6">Keyword groups (tags)</Typography>
-                    <Button variant="contained" size="small" onClick={() => setDialogOpen(true)}>
-                        Create Keyword Group
-                    </Button>
                 </Stack>
 
-                <Stack direction="row" flexWrap="wrap" gap={1}>
+                <Stack direction="row" flexWrap="wrap" gap={1} sx={{ mb: 2 }}>
                     {optimisticKeywordGroups.map((group) => {
                         const textColor = tinycolor(group.color).isLight() ? "#000" : "#fff";
                         return (
                             <Chip
                                 key={group.id}
                                 label={group.name}
-                                onDelete={() => confirmDelete(group)} // ✅ open confirmation modal
+                                onDelete={() => confirmDelete(group)}
                                 sx={{
                                     boxShadow: "rgba(100, 100, 111, 0.2) 0px 7px 29px 0px",
                                     backgroundColor: group.color,
@@ -109,6 +106,20 @@ const KeywordGroups = ({ keywordGroups: initialKeywordGroups }: { keywordGroups:
                         );
                     })}
                 </Stack>
+
+                <Box
+                    sx={{
+                        display: "flex",
+                        justifyContent: "center",
+                        pt: 2,
+                    }}
+                >
+                <Button variant="contained" size="small" onClick={() => setDialogOpen(true)}>
+                    Create Keyword Group
+                </Button>
+
+                </Box>
+
 
                 {dialogOpen && (
                     <CreateKeywordGroupDialog
