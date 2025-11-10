@@ -9,6 +9,7 @@ import DataStateHandler from "../components/Common/DataStateHandler.tsx";
 import KeywordTagSelector from "../components/Common/KeywordTagSelector.tsx";
 import toast from "react-hot-toast";
 import BackButton from "../components/Common/BackButton.tsx";
+import SeoPerformanceRechart from "../components/Project/SeoPerformanceRechart.tsx";
 
 export default function KeywordShowPage() {
     const { id } = useParams<{ id: string }>();
@@ -75,15 +76,52 @@ export default function KeywordShowPage() {
                     <BackButton />
 
                     <Box
-                        display="flex"
-                        alignItems="center"
-                        gap={2}
-                        mb={2}
+                        sx={{
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            textAlign: "center",
+                            mb: 6,
+                        }}
                     >
-                        <Typography variant="h4" gutterBottom>
+                        <Typography
+                            variant="h1"
+                            sx={{
+                                fontSize: { xs: "2rem", md: "3rem" },
+                                fontWeight: 700,
+                                color: "primary.main",
+                                letterSpacing: 0.5,
+                                textTransform: "capitalize",
+                                borderBottom: "3px solid",
+                                borderColor: "primary.main",
+                                display: "inline-block",
+                                pb: 0.5,
+                                lineHeight: 1.2,
+                            }}
+                        >
                             {keywordData.keyword}
                         </Typography>
+                    </Box>
 
+
+                    <Box
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="center"
+                        gap={2}
+                        mb={2}
+                        sx={{
+                            backgroundColor: '#fff',
+                            borderRadius: 2,
+                            px: 2,
+                            py: 1.5,
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                            width: 'fit-content',
+                        }}
+                    >
+                        <Typography variant="h6" gutterBottom>
+                            Keyword groups (tags) :
+                        </Typography>
 
                         <KeywordTagSelector
                             groups={keywordGroups}
@@ -97,6 +135,7 @@ export default function KeywordShowPage() {
 
 
                     <Paper sx={{ mt: 3 }}>
+                        <SeoPerformanceRechart id={Number(id)} mode={'keyword'}/>
                         <KeywordRankGrid data={keywordData.keywords_rank ?? []} />
                     </Paper>
                 </Box>

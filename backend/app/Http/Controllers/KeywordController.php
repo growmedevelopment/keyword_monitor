@@ -139,16 +139,18 @@ class KeywordController extends Controller
         }
     }
 
-    public function getSeoMetrics(Request $request, string $project_id): JsonResponse
+    public function getSeoMetrics(Request $request, string $id): JsonResponse
     {
         try {
             $request->validate([
+                'mode' => ['required', 'string', 'in:project,keyword'],
                 'start_date' => ['required', 'date'],
                 'end_date'   => ['required', 'date', 'after_or_equal:start_date'],
             ]);
 
             $metrics = $this->keywordMetricsService->getSeoMetrics(
-                (int) $project_id,
+                (int) $id,
+                $request->input('mode'),
                 $request->input('start_date'),
                 $request->input('end_date')
             );
@@ -156,7 +158,8 @@ class KeywordController extends Controller
             return response()->json($metrics);
         } catch (Exception $e) {
             Log::error('Failed to get SEO metrics', [
-                'project_id' => $project_id,
+                'mode' => $request->input('mode'),
+                'id' => $id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);

@@ -36,15 +36,13 @@ const keywordService = {
         return response.data;
     },
 
-    async getSeoMetrics(projectId: string, startDate: string, endDate: string): Promise<SeoMetricsResponse> {
+    async getSeoMetrics(id: string, startDate: string, endDate: string, mode: string): Promise<SeoMetricsResponse> {
         const payload = {
             start_date: startDate,
             end_date: endDate,
+            mode,
         };
-        const response = await axios.post(
-            `${API}/api/projects/${projectId}/keywords/seo-metrics`,
-            payload
-        );
+        const response = await axios.post(`${API}/api/seo-metrics/${id}`, payload);
         return response.data;
     },
 };

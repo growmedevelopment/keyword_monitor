@@ -27,7 +27,8 @@ import keywordService, { type SeoMetricsResponse } from "../../services/keywordS
 
 // Types
 type ComponentProps = {
-    projectId: number;
+    id: number;
+    mode: "project" | "keyword";
 };
 
 // Metric Card
@@ -44,7 +45,7 @@ const MetricCardItem = ({ title, value }: { title: string; value: number | strin
     </Card>
 );
 
-const SeoPerformanceRechart: React.FC<ComponentProps> = ({ projectId }) => {
+const SeoPerformanceRechart: React.FC<ComponentProps> = ({ id, mode }) => {
     const [metrics, setMetrics] = useState<SeoMetricsResponse | null>(null);
     const [loading, setLoading] = useState(false);
     const [period, setPeriod] = useState("CURRENT");
@@ -58,8 +59,9 @@ const SeoPerformanceRechart: React.FC<ComponentProps> = ({ projectId }) => {
         try {
             const startDate = start.format("YYYY-MM-DD");
             const endDate = end.format("YYYY-MM-DD");
-            const res = await keywordService.getSeoMetrics(String(projectId), startDate, endDate);
-            setMetrics(res);
+            let response = await keywordService.getSeoMetrics(String(id), startDate, endDate, mode)
+
+            setMetrics(response);
         } catch (error) {
             console.error("Error fetching SEO metrics:", error);
         } finally {

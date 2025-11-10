@@ -160,7 +160,7 @@ export default function ProjectShowPage() {
 
                             {/*SEO Performance Chart*/}
                             <Grid size={{ xs: 12, md: 8, lg: 8.5 }}>
-                                <SeoPerformanceRechart projectId={Number(id)} />
+                                <SeoPerformanceRechart id={Number(id)} mode={'project'}/>
                             </Grid>
                         </Grid>
 
