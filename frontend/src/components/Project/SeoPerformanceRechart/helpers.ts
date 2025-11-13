@@ -5,10 +5,11 @@ import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
 
-import type { KeywordWithResults, SeoMetrics } from "./types";
+import type { SeoMetrics } from "./types";
+import type {Keyword, KeywordGroup, KeywordRank, KeywordResult} from "../../types/keywordTypes.ts";
 
 export const filterResultsByRange = (
-    keywords: KeywordWithResults[],
+    keywords: Keyword[],
     [start, end]: [Dayjs, Dayjs]
 ) => {
     return keywords.map((kw) => ({
@@ -20,7 +21,19 @@ export const filterResultsByRange = (
     }));
 };
 
-export const buildMetrics = (keywords: KeywordWithResults[]): SeoMetrics => {
+export const buildMetrics = (keywords: {
+    id: number;
+    keyword: string;
+    status_code: number;
+    status_message: string;
+    project_id: number;
+    results: KeywordResult[];
+    keywords_rank: KeywordRank[];
+    keyword_groups: KeywordGroup;
+    keyword_group_id: KeywordGroup["id"] | null;
+    keyword_group_name: KeywordGroup["name"] | null;
+    keyword_group_color: KeywordGroup["color"] | null
+}[]): SeoMetrics => {
     const chartMap: Record<string, number[]> = {};
     const allRanks: number[] = [];
 
