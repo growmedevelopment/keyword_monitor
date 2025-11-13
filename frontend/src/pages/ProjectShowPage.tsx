@@ -179,6 +179,7 @@ export default function ProjectShowPage() {
                             keywords={projectData.keywords}
                             keywordGroups={projectData.keyword_groups}
                             onAddKeyword={() => setDialogOpen(true)}
+                            selectedDateRange={dateRange}
                         />
 
                         {/* Add Keyword Dialog */}

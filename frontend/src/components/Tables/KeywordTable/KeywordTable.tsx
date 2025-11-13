@@ -1,15 +1,20 @@
-import { AgGridReact } from 'ag-grid-react';
-import { useMemo } from 'react';
-import {columnDefs} from "./columns.tsx";
-import type {Keyword, KeywordGroup} from "../../types/keywordTypes.ts";
-import '../../../style/keywordTable.css';
+import { AgGridReact } from "ag-grid-react";
+import { useMemo, useEffect, useState } from "react";
+import "../../../style/keywordTable.css";
+
+import type { Keyword, KeywordGroup } from "../../types/keywordTypes";
+import { buildColumnDefs } from "./columns";
+import { Dayjs } from "dayjs";
+import type {ColDef} from "ag-grid-community";
 
 interface Props {
     keywords: Keyword[];
-    keywordGroups: KeywordGroup[]
+    keywordGroups: KeywordGroup[];
+    dateRange: [Dayjs, Dayjs];
 }
 
-export default function KeywordTable({ keywords, keywordGroups }: Props) {
+export default function KeywordTable({ keywords, keywordGroups, dateRange }: Props) {
+    const [columnDefs, setColumnDefs] = useState<ColDef<Keyword>[]>([]);
 
     const defaultColDef = useMemo(
         () => ({
@@ -21,12 +26,20 @@ export default function KeywordTable({ keywords, keywordGroups }: Props) {
         []
     );
 
+
+    useEffect(() => {
+        if (dateRange[0] && dateRange[1]) {
+            const cols = buildColumnDefs(dateRange[0], dateRange[1]);
+            setColumnDefs(cols);
+        }
+    }, [dateRange]);
+
     if (!keywords || keywords.length === 0) {
         return <p>No keywords added yet.</p>;
     }
 
     return (
-        <div className="ag-theme-alpine" style={{ height: 500, width: '100%' }}>
+        <div className="ag-theme-alpine" style={{ height: 500, width: "100%" }}>
             <AgGridReact
                 rowData={keywords}
                 columnDefs={columnDefs}
