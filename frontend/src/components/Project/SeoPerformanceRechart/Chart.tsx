@@ -40,25 +40,29 @@ const Chart = ({ metrics }: { metrics: SeoMetrics }) => {
                     stroke="#1976d2"
                     strokeWidth={2}
                     fill="url(#colorPos)"
-                    dot={({ cx, cy, payload }: any) => (
-                        <circle
-                            cx={cx}
-                            cy={cy}
-                            r={4}
-                            fill={getDotColor(payload.avg_position)}
-                            stroke="#fff"
-                            strokeWidth={1.5}
-                        />
+                    dot={({ cx, cy, payload, index }: any) => (
+                        <g key={`dot-${index}`}>
+                            <circle
+                                cx={cx}
+                                cy={cy}
+                                r={4}
+                                fill={getDotColor(payload.avg_position)}
+                                stroke="#fff"
+                                strokeWidth={1.5}
+                            />
+                        </g>
                     )}
-                    activeDot={({ cx, cy, payload }: any) => (
-                        <circle
-                            cx={cx}
-                            cy={cy}
-                            r={6}
-                            fill={getDotColor(payload.avg_position)}
-                            stroke="#fff"
-                            strokeWidth={2}
-                        />
+                    activeDot={({ cx, cy, payload, index }: any) => (
+                        <g key={`dot-${index}`}>
+                            <circle
+                                cx={cx}
+                                cy={cy}
+                                r={6}
+                                fill={getDotColor(payload.avg_position)}
+                                stroke="#fff"
+                                strokeWidth={2}
+                            />
+                        </g>
                     )}
                 />
             </AreaChart>

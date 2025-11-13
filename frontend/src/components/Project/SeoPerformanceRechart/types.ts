@@ -1,4 +1,5 @@
 import { Dayjs } from "dayjs";
+import type {Keyword} from "../../types/keywordTypes.ts";
 
 export type KeywordPoint = {
     rank_group: number;
@@ -8,6 +9,8 @@ export type KeywordPoint = {
 export type KeywordWithResults = {
     id: number;
     keyword: string;
+    keyword_group_color: string;
+    keyword_group_id: string;
     results: KeywordPoint[];
 };
 
@@ -18,7 +21,7 @@ export type SeoMetrics = {
 };
 
 export type ComponentProps = {
-    keywords: KeywordWithResults[];
+    keywords: Keyword[];
     datePeriod: [Dayjs, Dayjs];
     setDateRangeFunction?: (range: [Dayjs, Dayjs]) => void;
 };
