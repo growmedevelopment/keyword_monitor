@@ -139,36 +139,36 @@ class KeywordController extends Controller
         }
     }
 
-    public function getSeoMetrics(Request $request, string $id): JsonResponse
-    {
-        try {
-            $request->validate([
-                'mode' => ['required', 'string', 'in:project,keyword'],
-                'start_date' => ['required', 'date'],
-                'end_date'   => ['required', 'date', 'after_or_equal:start_date'],
-            ]);
-
-            $metrics = $this->keywordMetricsService->getSeoMetrics(
-                (int) $id,
-                $request->input('mode'),
-                $request->input('start_date'),
-                $request->input('end_date')
-            );
-
-            return response()->json($metrics);
-        } catch (Exception $e) {
-            Log::error('Failed to get SEO metrics', [
-                'mode' => $request->input('mode'),
-                'id' => $id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            return response()->json([
-                'error' => 'Failed to fetch SEO metrics.',
-                'message' => config('app.debug') ? $e->getMessage() : 'An unexpected error occurred.',
-            ], 500);
-        }
-    }
+//    public function getSeoMetrics(Request $request, string $id): JsonResponse
+//    {
+//        try {
+//            $request->validate([
+//                'mode' => ['required', 'string', 'in:project,keyword'],
+//                'start_date' => ['required', 'date'],
+//                'end_date'   => ['required', 'date', 'after_or_equal:start_date'],
+//            ]);
+//
+//            $metrics = $this->keywordMetricsService->getSeoMetrics(
+//                (int) $id,
+//                $request->input('mode'),
+//                $request->input('start_date'),
+//                $request->input('end_date')
+//            );
+//
+//            return response()->json($metrics);
+//        } catch (Exception $e) {
+//            Log::error('Failed to get SEO metrics', [
+//                'mode' => $request->input('mode'),
+//                'id' => $id,
+//                'error' => $e->getMessage(),
+//                'trace' => $e->getTraceAsString(),
+//            ]);
+//
+//            return response()->json([
+//                'error' => 'Failed to fetch SEO metrics.',
+//                'message' => config('app.debug') ? $e->getMessage() : 'An unexpected error occurred.',
+//            ], 500);
+//        }
+//    }
 
 }

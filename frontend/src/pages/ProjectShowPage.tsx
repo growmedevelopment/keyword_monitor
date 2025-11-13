@@ -12,7 +12,7 @@ import DataStateHandler from "../components/Common/DataStateHandler.tsx";
 import toast from "react-hot-toast";
 import KeywordGroups from "../components/Project/KeywordGroups.tsx";
 import BackButton from "../components/Common/BackButton.tsx";
-import SeoPerformanceRechart from "../components/Project/SeoPerformanceRechart.tsx";
+import Rechart from "../components/Project/SeoPerformanceRechart/Rechart.tsx";
 import dayjs, {type Dayjs} from "dayjs";
 
 
@@ -165,7 +165,10 @@ export default function ProjectShowPage() {
 
                             {/*SEO Performance Chart*/}
                             <Grid size={{ xs: 12, md: 8, lg: 8.5 }}>
-                                <SeoPerformanceRechart id={Number(id)} mode={'project'}/>
+                                <Rechart
+                                    keywords={projectData.keywords}
+                                    datePeriod={dateRange}
+                                    setDateRangeFunction={setDateRange}/>
                             </Grid>
                         </Grid>
 
