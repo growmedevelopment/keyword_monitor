@@ -13,6 +13,7 @@ import toast from "react-hot-toast";
 import KeywordGroups from "../components/Project/KeywordGroups.tsx";
 import BackButton from "../components/Common/BackButton.tsx";
 import SeoPerformanceRechart from "../components/Project/SeoPerformanceRechart.tsx";
+import dayjs, {type Dayjs} from "dayjs";
 
 
 
@@ -23,16 +24,21 @@ export default function ProjectShowPage() {
     const [error, setError] = useState<string | null>(null);
     const [isDialogOpen, setDialogOpen] = useState(false);
 
+    const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>([
+        dayjs().subtract(3, "day"),
+        dayjs(),
+    ]);
+
     const loadProject = useCallback(() => {
         if (!id) return;
 
         setLoading(true);
         projectService
-            .getById(id)
+            .getById(id, dateRange)
             .then(setProject)
             .catch(() => setError("Failed to load project"))
             .finally(() => setLoading(false));
-    }, [id]);
+    }, [id, dateRange]);
 
     useEffect(() => {
         loadProject();
@@ -118,7 +124,6 @@ export default function ProjectShowPage() {
                 data={project}
                 emptyMessage="No project found"
             >
-
 
                 {(projectData: Project) => (
 

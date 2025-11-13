@@ -1,5 +1,6 @@
 import axios from '../axios';
 import type {Project} from "../components/types/projectTypes.ts";
+import type {Dayjs} from "dayjs";
 const API = import.meta.env.VITE_API_BACKEND_ENDPOINT
 
 async function ensureCsrfCookie() {
@@ -17,8 +18,20 @@ const projectService = {
         return response.data;
     },
 
-    async getById(id: string) {
-        const response = await axios.get<Project>(`${API}/api/projects/${id}` );
+    async getById(id: string, dateRange: [Dayjs, Dayjs]) {
+
+        const [start, end] = dateRange;
+
+        const startDate = start.format("YYYY-MM-DD");
+        const endDate = end.format("YYYY-MM-DD");
+
+        const response = await axios.post<Project>(`${API}/api/projects/${id}`,
+            {
+                date_range: {
+                    start_date: startDate,
+                    end_date: endDate
+                }
+            });
         return response.data;
     },
 

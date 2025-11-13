@@ -32,11 +32,16 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::patch('/projects/{id}/restore', [ProjectController::class, 'restore'])->name('projects.restore');
 
-    Route::apiResource('projects', ProjectController::class);
+    Route::get('/projects', [ProjectController::class, 'index']);
+    Route::get('/projects/archived', [ProjectController::class, 'archived']);
+    Route::post('/projects', [ProjectController::class, 'store']);
+    Route::post('/projects/{id}', [ProjectController::class, 'show']);
+    Route::delete('/projects/{id}', [ProjectController::class, 'destroy']);
+    Route::patch('/projects/{id}/restore', [ProjectController::class, 'restore']);
 
     Route::post('/projects/{project}/keywords/create', [KeywordController::class, 'addKeywordToProject']);
 
-    Route::post('/seo-metrics/{id}', [KeywordController::class, 'getSeoMetrics']);
+   // Route::post('/seo-metrics/{id}', [KeywordController::class, 'getSeoMetrics']);
 
     Route::get('/keywords/{keyword}', [KeywordController::class, 'show']);
 

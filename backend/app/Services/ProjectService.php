@@ -6,6 +6,7 @@ use App\Http\Resources\ProjectsResource;
 use App\Http\Resources\ProjectViewResource;
 use App\Models\Project;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -60,15 +61,27 @@ class ProjectService
         $project->restore();
     }
 
-    public function show(string $project_id): ProjectViewResource {
+    public function show(string $project_id, array $dateRange): ProjectViewResource
+    {
+        $start = Carbon::parse($dateRange['start_date'])->startOfDay();
+        $end = Carbon::parse($dateRange['end_date'])->endOfDay();
 
-        $project = Project::with(['keywords.keywordsRank', 'keyword_groups'])->findOrFail($project_id);
+        // Load project with filtered keyword ranks
+        $project = Project::with([
+            'keywords' => function ($query) {
+                $query->orderBy('keyword'); // optional sorting
+            },
+            'keywords.keywordsRank' => function ($query) use ($start, $end) {
+                $query->whereBetween('tracked_at', [$start, $end])
+                    ->orderBy('tracked_at', 'desc');
+            },
+            'keyword_groups'
+        ])->findOrFail($project_id);
 
         if ($project->user_id !== auth()->id()) {
             abort(403, 'Unauthorized');
         }
 
-       return new ProjectViewResource($project);
-
+        return new ProjectViewResource($project);
     }
 }
