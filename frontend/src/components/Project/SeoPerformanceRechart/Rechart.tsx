@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
-import dayjs, { Dayjs } from "dayjs";
-import { Box, Grid, Button, CircularProgress } from "@mui/material";
-
+import { Dayjs } from "dayjs";
+import { Box, Grid, CircularProgress } from "@mui/material";
 import type { ComponentProps, SeoMetrics } from "./types";
 import { filterResultsByRange, buildMetrics } from "./helpers";
 import MetricCardItem from "./MetricCardItem";
@@ -13,14 +12,11 @@ const Rechart: React.FC<ComponentProps> = ({
                                                datePeriod: externalDateRange,
                                                selectedMode,
                                                setDateRangeFunction,
-                                               setDateModeFunction}) => {
+                                               setDateModeFunction
+                                           }) => {
 
     const [pickerMode, setPickerMode] = useState<"range" | "compare">(selectedMode);
-
-    const [localRange, setLocalRange] = useState<[Dayjs | null, Dayjs | null]>(
-        externalDateRange
-    );
-
+    const [localRange, setLocalRange] = useState<[Dayjs | null, Dayjs | null]>(externalDateRange);
     const [metrics, setMetrics] = useState<SeoMetrics | null>(null);
 
     const recalc = (range: [Dayjs, Dayjs]) => {
@@ -28,11 +24,11 @@ const Rechart: React.FC<ComponentProps> = ({
         setMetrics(buildMetrics(filtered));
     };
 
-    // Sync updates coming from parent (ProjectShowPage)
     useEffect(() => {
         setLocalRange(externalDateRange);
+        setPickerMode(selectedMode);
         recalc(externalDateRange);
-    }, [keywords, externalDateRange]);
+    }, [keywords, externalDateRange, selectedMode]);
 
     if (!metrics) {
         return (
@@ -44,7 +40,7 @@ const Rechart: React.FC<ComponentProps> = ({
 
     return (
         <Box sx={{ p: 3, bgcolor: "background.paper", borderRadius: 1, mb: 3 }}>
-            {/* Date Selector Box */}
+
             <Box
                 sx={{
                     p: 2,
@@ -54,64 +50,33 @@ const Rechart: React.FC<ComponentProps> = ({
                     backgroundColor: "#fafafa",
                 }}
             >
-                {/* Presets */}
-                <Box sx={{ display: "flex", gap: 1, mb: 2, flexWrap: "wrap" }}>
-                    {[
-                        { label: "CURRENT", value: externalDateRange },
-                        { label: "7D", value: [dayjs().subtract(7, "day"), dayjs()] },
-                        { label: "1M", value: [dayjs().subtract(1, "month"), dayjs()] },
-                        { label: "3M", value: [dayjs().subtract(3, "month"), dayjs()] },
-                        { label: "6M", value: [dayjs().subtract(6, "month"), dayjs()] },
-                        { label: "1Y", value: [dayjs().subtract(12, "month"), dayjs()] },
-                    ].map((preset) => {
-                        const isActive =
-                            localRange[0]?.isSame(preset.value[0], "day") &&
-                            localRange[1]?.isSame(preset.value[1], "day");
-
-                        return (
-                            <Button
-                                key={preset.label}
-                                variant={isActive ? "contained" : "outlined"}
-                                size="small"
-                                onClick={() => {
-                                    setPickerMode("range");
-
-                                    const range = preset.value as [Dayjs, Dayjs];
-                                    setLocalRange(range);
-
-                                    setDateRangeFunction?.(range);
-                                    setDateModeFunction?.("range");
-                                    recalc(range);
-                                }}
-                            >
-                                {preset.label}
-                            </Button>
-                        );
-                    })}
-                </Box>
-
                 <CalendarPicker
                     initialRange={localRange}
                     mode={pickerMode}
                     onApply={(range, mode) => {
+                        // Update internal UI
                         setLocalRange(range);
-                        setDateRangeFunction?.(range); // update parent
+                        setPickerMode(mode);
+
+                        // Update parent (triggers backend request)
+                        setDateRangeFunction?.(range);
+                        setDateModeFunction?.(mode);
+
+                        // Recalculate metrics
                         recalc(range);
-                        setPickerMode(mode)// sync from child
-                        setDateModeFunction?.(mode); // update parent
                     }}
                 />
             </Box>
 
             {/* Metrics */}
             <Grid container spacing={2} sx={{ mb: 3 }}>
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{xs: 12, sm:6, md:4}}>
                     <MetricCardItem
                         title="Average Position"
                         value={metrics.average_position}
                     />
                 </Grid>
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{xs: 12, sm:6, md:4}}>
                     <MetricCardItem
                         title="Tracked Keywords"
                         value={metrics.tracked_keywords}
@@ -119,7 +84,6 @@ const Rechart: React.FC<ComponentProps> = ({
                 </Grid>
             </Grid>
 
-            {/* Chart */}
             <Box sx={{ height: 300 }}>
                 <Chart metrics={metrics} />
             </Box>
