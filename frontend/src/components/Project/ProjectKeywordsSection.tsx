@@ -8,9 +8,10 @@ interface ProjectKeywordsSectionProps {
     onAddKeyword: () => void;
     keywordGroups: KeywordGroup[];
     selectedDateRange: [Dayjs, Dayjs];
+    selectedMode : "range" | "compare";
 }
 
-export default function ProjectKeywordsSection({keywords, onAddKeyword, keywordGroups, selectedDateRange}: ProjectKeywordsSectionProps) {
+export default function ProjectKeywordsSection({keywords, onAddKeyword, keywordGroups, selectedDateRange, selectedMode}: ProjectKeywordsSectionProps) {
     return (
         <Paper sx={{ p: 2 }}>
             <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
@@ -20,7 +21,7 @@ export default function ProjectKeywordsSection({keywords, onAddKeyword, keywordG
                 </Button>
             </Stack>
 
-            <KeywordTable keywords={keywords} keywordGroups={keywordGroups} dateRange={selectedDateRange} />
+            <KeywordTable keywords={keywords} keywordGroups={keywordGroups} dateRange={selectedDateRange} mode={selectedMode}/>
         </Paper>
     );
 }

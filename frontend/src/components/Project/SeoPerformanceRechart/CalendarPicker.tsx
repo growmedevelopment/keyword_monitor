@@ -4,6 +4,7 @@ import type { DateRange } from "react-day-picker";
 import dayjs, { Dayjs } from "dayjs";
 import "react-day-picker/dist/style.css";
 import { useState, useEffect } from "react";
+import "../../../style/calendar-picker.css";
 
 interface Props {
     initialRange: [Dayjs | null, Dayjs | null];
@@ -12,7 +13,6 @@ interface Props {
 }
 
 export default function CalendarPicker({ initialRange, mode, onApply }: Props) {
-
     const [pickerMode, setPickerMode] = useState(mode);
 
     const [range, setRange] = useState<DateRange>({
@@ -21,50 +21,30 @@ export default function CalendarPicker({ initialRange, mode, onApply }: Props) {
     });
 
     const [compareDates, setCompareDates] = useState<Date[]>([]);
-    const [currentMonth, setCurrentMonth] = useState<Date>(
-        initialRange[0]?.toDate() ?? new Date()
-    );
 
-    // -----------------------------
+    //-----------------------------------
+    // FORCE CURRENT MONTH ON THE RIGHT
+    //-----------------------------------
+    const today = new Date();
+    const leftMonth = dayjs(today).subtract(1, "month").toDate(); // ← left panel
+
+    const [, setCurrentMonth] = useState<Date>(leftMonth);
+
+    //-----------------------------------
     // PRESETS
-    // -----------------------------
+    //-----------------------------------
     const presets = [
-        {
-            label: "YESTERDAY",
-            value: [dayjs().subtract(1, "day"), dayjs().subtract(1, "day")]
-        },
-        {
-            label: "LAST 2 DAYS",
-            value: [dayjs().subtract(2, "day"), dayjs()]
-        },
-        {
-            label: "7D",
-            value: [dayjs().subtract(7, "day"), dayjs()]
-        },
-        {
-            label: "1M",
-            value: [dayjs().subtract(1, "month"), dayjs()]
-        },
-        {
-            label: "3M",
-            value: [dayjs().subtract(3, "month"), dayjs()]
-        },
-        {
-            label: "6M",
-            value: [dayjs().subtract(6, "month"), dayjs()]
-        },
-        {
-            label: "1Y",
-            value: [dayjs().subtract(12, "month"), dayjs()]
-        },
+        { label: "YESTERDAY", value: [dayjs().subtract(1, "day"), dayjs().subtract(1, "day")] },
+        { label: "LAST 2 DAYS", value: [dayjs().subtract(2, "day"), dayjs()] },
+        { label: "7D", value: [dayjs().subtract(7, "day"), dayjs()] },
+        { label: "1M", value: [dayjs().subtract(1, "month"), dayjs()] },
+        { label: "3M", value: [dayjs().subtract(3, "month"), dayjs()] },
+        { label: "6M", value: [dayjs().subtract(6, "month"), dayjs()] },
+        { label: "1Y", value: [dayjs().subtract(12, "month"), dayjs()] }
     ];
 
-    // -----------------------------
-    // Active preset detection
-    // -----------------------------
     const isActivePreset = (preset: [Dayjs, Dayjs]) => {
-        if (pickerMode !== "range") return false; // <<< NEW RULE
-
+        if (pickerMode !== "range") return false;
         if (!range.from || !range.to) return false;
 
         return (
@@ -80,10 +60,12 @@ export default function CalendarPicker({ initialRange, mode, onApply }: Props) {
         const to = preset[1].toDate();
 
         setRange({ from, to });
-        setCurrentMonth(from);
+        setCurrentMonth(leftMonth); // always show correct months
     };
 
-    // sync internal UI to parent changes
+    //-----------------------------------
+    // SYNC with parent changes
+    //-----------------------------------
     useEffect(() => {
         setPickerMode(mode);
 
@@ -92,17 +74,19 @@ export default function CalendarPicker({ initialRange, mode, onApply }: Props) {
 
         if (mode === "range") {
             setRange({ from, to });
-            setCurrentMonth(from ?? new Date());
+            setCurrentMonth(leftMonth);
         }
 
         if (mode === "compare") {
             const list = [from, to].filter(Boolean) as Date[];
             setCompareDates(list);
-            setCurrentMonth(from ?? new Date());
+            setCurrentMonth(leftMonth);
         }
-
     }, [mode, initialRange]);
 
+    //-----------------------------------
+    // APPLY button
+    //-----------------------------------
     const apply = () => {
         if (pickerMode === "range" && range.from && range.to) {
             onApply([dayjs(range.from), dayjs(range.to)], "range");
@@ -115,13 +99,12 @@ export default function CalendarPicker({ initialRange, mode, onApply }: Props) {
     };
 
     return (
-        <Box>
+        <Box className="calendar-picker">
 
-            {/* ● PRESETS */}
+            {/* PRESETS */}
             <Box sx={{ display: "flex", gap: 1, mb: 2, flexWrap: "wrap" }}>
                 {presets.map((p) => {
                     const presetValue = p.value as [Dayjs, Dayjs];
-
                     const isActive = isActivePreset(presetValue);
 
                     return (
@@ -130,6 +113,7 @@ export default function CalendarPicker({ initialRange, mode, onApply }: Props) {
                             variant={isActive ? "contained" : "outlined"}
                             size="small"
                             onClick={() => applyPreset(presetValue)}
+                            disabled={pickerMode === "compare"}   // <<< NEW RULE
                         >
                             {p.label}
                         </Button>
@@ -137,7 +121,7 @@ export default function CalendarPicker({ initialRange, mode, onApply }: Props) {
                 })}
             </Box>
 
-            {/* ● MODE SWITCH */}
+            {/* MODE SWITCH */}
             <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
                 <Button
                     variant={pickerMode === "range" ? "contained" : "outlined"}
@@ -156,7 +140,7 @@ export default function CalendarPicker({ initialRange, mode, onApply }: Props) {
                 </Button>
             </Box>
 
-            {/* ● CALENDAR */}
+            {/* CALENDAR */}
             {pickerMode === "range" && (
                 <DayPicker
                     mode="range"
@@ -164,11 +148,10 @@ export default function CalendarPicker({ initialRange, mode, onApply }: Props) {
                     onSelect={(r) => {
                         if (!r) return;
                         setRange(r);
-                        if (r.from) setCurrentMonth(r.from);
                     }}
                     numberOfMonths={2}
-                    month={currentMonth}
-                    onMonthChange={setCurrentMonth}
+                    month={leftMonth}        // ← ALWAYS show correct month
+                    disabled={{ after: today }}
                 />
             )}
 
@@ -177,18 +160,14 @@ export default function CalendarPicker({ initialRange, mode, onApply }: Props) {
                     mode="multiple"
                     max={2}
                     selected={compareDates}
-                    onSelect={(dates) => {
-                        const list = dates ?? [];
-                        setCompareDates(list);
-                        if (list.length > 0) setCurrentMonth(list[0]);
-                    }}
+                    onSelect={(dates) => setCompareDates(dates ?? [])}
                     numberOfMonths={2}
-                    month={currentMonth}
-                    onMonthChange={setCurrentMonth}
+                    month={leftMonth}
+                    disabled={{ after: today }}
                 />
             )}
 
-            {/* ● APPLY BUTTON */}
+            {/* APPLY BUTTON */}
             <Button onClick={apply} variant="contained" sx={{ mt: 2 }}>
                 Apply
             </Button>
