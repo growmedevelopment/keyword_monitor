@@ -26,6 +26,7 @@
     "mui-color-input": "^7.0.0",
     "pusher-js": "^8.4.0",
     "react": "^19.1.0",
+    "react-day-picker": "^9.11.1",
     "react-dom": "^19.1.0",
     "react-hot-toast": "^2.6.0",
     "react-router-dom": "^7.7.1",

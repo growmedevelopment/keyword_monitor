@@ -45,7 +45,8 @@ class ProjectController extends Controller
 
     public function show(Request $request, $id): JsonResponse
     {
-        $project = $this->projectService->show($id);
+
+        $project = $this->projectService->show( $request, $id);
 
         return response()->json($project);
     }

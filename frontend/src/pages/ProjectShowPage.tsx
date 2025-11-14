@@ -12,7 +12,8 @@ import DataStateHandler from "../components/Common/DataStateHandler.tsx";
 import toast from "react-hot-toast";
 import KeywordGroups from "../components/Project/KeywordGroups.tsx";
 import BackButton from "../components/Common/BackButton.tsx";
-import SeoPerformanceRechart from "../components/Project/SeoPerformanceRechart.tsx";
+import Rechart from "../components/Project/SeoPerformanceRechart/Rechart.tsx";
+import dayjs, {type Dayjs} from "dayjs";
 
 
 
@@ -23,16 +24,22 @@ export default function ProjectShowPage() {
     const [error, setError] = useState<string | null>(null);
     const [isDialogOpen, setDialogOpen] = useState(false);
 
+    const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>([
+        dayjs().subtract(3, "day"),
+        dayjs(),
+    ]);
+    const [mode, setMode] = useState<"range" | "compare">(project?.mode?? "range");
+
     const loadProject = useCallback(() => {
         if (!id) return;
 
         setLoading(true);
         projectService
-            .getById(id)
+            .getById(id, dateRange, mode)
             .then(setProject)
             .catch(() => setError("Failed to load project"))
             .finally(() => setLoading(false));
-    }, [id]);
+    }, [id, dateRange]);
 
     useEffect(() => {
         loadProject();
@@ -119,7 +126,6 @@ export default function ProjectShowPage() {
                 emptyMessage="No project found"
             >
 
-
                 {(projectData: Project) => (
 
                     <>
@@ -152,28 +158,35 @@ export default function ProjectShowPage() {
                         </Box>
 
                         <Grid container spacing={3} alignItems="stretch">
-                            {/* Project Details */}
                             <Grid size={{ xs: 12, md: 4, lg: 3.5 }}>
                                 <ProjectDetails project={projectData} />
                                 <KeywordGroups keywordGroups={projectData.keyword_groups}/>
                             </Grid>
 
-                            {/*SEO Performance Chart*/}
                             <Grid size={{ xs: 12, md: 8, lg: 8.5 }}>
-                                <SeoPerformanceRechart id={Number(id)} mode={'project'}/>
+                                <Rechart
+                                    keywords={projectData.keywords}
+                                    datePeriod={dateRange}
+                                    selectedMode={mode}
+                                    setDateRangeFunction={(range) => {
+                                        setDateRange(range);
+                                    }}
+                                    setDateModeFunction={(selectedMode)=>{
+                                        setMode(selectedMode);
+                                    }}
+                                />
                             </Grid>
                         </Grid>
 
 
-
-                        {/*/!* Keywords Section *!/*/}
                         <ProjectKeywordsSection
                             keywords={projectData.keywords}
                             keywordGroups={projectData.keyword_groups}
                             onAddKeyword={() => setDialogOpen(true)}
+                            selectedDateRange={dateRange}
+                            selectedMode={mode}
                         />
 
-                        {/* Add Keyword Dialog */}
                         {isDialogOpen &&
                             <AddKeywordDialog
                                 onClose={() => setDialogOpen(false)}

@@ -1,4 +1,5 @@
 export interface KeywordResult {
+    tracked_at: string;
     type: string;
     rank_absolute: number;
     rank_group: number;
@@ -39,7 +40,7 @@ export interface Keyword {
     status_code: number;
     status_message: string;
     project_id: number;
-    results: KeywordResult;
+    results: KeywordResult[];
     keywords_rank : KeywordRank[];
     keyword_groups: KeywordGroup;
     keyword_group_id: KeywordGroup['id'] | null;

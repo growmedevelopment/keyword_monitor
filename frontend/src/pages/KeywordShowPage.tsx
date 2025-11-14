@@ -9,7 +9,6 @@ import DataStateHandler from "../components/Common/DataStateHandler.tsx";
 import KeywordTagSelector from "../components/Common/KeywordTagSelector.tsx";
 import toast from "react-hot-toast";
 import BackButton from "../components/Common/BackButton.tsx";
-import SeoPerformanceRechart from "../components/Project/SeoPerformanceRechart.tsx";
 
 export default function KeywordShowPage() {
     const { id } = useParams<{ id: string }>();
@@ -135,7 +134,7 @@ export default function KeywordShowPage() {
 
 
                     <Paper sx={{ mt: 3 }}>
-                        <SeoPerformanceRechart id={Number(id)} mode={'keyword'}/>
+                        {/*<Rechart id={Number(id)} mode={'keyword'}/>*/}
                         <KeywordRankGrid data={keywordData.keywords_rank ?? []} />
                     </Paper>
                 </Box>
