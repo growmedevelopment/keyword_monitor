@@ -15,6 +15,7 @@ interface Props {
 }
 
 export default function KeywordTable({keywords, keywordGroups, dateRange, mode}: Props) {
+
     const [columnDefs, setColumnDefs] = useState<ColDef<Keyword>[]>([]);
 
     const defaultColDef = useMemo(
