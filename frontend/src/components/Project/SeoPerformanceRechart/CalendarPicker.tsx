@@ -136,8 +136,10 @@ export default function CalendarPicker({ initialRange, mode, onApply }: Props) {
                 >
                     Chosen dates :
                 </Typography>
+
                 <Button
-                    variant="contained"
+                    sx={{ display: "flex",  gap: 1, alignItems: "center", justifyContent: "space-between", borderRadius: 1 }}
+                    variant="outlined"
                     onClick={(e) => setAnchorEl(e.currentTarget)}
                 >
                     <CalendarMonthIcon fontSize="small" />
