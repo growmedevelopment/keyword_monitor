@@ -62,8 +62,7 @@ class ProjectService
         $project->restore();
     }
 
-    public function show(Request $request, string $id)
-    {
+    public function show(Request $request, string $id): ProjectViewResource {
         $mode = $request->input('mode', 'range');
 
         $startDate = $request->input('date_range.start_date');
@@ -96,6 +95,6 @@ class ProjectService
             abort(403, 'Unauthorized');
         }
 
-        return new ProjectViewResource($project);
+        return new ProjectViewResource($project, $mode);
     }
 }

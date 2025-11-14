@@ -7,31 +7,34 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class ProjectViewResource extends JsonResource
 {
-    /**
-     * Transform the resource into an array.
-     *
-     * @return array<string, mixed>
-     */
+    private string $mode;
+
+    public function __construct($resource, string $mode = 'range')
+    {
+        parent::__construct($resource);
+        $this->mode = $mode;
+    }
+
     public function toArray(Request $request): array
     {
-        /** @var \App\Models\Project $rank */
-        $rank = $this->resource;
+        $project = $this->resource;
 
         return [
-            'id' => $rank->id,
-            'name' => $rank->name,
-            'url' => $rank->url,
-            'user' =>[
-                'id' => $rank->user->id,
-                'name' => $rank->user->name,
-                'email' => $rank->user->email,
+            'id' => $project->id,
+            'name' => $project->name,
+            'url' => $project->url,
+            'user' => [
+                'id' => $project->user->id,
+                'name' => $project->user->name,
+                'email' => $project->user->email,
             ],
             'keywords' => ProjectKeywordResource::collection($this->whenLoaded('keywords')),
             'keyword_groups' => ProjectKeywordGroupResource::collection($this->whenLoaded('keyword_groups')),
-            'created_at' => $rank->created_at,
-            'location_code' => $rank->location_code,
-            'location_name' => $rank->location_name,
-            'country' =>$rank->country,
+            'mode' => $this->mode,
+            'created_at' => $project->created_at,
+            'location_code' => $project->location_code,
+            'location_name' => $project->location_name,
+            'country' => $project->country,
         ];
     }
 }

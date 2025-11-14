@@ -8,8 +8,14 @@ import MetricCardItem from "./MetricCardItem";
 import Chart from "./Chart";
 import CalendarPicker from "./CalendarPicker";
 
-const Rechart: React.FC<ComponentProps> = ({keywords, datePeriod: externalDateRange, setDateRangeFunction,}) => {
-    const [pickerMode, setPickerMode] = useState<"range" | "compare">("range");
+const Rechart: React.FC<ComponentProps> = ({
+                                               keywords,
+                                               datePeriod: externalDateRange,
+                                               selectedMode,
+                                               setDateRangeFunction,
+                                               setDateModeFunction}) => {
+
+    const [pickerMode, setPickerMode] = useState<"range" | "compare">(selectedMode);
 
     const [localRange, setLocalRange] = useState<[Dayjs | null, Dayjs | null]>(
         externalDateRange
@@ -73,7 +79,8 @@ const Rechart: React.FC<ComponentProps> = ({keywords, datePeriod: externalDateRa
                                     const range = preset.value as [Dayjs, Dayjs];
                                     setLocalRange(range);
 
-                                    setDateRangeFunction?.(range, "range");
+                                    setDateRangeFunction?.(range);
+                                    setDateModeFunction?.("range");
                                     recalc(range);
                                 }}
                             >
@@ -87,10 +94,11 @@ const Rechart: React.FC<ComponentProps> = ({keywords, datePeriod: externalDateRa
                     initialRange={localRange}
                     mode={pickerMode}
                     onApply={(range, mode) => {
-                        setPickerMode(mode);
                         setLocalRange(range);
-                        setDateRangeFunction?.(range, mode);
+                        setDateRangeFunction?.(range); // update parent
                         recalc(range);
+                        setPickerMode(mode)// sync from child
+                        setDateModeFunction?.(mode); // update parent
                     }}
                 />
             </Box>

@@ -23,5 +23,7 @@ export type SeoMetrics = {
 export type ComponentProps = {
     keywords: Keyword[];
     datePeriod: [Dayjs, Dayjs];
-    setDateRangeFunction?: (range: [Dayjs, Dayjs], mode: "range" | "compare") => void;
+    selectedMode : "range" | "compare";
+    setDateRangeFunction?: (range: [Dayjs, Dayjs]) => void;
+    setDateModeFunction?: (mode: "range" | "compare") => void;
 };

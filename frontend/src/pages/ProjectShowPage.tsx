@@ -28,7 +28,7 @@ export default function ProjectShowPage() {
         dayjs().subtract(3, "day"),
         dayjs(),
     ]);
-    const [mode, setMode] = useState<"range" | "compare">("range");
+    const [mode, setMode] = useState<"range" | "compare">(project?.mode?? "range");
 
     const loadProject = useCallback(() => {
         if (!id) return;
@@ -167,8 +167,11 @@ export default function ProjectShowPage() {
                                 <Rechart
                                     keywords={projectData.keywords}
                                     datePeriod={dateRange}
-                                    setDateRangeFunction={(range, selectedMode) => {
+                                    selectedMode={mode}
+                                    setDateRangeFunction={(range) => {
                                         setDateRange(range);
+                                    }}
+                                    setDateModeFunction={(selectedMode)=>{
                                         setMode(selectedMode);
                                     }}
                                 />
