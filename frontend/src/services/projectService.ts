@@ -18,7 +18,7 @@ const projectService = {
         return response.data;
     },
 
-    async getById(id: string, dateRange: [Dayjs, Dayjs]) {
+    async getById(id: string, dateRange: [Dayjs, Dayjs], mode: "range" | "compare") {
 
         const [start, end] = dateRange;
 
@@ -27,6 +27,7 @@ const projectService = {
 
         const response = await axios.post<Project>(`${API}/api/projects/${id}`,
             {
+                mode,
                 date_range: {
                     start_date: startDate,
                     end_date: endDate

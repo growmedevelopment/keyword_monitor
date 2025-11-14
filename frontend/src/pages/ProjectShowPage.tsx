@@ -28,13 +28,14 @@ export default function ProjectShowPage() {
         dayjs().subtract(3, "day"),
         dayjs(),
     ]);
+    const [mode, setMode] = useState<"range" | "compare">("range");
 
     const loadProject = useCallback(() => {
         if (!id) return;
 
         setLoading(true);
         projectService
-            .getById(id, dateRange)
+            .getById(id, dateRange, mode)
             .then(setProject)
             .catch(() => setError("Failed to load project"))
             .finally(() => setLoading(false));
@@ -157,24 +158,24 @@ export default function ProjectShowPage() {
                         </Box>
 
                         <Grid container spacing={3} alignItems="stretch">
-                            {/* Project Details */}
                             <Grid size={{ xs: 12, md: 4, lg: 3.5 }}>
                                 <ProjectDetails project={projectData} />
                                 <KeywordGroups keywordGroups={projectData.keyword_groups}/>
                             </Grid>
 
-                            {/*SEO Performance Chart*/}
                             <Grid size={{ xs: 12, md: 8, lg: 8.5 }}>
                                 <Rechart
                                     keywords={projectData.keywords}
                                     datePeriod={dateRange}
-                                    setDateRangeFunction={setDateRange}/>
+                                    setDateRangeFunction={(range, selectedMode) => {
+                                        setDateRange(range);
+                                        setMode(selectedMode);
+                                    }}
+                                />
                             </Grid>
                         </Grid>
 
 
-
-                        {/*/!* Keywords Section *!/*/}
                         <ProjectKeywordsSection
                             keywords={projectData.keywords}
                             keywordGroups={projectData.keyword_groups}
@@ -182,7 +183,6 @@ export default function ProjectShowPage() {
                             selectedDateRange={dateRange}
                         />
 
-                        {/* Add Keyword Dialog */}
                         {isDialogOpen &&
                             <AddKeywordDialog
                                 onClose={() => setDialogOpen(false)}
