@@ -45,9 +45,8 @@ class ProjectController extends Controller
 
     public function show(Request $request, $id): JsonResponse
     {
-        $dateRange = $request->input('date_range');
 
-        $project = $this->projectService->show($id, $dateRange);
+        $project = $this->projectService->show( $request, $id);
 
         return response()->json($project);
     }
