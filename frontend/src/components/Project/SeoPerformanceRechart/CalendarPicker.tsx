@@ -1,10 +1,10 @@
-import { Box, Button } from "@mui/material";
+import {Box, Button, Popover, Typography} from "@mui/material";
 import { DayPicker } from "react-day-picker";
 import type { DateRange } from "react-day-picker";
 import dayjs, { Dayjs } from "dayjs";
 import "react-day-picker/dist/style.css";
 import { useState, useEffect } from "react";
-import "../../../style/calendar-picker.css";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 
 interface Props {
     initialRange: [Dayjs | null, Dayjs | null];
@@ -13,26 +13,28 @@ interface Props {
 }
 
 export default function CalendarPicker({ initialRange, mode, onApply }: Props) {
+
+    // -----------------------------
+    // STATE
+    // -----------------------------
     const [pickerMode, setPickerMode] = useState(mode);
+    const [compareDates, setCompareDates] = useState<Date[]>([]);
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
     const [range, setRange] = useState<DateRange>({
         from: initialRange[0]?.toDate() ?? undefined,
         to: initialRange[1]?.toDate() ?? undefined,
     });
 
-    const [compareDates, setCompareDates] = useState<Date[]>([]);
+    const [currentMonth, setCurrentMonth] = useState<Date>(
+        initialRange[0]?.toDate() ?? new Date()
+    );
 
-    //-----------------------------------
-    // FORCE CURRENT MONTH ON THE RIGHT
-    //-----------------------------------
-    const today = new Date();
-    const leftMonth = dayjs(today).subtract(1, "month").toDate(); // ← left panel
+    const open = Boolean(anchorEl);
 
-    const [, setCurrentMonth] = useState<Date>(leftMonth);
-
-    //-----------------------------------
+    // -----------------------------
     // PRESETS
-    //-----------------------------------
+    // -----------------------------
     const presets = [
         { label: "YESTERDAY", value: [dayjs().subtract(1, "day"), dayjs().subtract(1, "day")] },
         { label: "LAST 2 DAYS", value: [dayjs().subtract(2, "day"), dayjs()] },
@@ -60,12 +62,12 @@ export default function CalendarPicker({ initialRange, mode, onApply }: Props) {
         const to = preset[1].toDate();
 
         setRange({ from, to });
-        setCurrentMonth(leftMonth); // always show correct months
+        setCurrentMonth(from);
     };
 
-    //-----------------------------------
-    // SYNC with parent changes
-    //-----------------------------------
+    // -----------------------------
+    // SYNC WITH PARENT
+    // -----------------------------
     useEffect(() => {
         setPickerMode(mode);
 
@@ -74,103 +76,176 @@ export default function CalendarPicker({ initialRange, mode, onApply }: Props) {
 
         if (mode === "range") {
             setRange({ from, to });
-            setCurrentMonth(leftMonth);
+            setCurrentMonth(from ?? new Date());
         }
 
         if (mode === "compare") {
             const list = [from, to].filter(Boolean) as Date[];
             setCompareDates(list);
-            setCurrentMonth(leftMonth);
+            setCurrentMonth(from ?? new Date());
         }
     }, [mode, initialRange]);
 
-    //-----------------------------------
-    // APPLY button
-    //-----------------------------------
+    // -----------------------------
+    // APPLY BUTTON
+    // -----------------------------
     const apply = () => {
         if (pickerMode === "range" && range.from && range.to) {
             onApply([dayjs(range.from), dayjs(range.to)], "range");
+            setAnchorEl(null);
             return;
         }
 
         if (pickerMode === "compare" && compareDates.length === 2) {
             onApply([dayjs(compareDates[0]), dayjs(compareDates[1])], "compare");
+            setAnchorEl(null);
         }
     };
 
+    // -----------------------------
+    // DATE LABEL FOR INPUT
+    // -----------------------------
+    const renderLabel = () => {
+        if (pickerMode === "range") {
+            if (!range.from || !range.to) return "Select date range";
+            return `${dayjs(range.from).format("MMM D")} – ${dayjs(range.to).format("MMM D")}`;
+        }
+
+        if (pickerMode === "compare") {
+            if (compareDates.length < 2) return "Select 2 dates to compare";
+            return `${dayjs(compareDates[0]).format("MMM D")} vs ${dayjs(compareDates[1]).format("MMM D")}`;
+        }
+
+        return "";
+    };
+
+    // -----------------------------
+    // RENDER
+    // -----------------------------
     return (
         <Box className="calendar-picker">
 
-            {/* PRESETS */}
-            <Box sx={{ display: "flex", gap: 1, mb: 2, flexWrap: "wrap" }}>
-                {presets.map((p) => {
-                    const presetValue = p.value as [Dayjs, Dayjs];
-                    const isActive = isActivePreset(presetValue);
-
-                    return (
-                        <Button
-                            key={p.label}
-                            variant={isActive ? "contained" : "outlined"}
-                            size="small"
-                            onClick={() => applyPreset(presetValue)}
-                            disabled={pickerMode === "compare"}   // <<< NEW RULE
-                        >
-                            {p.label}
-                        </Button>
-                    );
-                })}
-            </Box>
-
-            {/* MODE SWITCH */}
-            <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
-                <Button
-                    variant={pickerMode === "range" ? "contained" : "outlined"}
-                    size="small"
-                    onClick={() => setPickerMode("range")}
-                >
-                    Range
-                </Button>
-
-                <Button
-                    variant={pickerMode === "compare" ? "contained" : "outlined"}
-                    size="small"
-                    onClick={() => setPickerMode("compare")}
-                >
-                    Compare
-                </Button>
-            </Box>
-
-            {/* CALENDAR */}
-            {pickerMode === "range" && (
-                <DayPicker
-                    mode="range"
-                    selected={range}
-                    onSelect={(r) => {
-                        if (!r) return;
-                        setRange(r);
+            {/* CLICKABLE INPUT */}
+            <Box sx={{ mb: 2, display: "flex",  gap: 1, alignItems: "center", justifyContent: "end" }}>
+                <Typography
+                    sx={{
+                        fontSize: "0.85rem",
+                        fontWeight: 600,
+                        color: "text.secondary",
                     }}
-                    numberOfMonths={2}
-                    month={leftMonth}        // ← ALWAYS show correct month
-                    disabled={{ after: today }}
-                />
-            )}
+                >
+                    Chosen dates :
+                </Typography>
+                <Button
+                    variant="contained"
+                    onClick={(e) => setAnchorEl(e.currentTarget)}
+                >
+                    <CalendarMonthIcon fontSize="small" />
+                    {renderLabel()}
+                </Button>
+            </Box>
 
-            {pickerMode === "compare" && (
-                <DayPicker
-                    mode="multiple"
-                    max={2}
-                    selected={compareDates}
-                    onSelect={(dates) => setCompareDates(dates ?? [])}
-                    numberOfMonths={2}
-                    month={leftMonth}
-                    disabled={{ after: today }}
-                />
-            )}
 
-            {/* APPLY BUTTON */}
-            <Button onClick={apply} variant="contained" sx={{ mt: 2 }}>
-                Apply
-            </Button>
+            {/* POPOVER CALENDAR */}
+            <Popover
+                open={open}
+                anchorEl={anchorEl}
+                onClose={() => setAnchorEl(null)}
+                anchorOrigin={{
+                    vertical: "bottom",
+                    horizontal: "left",
+                }}
+                transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                }}
+            >
+                <Box sx={{ p: 2, maxWidth: 900 }}>
+
+                    {/* PRESETS */}
+                    <Box sx={{ display: "flex", gap: 1, mb: 2, flexWrap: "wrap" }}>
+                        {presets.map((p) => {
+                            const v = p.value as [Dayjs, Dayjs];
+                            const active = isActivePreset(v);
+
+                            return (
+                                <Button
+                                    key={p.label}
+                                    variant={active ? "contained" : "outlined"}
+                                    size="small"
+                                    onClick={() => applyPreset(v)}
+                                >
+                                    {p.label}
+                                </Button>
+                            );
+                        })}
+                    </Box>
+
+                    {/* MODE SWITCH */}
+                    <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
+                        <Button
+                            variant={pickerMode === "range" ? "contained" : "outlined"}
+                            size="small"
+                            onClick={() => setPickerMode("range")}
+                        >
+                            Range
+                        </Button>
+
+                        <Button
+                            variant={pickerMode === "compare" ? "contained" : "outlined"}
+                            size="small"
+                            onClick={() => setPickerMode("compare")}
+                        >
+                            Compare
+                        </Button>
+                    </Box>
+
+                    {/* CALENDAR */}
+                    {pickerMode === "range" && (
+                        <DayPicker
+                            mode="range"
+                            selected={range}
+                            onSelect={(r) => {
+                                if (!r) return;
+                                setRange(r);
+                                if (r.from) setCurrentMonth(r.from);
+                            }}
+                            numberOfMonths={2}
+                            month={currentMonth}
+                            onMonthChange={setCurrentMonth}
+                            disabled={{ after: new Date() }}
+                        />
+                    )}
+
+                    {pickerMode === "compare" && (
+                        <DayPicker
+                            mode="multiple"
+                            max={2}
+                            selected={compareDates}
+                            onSelect={(dates) => {
+                                const list = dates ?? [];
+                                setCompareDates(list);
+                                if (list.length > 0) setCurrentMonth(list[0]);
+                            }}
+                            numberOfMonths={2}
+                            month={currentMonth}
+                            onMonthChange={setCurrentMonth}
+                            disabled={{ after: new Date() }}
+                        />
+                    )}
+
+                    {/* APPLY */}
+                    <Button
+                        onClick={apply}
+                        variant="contained"
+                        fullWidth
+                        sx={{ mt: 2 }}
+                    >
+                        Apply
+                    </Button>
+
+                </Box>
+            </Popover>
         </Box>
     );
 }

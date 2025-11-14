@@ -41,15 +41,6 @@ const Rechart: React.FC<ComponentProps> = ({
     return (
         <Box sx={{ p: 3, bgcolor: "background.paper", borderRadius: 1, mb: 3 }}>
 
-            <Box
-                sx={{
-                    p: 2,
-                    borderRadius: 2,
-                    border: "1px solid #e0e0e0",
-                    mb: 3,
-                    backgroundColor: "#fafafa",
-                }}
-            >
                 <CalendarPicker
                     initialRange={localRange}
                     mode={pickerMode}
@@ -66,7 +57,7 @@ const Rechart: React.FC<ComponentProps> = ({
                         recalc(range);
                     }}
                 />
-            </Box>
+
 
             {/* Metrics */}
             <Grid container spacing={2} sx={{ mb: 3 }}>
