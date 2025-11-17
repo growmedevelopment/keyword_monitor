@@ -34,7 +34,6 @@ export function getNumericPosition(data: Keyword, index: number): number | strin
     if (!dateKey) return "-";
 
     const rank = getGroupByDate(data)[dateKey]?.position;
-    if (rank === 0) return 101;
     return typeof rank === "number" ? rank : "-";
 }
 

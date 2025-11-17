@@ -17,20 +17,21 @@ export const PositionWithTrend =
             return <CircularProgress size={18} />;
         }
 
-        // LEFT → RIGHT chronological display
-        // So older = index, newer = index - 1
         const curr = getNumericPosition(p.data!, index);
         const prev = index > 0 ? getNumericPosition(p.data!, index - 1) : "-";
 
-        if (curr === "-") return <span>–</span>;
-        if (prev === "-") return <span>{curr}</span>;
+        // No formatting at all — show the raw number or "-"
+        const displayCurr = curr;
 
-        // Reverse because newer - older
+        if (curr === "-") return <span>–</span>;
+        if (prev === "-") return <span>{displayCurr}</span>;
+
         const delta = (curr as number) - (prev as number);
 
         const color =
-            delta < 0 ? COLORS.improved :      // moved UP in ranking
-                delta > 0 ? COLORS.worse : COLORS.neutral;
+            delta < 0 ? COLORS.improved :
+                delta > 0 ? COLORS.worse :
+                    COLORS.neutral;
 
         const symbol =
             delta < 0 ? "▲" :
@@ -42,7 +43,7 @@ export const PositionWithTrend =
                 style={{ display: "inline-flex", gap: 6, alignItems: "center" }}
                 title={`Change vs next day: ${delta > 0 ? `+${delta}` : delta}`}
             >
-                <span>{curr}</span>
+                <span>{displayCurr}</span>
                 <span style={{ color, fontSize: 12 }}>
                     {symbol} {Math.abs(delta)}
                 </span>
