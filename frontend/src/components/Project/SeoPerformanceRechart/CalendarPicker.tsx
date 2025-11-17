@@ -216,6 +216,7 @@ export default function CalendarPicker({ initialRange, mode, onApply }: Props) {
                             month={currentMonth}
                             onMonthChange={setCurrentMonth}
                             disabled={{ after: new Date() }}
+                            endMonth={new Date()}
                         />
                     )}
 
@@ -233,6 +234,7 @@ export default function CalendarPicker({ initialRange, mode, onApply }: Props) {
                             month={currentMonth}
                             onMonthChange={setCurrentMonth}
                             disabled={{ after: new Date() }}
+                            endMonth={new Date()}
                         />
                     )}
 
