@@ -14,7 +14,7 @@ class KeywordRankResultResource extends JsonResource
         $rank = $this->resource;
 
         return [
-            'rank_group' => $rank->position,
+            'position' => $rank->position,
             'url'        => $rank->url,
             'tracked_at' => $rank->tracked_at,
         ];

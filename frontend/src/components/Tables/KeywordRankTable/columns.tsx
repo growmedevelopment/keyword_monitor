@@ -19,7 +19,7 @@ export const columnDefs: ColDef[] = [
             new Date(params.value).toISOString().slice(0, 10),
     },
     {
-        field: 'rank_group',
+        field: 'position',
         headerName: 'Position',
         sortable: true,
         width: 60, // fixed width

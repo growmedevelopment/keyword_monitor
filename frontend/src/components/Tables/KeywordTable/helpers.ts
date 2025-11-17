@@ -8,7 +8,7 @@ dayjs.extend(timezone);
 
 export const timezoneLabel = "America/Edmonton";
 
-export type Result = { rank_group: number; url: string; tracked_at: string };
+export type Result = { position: number; url: string; tracked_at: string };
 
 export function getResultsArray(k: Keyword): Result[] {
     const r = (k as any).results;
@@ -33,7 +33,7 @@ export function getNumericPosition(data: Keyword, index: number): number | strin
     const dateKey = dates[index];
     if (!dateKey) return "-";
 
-    const rank = getGroupByDate(data)[dateKey]?.rank_group;
+    const rank = getGroupByDate(data)[dateKey]?.position;
     if (rank === 0) return 101;
     return typeof rank === "number" ? rank : "-";
 }

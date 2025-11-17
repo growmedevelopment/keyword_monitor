@@ -1,6 +1,6 @@
 import { Box, Typography, Paper } from "@mui/material";
 import type { Keyword, KeywordGroup } from "../components/types/keywordTypes.ts";
-import { useEffect, useState } from "react";
+import {useCallback, useEffect, useState} from "react";
 import { useParams } from "react-router-dom";
 import keywordService from "../services/keywordService.ts";
 import keywordGroupService from "../services/keywordGroupService.ts";
@@ -9,6 +9,8 @@ import DataStateHandler from "../components/Common/DataStateHandler.tsx";
 import KeywordTagSelector from "../components/Common/KeywordTagSelector.tsx";
 import toast from "react-hot-toast";
 import BackButton from "../components/Common/BackButton.tsx";
+import dayjs, {type Dayjs} from "dayjs";
+import Rechart from "../components/Project/SeoPerformanceRechart/Rechart.tsx";
 
 export default function KeywordShowPage() {
     const { id } = useParams<{ id: string }>();
@@ -17,30 +19,38 @@ export default function KeywordShowPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [selectedKeywordGroup, setSelectedKeywordGroup] = useState<number | null>(null);
+    const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>([
+        dayjs().subtract(3, "day"),
+        dayjs(),
+    ]);
 
-    useEffect(() => {
-        const fetchData = async () => {
-            if (!id) return;
-            try {
-                setLoading(true);
-                const keywordData = await keywordService.getById(id);
+    const [mode, setMode] = useState<"range" | "compare">("range");
+
+    const loadKeyword = useCallback(() => {
+        if (!id) return;
+
+        setLoading(true);
+
+        keywordService
+            .getByFilteredResults(id, dateRange, mode)
+            .then(async (keywordData) => {
                 setKeyword(keywordData);
 
                 if (keywordData.keyword_groups) {
                     setSelectedKeywordGroup(keywordData.keyword_groups.id);
                 }
 
+                // Load groups only once OR always if needed
                 const groups = await keywordGroupService.getByProject(keywordData.project_id);
                 setKeywordGroups(groups);
-            } catch {
-                setError("Failed to load data");
-            } finally {
-                setLoading(false);
-            }
-        };
+            })
+            .catch(() => setError("Failed to load data"))
+            .finally(() => setLoading(false));
+    }, [id, dateRange]);
 
-        fetchData().then();
-    }, [id]);
+    useEffect(() => {
+        loadKeyword();
+    }, [loadKeyword]);
 
     async function assignKeywordToGroup(keywordId: number, groupId: number | null) {
         try {
@@ -132,9 +142,21 @@ export default function KeywordShowPage() {
                         />
                     </Box>
 
+                    <Paper sx={{ mt: 3, p: 2 }}>
+                        <Rechart
+                            keywords={[keywordData]}
+                            datePeriod={dateRange}
+                            selectedMode={mode}
+                            setDateRangeFunction={(range) => {
+                                setDateRange(range);
+                            }}
+                            setDateModeFunction={(selectedMode) => {
+                                setMode(selectedMode);
+                            }}
+                        />
+                    </Paper>
 
                     <Paper sx={{ mt: 3 }}>
-                        {/*<Rechart id={Number(id)} mode={'keyword'}/>*/}
                         <KeywordRankGrid data={keywordData.keywords_rank ?? []} />
                     </Paper>
                 </Box>
