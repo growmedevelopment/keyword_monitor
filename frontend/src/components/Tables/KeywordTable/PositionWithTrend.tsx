@@ -10,38 +10,37 @@ const COLORS = {
 };
 
 export const PositionWithTrend =
-    (daysAgo: number) => (p: ICellRendererParams<Keyword>) => {
+    (index: number) => (p: ICellRendererParams<Keyword>) => {
 
         const results = (p.data as any)?.results;
         if (!results || (Array.isArray(results) && results.length === 0)) {
             return <CircularProgress size={18} />;
         }
 
-        const curr = getNumericPosition(p.data!, daysAgo);
-        const prev = getNumericPosition(p.data!, daysAgo + 1);
+        // LEFT → RIGHT chronological display
+        // So older = index, newer = index - 1
+        const curr = getNumericPosition(p.data!, index);
+        const prev = index > 0 ? getNumericPosition(p.data!, index - 1) : "-";
 
-        // No current data → show dash
         if (curr === "-") return <span>–</span>;
-
-        // No previous data → show only the number
         if (prev === "-") return <span>{curr}</span>;
 
-        const delta = (prev as number) - (curr as number);
+        // Reverse because newer - older
+        const delta = (curr as number) - (prev as number);
 
         const color =
-            delta > 0 ? COLORS.improved :
-                delta < 0 ? COLORS.worse :
-                    COLORS.neutral;
+            delta < 0 ? COLORS.improved :      // moved UP in ranking
+                delta > 0 ? COLORS.worse : COLORS.neutral;
 
         const symbol =
-            delta > 0 ? "▲" :
-                delta < 0 ? "▼" :
+            delta < 0 ? "▲" :
+                delta > 0 ? "▼" :
                     "▬";
 
         return (
             <span
                 style={{ display: "inline-flex", gap: 6, alignItems: "center" }}
-                title={`Change vs previous day: ${delta > 0 ? `+${delta}` : delta}`}
+                title={`Change vs next day: ${delta > 0 ? `+${delta}` : delta}`}
             >
                 <span>{curr}</span>
                 <span style={{ color, fontSize: 12 }}>
