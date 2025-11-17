@@ -9,14 +9,6 @@ type DeleteResponse = {
     message: string,
 };
 
-export type SeoMetricsResponse = {
-    average_position: number;
-    chart_data: {
-        date: string;
-        avg_position: number;
-    }[];
-};
-
 const keywordService = {
     async create(projectId: string, keyword: string, groupId: number | null): Promise<any> {
         const response = await axios.post(`${API}/api/projects/${projectId}/keywords/create`, {
@@ -38,7 +30,6 @@ const keywordService = {
 
         const startDate = start.format("YYYY-MM-DD");
         const endDate = end.format("YYYY-MM-DD");
-        const response2 = await axios.get(`${API}/api/keywords/${keywordId}`);
         const response = await axios.post(`${API}/api/keywords/${keywordId}/filteredResults`, {
             mode,
             date_range: {
@@ -46,9 +37,6 @@ const keywordService = {
                 end_date: endDate
             }
         });
-
-        console.log(response2.data,'response2');
-        console.log(response.data,'response');
         return response.data;
     },
 
@@ -58,16 +46,6 @@ const keywordService = {
         const response = await axios.delete(`${API}/api/keywords/${keywordId}`);
         return response.data;
     },
-
-    // async getSeoMetrics(id: string, startDate: string, endDate: string, mode: string): Promise<SeoMetricsResponse> {
-    //     const payload = {
-    //         start_date: startDate,
-    //         end_date: endDate,
-    //         mode,
-    //     };
-    //     const response = await axios.post(`${API}/api/seo-metrics/${id}`, payload);
-    //     return response.data;
-    // },
 };
 
 export default keywordService;
