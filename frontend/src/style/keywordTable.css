@@ -1,3 +1,17 @@
 .keyword-item{
   margin: 0;
 }
+
+.ag-cell,
+.ag-cell a{
+  display: flex;
+  align-content: center;
+  align-items: center;
+  justify-content: center;
+}
+
+.ag-cell:first-child{
+  justify-content: flex-start;
+}
+
+
