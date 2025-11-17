@@ -12,13 +12,19 @@ export const filterResultsByRange = (
     keywords: Keyword[],
     [start, end]: [Dayjs, Dayjs]
 ) => {
-    return keywords.map((kw) => ({
-        ...kw,
-        results: kw.results.filter((r) => {
+    return keywords.map((kw) => {
+        const sourceResults = kw.results ?? kw.keywords_rank ?? [];
+
+        const filtered = sourceResults.filter((r) => {
             const t = dayjs(r.tracked_at);
             return t.isSameOrAfter(start, "day") && t.isSameOrBefore(end, "day");
-        }),
-    }));
+        });
+
+        return {
+            ...kw,
+            results: filtered, // normalized output
+        };
+    });
 };
 
 export const buildMetrics = (keywords: {
@@ -38,9 +44,13 @@ export const buildMetrics = (keywords: {
     const allRanks: number[] = [];
 
     keywords.forEach((kw) => {
-        kw.results.forEach((r) => {
+        // Fallback: use keywords_rank if results missing
+        const results = kw.results ?? kw.keywords_rank ?? [];
+        results.forEach((r) => {
             const dateISO = dayjs(r.tracked_at).format("YYYY-MM-DD");
+
             if (!chartMap[dateISO]) chartMap[dateISO] = [];
+
             chartMap[dateISO].push(r.rank_group);
             allRanks.push(r.rank_group);
         });

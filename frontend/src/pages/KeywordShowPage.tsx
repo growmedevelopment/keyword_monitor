@@ -9,6 +9,8 @@ import DataStateHandler from "../components/Common/DataStateHandler.tsx";
 import KeywordTagSelector from "../components/Common/KeywordTagSelector.tsx";
 import toast from "react-hot-toast";
 import BackButton from "../components/Common/BackButton.tsx";
+import dayjs, {type Dayjs} from "dayjs";
+import Rechart from "../components/Project/SeoPerformanceRechart/Rechart.tsx";
 
 export default function KeywordShowPage() {
     const { id } = useParams<{ id: string }>();
@@ -17,6 +19,14 @@ export default function KeywordShowPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [selectedKeywordGroup, setSelectedKeywordGroup] = useState<number | null>(null);
+    const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>([
+        dayjs().subtract(3, "day"),
+        dayjs(),
+    ]);
+
+    const [mode, setMode] = useState<"range" | "compare">("range");
+
+
 
     useEffect(() => {
         const fetchData = async () => {
@@ -132,9 +142,21 @@ export default function KeywordShowPage() {
                         />
                     </Box>
 
+                    <Paper sx={{ mt: 3, p: 2 }}>
+                        <Rechart
+                            keywords={[keywordData]}
+                            datePeriod={dateRange}
+                            selectedMode={mode}
+                            setDateRangeFunction={(range) => {
+                                setDateRange(range);
+                            }}
+                            setDateModeFunction={(selectedMode) => {
+                                setMode(selectedMode);
+                            }}
+                        />
+                    </Paper>
 
                     <Paper sx={{ mt: 3 }}>
-                        {/*<Rechart id={Number(id)} mode={'keyword'}/>*/}
                         <KeywordRankGrid data={keywordData.keywords_rank ?? []} />
                     </Paper>
                 </Box>
