@@ -80,9 +80,12 @@ export default function CalendarPicker({ initialRange, mode, onApply }: Props) {
         }
 
         if (mode === "compare") {
-            const list = [from, to].filter(Boolean) as Date[];
+            let list = [from, to].filter(Boolean) as Date[];
+
+            list = list.sort((a, b) => a.getTime() - b.getTime()); // always ordered oldest → newest
+
             setCompareDates(list);
-            setCurrentMonth(from ?? new Date());
+            setCurrentMonth(list[0] ?? new Date());
         }
     }, [mode, initialRange]);
 
@@ -216,6 +219,7 @@ export default function CalendarPicker({ initialRange, mode, onApply }: Props) {
                             month={currentMonth}
                             onMonthChange={setCurrentMonth}
                             disabled={{ after: new Date() }}
+                            endMonth={new Date()}
                         />
                     )}
 
@@ -225,14 +229,20 @@ export default function CalendarPicker({ initialRange, mode, onApply }: Props) {
                             max={2}
                             selected={compareDates}
                             onSelect={(dates) => {
-                                const list = dates ?? [];
+                                const list = (dates ?? [])
+                                    .sort((a, b) => a.getTime() - b.getTime()); // sort oldest → newest
+
                                 setCompareDates(list);
-                                if (list.length > 0) setCurrentMonth(list[0]);
+
+                                if (list.length > 0) {
+                                    setCurrentMonth(list[0]); // always align calendar to oldest date
+                                }
                             }}
                             numberOfMonths={2}
                             month={currentMonth}
                             onMonthChange={setCurrentMonth}
                             disabled={{ after: new Date() }}
+                            endMonth={new Date()}
                         />
                     )}
 

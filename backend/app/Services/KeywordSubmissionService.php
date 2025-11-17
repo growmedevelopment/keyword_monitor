@@ -83,6 +83,7 @@ class KeywordSubmissionService
             "language_code"  => $keyword->language,
             "priority"       => $keyword->tracking_priority,
             "tag"            => "keyword_{$keyword->id}_project_{$project->id}",
+            "depth" => 20
         ]];
     }
 
