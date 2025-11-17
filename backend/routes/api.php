@@ -45,6 +45,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/keywords/{keyword}', [KeywordController::class, 'show']);
 
+    Route::post('keywords/{id}/filteredResults', [KeywordController::class, 'filteredResults']);
+
     Route::delete('/keywords/{keyword}', [KeywordController::class, 'destroy']);
 
     Route::get('/keyword-groups', [KeywordGroupController::class, 'index']);

@@ -7,6 +7,7 @@ use App\Models\Keyword;
 use App\Models\Project;
 use App\Services\KeywordMetricsService;
 use App\Services\KeywordSubmissionService;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -139,36 +140,40 @@ class KeywordController extends Controller
         }
     }
 
-//    public function getSeoMetrics(Request $request, string $id): JsonResponse
-//    {
-//        try {
-//            $request->validate([
-//                'mode' => ['required', 'string', 'in:project,keyword'],
-//                'start_date' => ['required', 'date'],
-//                'end_date'   => ['required', 'date', 'after_or_equal:start_date'],
-//            ]);
-//
-//            $metrics = $this->keywordMetricsService->getSeoMetrics(
-//                (int) $id,
-//                $request->input('mode'),
-//                $request->input('start_date'),
-//                $request->input('end_date')
-//            );
-//
-//            return response()->json($metrics);
-//        } catch (Exception $e) {
-//            Log::error('Failed to get SEO metrics', [
-//                'mode' => $request->input('mode'),
-//                'id' => $id,
-//                'error' => $e->getMessage(),
-//                'trace' => $e->getTraceAsString(),
-//            ]);
-//
-//            return response()->json([
-//                'error' => 'Failed to fetch SEO metrics.',
-//                'message' => config('app.debug') ? $e->getMessage() : 'An unexpected error occurred.',
-//            ], 500);
-//        }
-//    }
+    public function filteredResults(Request $request, string $id): JsonResponse {
+        $mode = $request->input('mode', 'range');
+
+        $startDate = $request->input('date_range.start_date');
+        $endDate   = $request->input('date_range.end_date');
+
+        if (!$startDate || !$endDate) {
+            return response()->json(['error' => 'Missing date range'], 422);
+        }
+
+        $start = Carbon::parse($startDate)->startOfDay();
+        $end   = Carbon::parse($endDate)->endOfDay();
+
+        $keyword = Keyword::with(['keywordsRank' => function ($q) use ($mode, $start, $end, $startDate, $endDate) {
+
+            if ($mode === 'range') {
+                $q->whereBetween('tracked_at', [$start, $end]);
+            }
+
+            if ($mode === 'compare') {
+                $q->where(function ($query) use ($startDate, $endDate) {
+                    $query->whereDate('tracked_at', '=', $startDate)
+                        ->orWhereDate('tracked_at', '=', $endDate);
+                });
+            }
+
+            $q->orderBy('tracked_at', 'asc');
+        }])->findOrFail($id);
+
+        return response()->json($keyword);
+    }
+
 
 }
+
+
+

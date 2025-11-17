@@ -2,7 +2,7 @@ export interface KeywordResult {
     tracked_at: string;
     type: string;
     rank_absolute: number;
-    rank_group: number;
+    position: number;
     url: string;
     title: string;
 }

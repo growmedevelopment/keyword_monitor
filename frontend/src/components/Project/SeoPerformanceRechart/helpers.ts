@@ -51,8 +51,8 @@ export const buildMetrics = (keywords: {
 
             if (!chartMap[dateISO]) chartMap[dateISO] = [];
 
-            chartMap[dateISO].push(r.rank_group);
-            allRanks.push(r.rank_group);
+            chartMap[dateISO].push(r.position);
+            allRanks.push(r.position);
         });
     });
 

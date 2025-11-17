@@ -1,6 +1,6 @@
 import { Box, Typography, Paper } from "@mui/material";
 import type { Keyword, KeywordGroup } from "../components/types/keywordTypes.ts";
-import { useEffect, useState } from "react";
+import {useCallback, useEffect, useState} from "react";
 import { useParams } from "react-router-dom";
 import keywordService from "../services/keywordService.ts";
 import keywordGroupService from "../services/keywordGroupService.ts";
@@ -26,31 +26,31 @@ export default function KeywordShowPage() {
 
     const [mode, setMode] = useState<"range" | "compare">("range");
 
+    const loadKeyword = useCallback(() => {
+        if (!id) return;
 
+        setLoading(true);
 
-    useEffect(() => {
-        const fetchData = async () => {
-            if (!id) return;
-            try {
-                setLoading(true);
-                const keywordData = await keywordService.getById(id);
+        keywordService
+            .getByFilteredResults(id, dateRange, mode)
+            .then(async (keywordData) => {
                 setKeyword(keywordData);
 
                 if (keywordData.keyword_groups) {
                     setSelectedKeywordGroup(keywordData.keyword_groups.id);
                 }
 
+                // Load groups only once OR always if needed
                 const groups = await keywordGroupService.getByProject(keywordData.project_id);
                 setKeywordGroups(groups);
-            } catch {
-                setError("Failed to load data");
-            } finally {
-                setLoading(false);
-            }
-        };
+            })
+            .catch(() => setError("Failed to load data"))
+            .finally(() => setLoading(false));
+    }, [id, dateRange]);
 
-        fetchData().then();
-    }, [id]);
+    useEffect(() => {
+        loadKeyword();
+    }, [loadKeyword]);
 
     async function assignKeywordToGroup(keywordId: number, groupId: number | null) {
         try {
