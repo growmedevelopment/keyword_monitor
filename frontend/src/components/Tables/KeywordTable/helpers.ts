@@ -28,15 +28,6 @@ export function getGroupByDate(k: Keyword): Record<string, Result> {
     }, {} as Record<string, Result>);
 }
 
-export function getNumericPosition(data: Keyword, index: number): number | string {
-    const dates = getSortedDates(data);
-    const dateKey = dates[index];
-    if (!dateKey) return "-";
-
-    const rank = getGroupByDate(data)[dateKey]?.position;
-    return typeof rank === "number" ? rank : "-";
-}
-
 export function getSortedDates(data: Keyword): string[] {
     return Object.keys(getGroupByDate(data)).sort();
 }
@@ -44,4 +35,24 @@ export function getSortedDates(data: Keyword): string[] {
 export function getUrlForToday(data: Keyword): string | undefined {
     const grouped = getGroupByDate(data);
     return grouped[getSortedDates(data).at(-1) ?? ""]?.url;
+}
+
+
+export function getPositionForExactDate(
+    keyword: any,
+    dateKey: string
+): number | string {
+
+    if (!keyword?.results || !Array.isArray(keyword.results)) {
+        return "-";
+    }
+
+    const map: Record<string, any> = {};
+
+    for (const r of keyword.results) {
+        const k = r.tracked_at.substring(0, 10);
+        map[k] = r;
+    }
+
+    return map[dateKey]?.position ?? "-";
 }

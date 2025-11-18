@@ -35,30 +35,4 @@ class KeywordUpdatedEvent implements ShouldBroadcastNow
     {
         return new Channel('project-' . $this->task->project_id);
     }
-
-    public function broadcastAs(): string
-    {
-        return 'keyword-updated';
-    }
-
-    public function broadcastWith(): array
-    {
-        $keyword = $this->task->keyword;
-
-        return [
-            'keyword' => [
-                'id'             => $keyword->id,
-                'keyword'        => $keyword->keyword,
-                'status_message' => $this->task->status_message,
-                'status_code'    => $this->task->status_code,
-                'results'        => [
-                    'type'          => $this->result->type,
-                    'rank_group'    => $this->result->rank_group,
-                    'rank_absolute' => $this->result->rank_absolute,
-                    'url'           => $this->result->url,
-                    'title'         => $this->result->title,
-                ],
-            ],
-        ];
-    }
 }

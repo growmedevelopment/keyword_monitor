@@ -3,10 +3,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import { Dayjs } from "dayjs";
 import { Box, Link } from '@mui/material';
 import type { Keyword } from "../../types/keywordTypes";
-import {
-    getNumericPosition,
-    getUrlForToday,
-} from "./helpers";
+import {getPositionForExactDate, getUrlForToday} from "./helpers";
 
 import { PositionWithTrend } from "./PositionWithTrend";
 import { GroupCell } from "./GroupCell";
@@ -91,39 +88,46 @@ export function buildColumnDefs(
         const dateCols: ColDef<Keyword>[] = [];
 
         let cursor = from.clone();
-        let index = 0;
 
         while (cursor.isBefore(to) || cursor.isSame(to, "day")) {
+            const dateKey = cursor.format("YYYY-MM-DD");   // exact API key
+            const headerLabel = cursor.format("MMM D");    // column label
+
             dateCols.push({
-                headerName: cursor.format("MMM D"),
+                headerName: headerLabel,
                 width: 110,
-                valueGetter: (p) => getNumericPosition(p.data!, index),
-                cellRenderer: PositionWithTrend(index),
+                valueGetter: (p) => getPositionForExactDate(p.data, dateKey),
+                cellRenderer: PositionWithTrend(dateKey),   // trend by real date
             });
 
             cursor = cursor.add(1, "day");
-            index++;
         }
 
         return [...staticCols, ...dateCols, removeCol];
     }
 
-    // COMPARE MODE — two columns
+    // COMPARE MODE — two columns using exact date keys
     if (mode === "compare") {
+        const fromKey = from.format("YYYY-MM-DD");
+        const toKey   = to.format("YYYY-MM-DD");
+
         return [
             ...staticCols,
+
             {
                 headerName: from.format("MMM D"),
                 width: 110,
-                valueGetter: (p) => getNumericPosition(p.data!, 0),
-                cellRenderer: PositionWithTrend(0),
+                valueGetter: (p) => getPositionForExactDate(p.data, fromKey),
+                cellRenderer: PositionWithTrend(fromKey),
             },
+
             {
                 headerName: to.format("MMM D"),
                 width: 110,
-                valueGetter: (p) => getNumericPosition(p.data!, 1),
-                cellRenderer: PositionWithTrend(1),
+                valueGetter: (p) => getPositionForExactDate(p.data, toKey),
+                cellRenderer: PositionWithTrend(toKey),
             },
+
             removeCol,
         ];
     }
