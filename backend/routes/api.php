@@ -41,8 +41,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/projects/{project}/keywords/create', [KeywordController::class, 'addKeywordToProject']);
 
-   // Route::post('/seo-metrics/{id}', [KeywordController::class, 'getSeoMetrics']);
-
     Route::get('/keywords/{keyword}', [KeywordController::class, 'show']);
 
     Route::post('keywords/{id}/filteredResults', [KeywordController::class, 'filteredResults']);

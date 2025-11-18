@@ -1,4 +1,4 @@
-import {useEffect, useState, useCallback} from "react";
+import {useCallback, useEffect, useState} from "react";
 import {useParams} from "react-router-dom";
 import {Box, Grid, Typography} from "@mui/material";
 import pusher from "../pusher";
@@ -14,7 +14,6 @@ import KeywordGroups from "../components/Project/KeywordGroups.tsx";
 import BackButton from "../components/Common/BackButton.tsx";
 import Rechart from "../components/Project/SeoPerformanceRechart/Rechart.tsx";
 import dayjs, {type Dayjs} from "dayjs";
-
 
 
 export default function ProjectShowPage() {
@@ -58,20 +57,64 @@ export default function ProjectShowPage() {
 
             const updatedKeyword = data.keyword;
 
-            // Extract title and position from first result if available
-            const firstResult = updatedKeyword.data_for_seo_results?.[0] || {};
+            // -----------------------------
+            // NORMALIZE RESULTS
+            // Backend sends:
+            //     results: { rank_group, url, title }
+            //
+            // Frontend expects:
+            //     results: [{ position, url, title, tracked_at, raw }]
+            // -----------------------------
+
+            const rawResults = updatedKeyword.results;
+
+            let normalizedResults: any[] = [];
+
+            if (Array.isArray(rawResults)) {
+                normalizedResults = rawResults.map((r) => ({
+                    position: r.rank_group ?? r.position ?? "-",
+                    url: r.url ?? "",
+                    title: r.title ?? "",
+                    tracked_at: r.tracked_at ?? new Date().toISOString(),
+                    raw: r
+                }));
+            } else if (rawResults) {
+                normalizedResults = [
+                    {
+                        position: rawResults.rank_group ?? rawResults.position ?? "-",
+                        url: rawResults.url ?? "",
+                        title: rawResults.title ?? "",
+                        tracked_at: rawResults.tracked_at ?? new Date().toISOString(),
+                        raw: rawResults
+                    }
+                ];
+            }
+
+            const first = normalizedResults[0] || {};
+
             const enrichedKeyword = {
                 ...updatedKeyword,
-                title: firstResult.title || "-",
-                position: firstResult.rank_group || "-",
+                results: normalizedResults,
+                title: first.title ?? "-",
+                position: first.position ?? "-" // always normalized
             };
 
-            setProject((prevProject) => {
-                if (!prevProject) return prevProject;
+            // -----------------------------
+            // MERGE INTO PROJECT STATE
+            // -----------------------------
 
-                const updatedKeywords = prevProject.keywords.map((k) =>
-                    k.id === enrichedKeyword.id ? {...k, ...enrichedKeyword} : k
-                );
+            setProject((prevProject) => {
+
+                if (!prevProject) {
+                    return prevProject;
+                }
+
+                const updatedKeywords = prevProject.keywords.map((k) => {
+                    if (k.id === enrichedKeyword.id) {
+                        return { ...k, ...enrichedKeyword };
+                    }
+                    return k;
+                });
 
                 return {
                     ...prevProject,
