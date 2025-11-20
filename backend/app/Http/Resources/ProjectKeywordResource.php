@@ -20,6 +20,7 @@ class ProjectKeywordResource extends JsonResource
             'results' => KeywordRankResultResource::collection(
                 $this->whenLoaded('keywordsRank')
             ),
+            'created_at'=>$this->created_at,
         ];
     }
 }

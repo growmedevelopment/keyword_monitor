@@ -10,9 +10,9 @@ type DeleteResponse = {
 };
 
 const keywordService = {
-    async create(projectId: string, keyword: string, groupId: number | null): Promise<any> {
+    async create(projectId: string, keywords: string[], groupId: number | null): Promise<any> {
         const response = await axios.post(`${API}/api/projects/${projectId}/keywords/create`, {
-            keyword,
+            keywords,
             keyword_group_id: groupId
         });
 

@@ -40,14 +40,18 @@ export default function KeywordTable({keywords, keywordGroups, dateRange, mode}:
     }
 
     return (
-        <div className="ag-theme-alpine" style={{ height: 500, width: "100%" }}>
+        <div className="ag-theme-alpine" style={{ width: "100%" }}>
             <AgGridReact
                 rowData={keywords}
                 columnDefs={columnDefs}
                 defaultColDef={defaultColDef}
                 pagination={true}
-                paginationPageSize={20}
+                paginationPageSize={15}
+                paginationPageSizeSelector={[ 15, 25, 50, 100]}
                 context={{ keywordGroups }}
+                suppressMultiSort={true}
+                domLayout="autoHeight"
+
             />
         </div>
     );

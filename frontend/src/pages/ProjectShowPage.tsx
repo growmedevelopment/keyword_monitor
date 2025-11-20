@@ -1,6 +1,6 @@
 import {useCallback, useEffect, useState} from "react";
 import {useParams} from "react-router-dom";
-import {Box, Grid, Typography} from "@mui/material";
+import {Box, CircularProgress, Grid, Typography} from "@mui/material";
 import pusher from "../pusher";
 import projectService from "../services/projectService";
 import keywordService from "../services/keywordService.ts";
@@ -22,7 +22,7 @@ export default function ProjectShowPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isDialogOpen, setDialogOpen] = useState(false);
-
+    const [addingKeywords, setAddingKeywords] = useState(false);
     const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>([
         dayjs().subtract(3, "day"),
         dayjs(),
@@ -76,7 +76,8 @@ export default function ProjectShowPage() {
                     url: r.url ?? "",
                     title: r.title ?? "",
                     tracked_at: r.tracked_at ?? new Date().toISOString(),
-                    raw: r
+                    raw: r,
+                    created_at : r.created_at,
                 }));
             } else if (rawResults) {
                 normalizedResults = [
@@ -85,7 +86,8 @@ export default function ProjectShowPage() {
                         url: rawResults.url ?? "",
                         title: rawResults.title ?? "",
                         tracked_at: rawResults.tracked_at ?? new Date().toISOString(),
-                        raw: rawResults
+                        raw: rawResults,
+                        created_at: rawResults.created_at,
                     }
                 ];
             }
@@ -133,29 +135,27 @@ export default function ProjectShowPage() {
         };
     }, [id]);
 
-    const handleAddKeyword = (newKeywords: string[], groupId: number | null) => {
+    const handleAddKeyword = async (newKeywords: string[], groupId: number | null) => {
         if (!project || !id) return;
 
-        newKeywords.forEach((keyword) => {
-            keywordService
-                .create(id, keyword, groupId)
-                .then((response) => {
-                    const createdKeyword = {...response.keyword,};
+        try {
+            setAddingKeywords(true);
+            const response = await keywordService.create(id, newKeywords, groupId);
 
-                    setProject((prev) =>
-                        prev ? {...prev, keywords: [...prev.keywords, createdKeyword]} : prev
-                    );
+            const createdKeywords = response.keywords;
 
-                    toast.success(response.message);
-                })
-                .catch((error) => {
-                    console.error("Failed to create keyword", error);
-                    toast.error(
-                        error?.response?.data?.message || error.message || "Failed to create keyword."
-                    );
-                });
-        });
+            setProject((prev) =>
+                prev
+                    ? { ...prev, keywords: [...prev.keywords, ...createdKeywords] }
+                    : prev
+            );
 
+            toast.success("Keywords added successfully!");
+        } catch (error: any) {
+            console.error("Bulk keyword add failed", error);
+            toast.error(error?.response?.data?.message || "Failed to add keywords");
+        }
+        setAddingKeywords(false);
         setDialogOpen(false);
     };
 
@@ -222,13 +222,32 @@ export default function ProjectShowPage() {
                         </Grid>
 
 
-                        <ProjectKeywordsSection
-                            keywords={projectData.keywords}
-                            keywordGroups={projectData.keyword_groups}
-                            onAddKeyword={() => setDialogOpen(true)}
-                            selectedDateRange={dateRange}
-                            selectedMode={mode}
-                        />
+                        <Box position="relative">
+                            <ProjectKeywordsSection
+                                keywords={projectData.keywords}
+                                keywordGroups={projectData.keyword_groups}
+                                onAddKeyword={() => setDialogOpen(true)}
+                                selectedDateRange={dateRange}
+                                selectedMode={mode}
+                            />
+
+                            {addingKeywords && (
+                                <Box
+                                    sx={{
+                                        position: "absolute",
+                                        inset: 0,
+                                        backgroundColor: "rgba(255,255,255,0.6)",
+                                        backdropFilter: "blur(3px)",
+                                        zIndex: 100,
+                                        display: "flex",
+                                        justifyContent: "center",
+                                        alignItems: "center",
+                                    }}
+                                >
+                                    <CircularProgress size={50} />
+                                </Box>
+                            )}
+                        </Box>
 
                         {isDialogOpen &&
                             <AddKeywordDialog

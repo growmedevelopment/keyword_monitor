@@ -18,10 +18,17 @@ export function buildColumnDefs(
     // STATIC COLUMNS
     const staticCols: ColDef<Keyword>[] = [
         {
+            field: "created_at",
+            hide: true,
+            sortable: true,
+            sort: "asc",
+            sortIndex: 0,
+            valueGetter: (p) => p.data?.created_at,
+        },
+        {
             field: "keyword",
             headerName: "Keyword",
             width: 200,
-            sort: "asc",
             cellRenderer: (p: ICellRendererParams<Keyword, string>) => {
                 return (
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
