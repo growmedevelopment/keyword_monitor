@@ -48,6 +48,8 @@ export default function KeywordTable({keywords, keywordGroups, dateRange, mode}:
                 pagination={true}
                 paginationPageSize={20}
                 context={{ keywordGroups }}
+                suppressMultiSort={true}
+
             />
         </div>
     );

@@ -46,6 +46,7 @@ export interface Keyword {
     keyword_group_id: KeywordGroup['id'] | null;
     keyword_group_name: KeywordGroup['name'] | null;
     keyword_group_color : KeywordGroup['color'] | null;
+    created_at: string;
 }
 
 

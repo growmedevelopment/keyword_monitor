@@ -47,60 +47,62 @@ class KeywordController extends Controller
     {
         try {
             $request->validate([
-                'keyword' => 'required|string|max:255',
+                'keywords' => 'required|array',
+                'keywords.*' => 'string|max:255',
                 'keyword_group_id' => 'nullable|exists:keyword_groups,id',
             ]);
 
-            // 1. Find project
             $project = Project::findOrFail($project_id);
+            $groupId = $request->input('keyword_group_id');
 
-            // 2. Check if keyword already exists for this project
-            $existingKeyword = $project->keywords()
-                ->where('keyword', $request->input('keyword'))
-                ->first();
+            $createdKeywords = [];
 
-            // 2a. If it exists and has a pending task without result, return 202
-            if ($existingKeyword) {
-                $hasPendingTask = $existingKeyword->dataForSeoTasks()
-                    ->where('status', DataForSeoTaskStatus::SUBMITTED)
-                    ->whereDoesntHave('result')
-                    ->exists();
+            foreach ($request->keywords as $keywordText) {
 
-                if ($hasPendingTask) {
-                    return response()->json([
-                        'message' => 'Keyword already submitted and waiting for results.',
-                        'keyword' => $existingKeyword->load('dataForSeoResults'),
-                    ], 202);
+                $keywordText = strtolower(trim($keywordText));
+
+                // Check if keyword already exists
+                $existing = $project->keywords()
+                    ->where('keyword', $keywordText)
+                    ->first();
+
+                if ($existing) {
+                    $createdKeywords[] = array_merge(
+                        $existing->toArray(),
+                        [
+                            'keyword_group_name'  => $existing->keyword_groups?->name,
+                            'keyword_group_color' => $existing->keyword_groups?->color,
+                            'already_exists'      => true,
+                        ]
+                    );
+                    continue;
                 }
 
-                return response()->json([
-                    'message' => 'Keyword already exists in the project.',
-                    'keyword' => $existingKeyword->load('dataForSeoResults'),
-                ], 200);
-            }
+                // Create keyword + submit to DataForSEO
+                $keyword = $this->keywordSubmissionService->submitKeyword(
+                    $project,
+                    $keywordText,
+                    $groupId
+                );
 
-            // 3. Submit keyword & create DataForSeoTask
-            $keyword = $this->keywordSubmissionService->submitKeyword(
-                $project,
-                $request['keyword'],
-                $request['keyword_group_id'] ?? null
-            );
-
-
-            return response()->json([
-                'message' => 'Keyword added and queued for background processing.',
-                'keyword' => array_merge(
+                $createdKeywords[] = array_merge(
                     $keyword->toArray(),
                     [
-                        'keyword_group_name' => $keyword->keyword_groups?->name,
+                        'keyword_group_name'  => $keyword->keyword_groups?->name,
                         'keyword_group_color' => $keyword->keyword_groups?->color,
-                        ]
-                ),
-                'status' => DataForSeoTaskStatus::QUEUED,
+                    ]
+                );
+            }
+
+            return response()->json([
+                'message'  => 'Keywords processed.',
+                'keywords' => $createdKeywords,
             ], 201);
 
-        } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 
