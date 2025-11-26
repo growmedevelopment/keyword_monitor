@@ -31,4 +31,9 @@ class Project extends Model
         return $this->hasMany(KeywordGroup::class);
     }
 
+    public function backlink_urls(): HasMany
+    {
+        return $this->hasMany(BacklinkTarget::class);
+    }
+
 }

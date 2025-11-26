@@ -25,14 +25,13 @@ const projectService = {
         const startDate = start.format("YYYY-MM-DD");
         const endDate = end.format("YYYY-MM-DD");
 
-        const response = await axios.post<Project>(`${API}/api/projects/${id}`,
-            {
+        const response = await axios.get<Project>(`${API}/api/projects/${id}`,{
+            params: {
                 mode,
-                date_range: {
-                    start_date: startDate,
-                    end_date: endDate
-                }
-            });
+                start_date: startDate,
+                end_date: endDate,
+            },
+        });
         return response.data;
     },
 

@@ -1,6 +1,8 @@
 import {useCallback, useEffect, useState} from "react";
 import {useParams} from "react-router-dom";
-import {Box, CircularProgress, Grid, Typography} from "@mui/material";
+import {Box, CircularProgress, Grid, Typography, Button} from "@mui/material";
+import { Link } from "react-router-dom";
+import LinkIcon from "@mui/icons-material/Link";
 import pusher from "../pusher";
 import projectService from "../services/projectService";
 import keywordService from "../services/keywordService.ts";
@@ -204,6 +206,19 @@ export default function ProjectShowPage() {
                             <Grid size={{ xs: 12, md: 4, lg: 3.5 }}>
                                 <ProjectDetails project={projectData} />
                                 <KeywordGroups keywordGroups={projectData.keyword_groups}/>
+                                <Box mt={3}>
+                                    <Button
+                                        variant="contained"
+                                        color="secondary"
+                                        fullWidth
+                                        component={Link}
+                                        to={`/projects/${projectData.id}/backlinks`}
+                                        startIcon={<LinkIcon />}
+                                        sx={{ fontWeight: 600, py: 1.5 }}
+                                    >
+                                        Backlink Monitoring
+                                    </Button>
+                                </Box>
                             </Grid>
 
                             <Grid size={{ xs: 12, md: 8, lg: 8.5 }}>
