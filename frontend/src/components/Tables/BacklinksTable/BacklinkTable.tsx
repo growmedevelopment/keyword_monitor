@@ -6,11 +6,11 @@ import {
     Stack,
 } from "@mui/material";
 import { AgGridReact } from "ag-grid-react";
-import { buildBacklinkColumnDefs } from "./columns";
-import type { BacklinkItem } from "../../services/backlinkService";
-import backlinkService from "../../services/backlinkService";
+import { buildBacklinkColumnDefs } from "./columns.tsx";
+import type { BacklinkItem } from "../../../services/backlinkService.ts";
+import backlinkService from "../../../services/backlinkService.ts";
 import toast from "react-hot-toast";
-import AddBacklinkUrlDialog from "../Dialogs/BacklinkUrl/AddBacklinkUrlDialog.tsx";
+import AddBacklinkUrlDialog from "../../Dialogs/BacklinkUrl/AddBacklinkUrlDialog.tsx";
 
 interface Props {
     backlinks: BacklinkItem[];

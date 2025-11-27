@@ -20,7 +20,7 @@ return new class extends Migration {
 
             // interpreted fields from SERP response
             $table->boolean('indexed')->nullable();     // rank_group > 0
-            $table->integer('status_code')->nullable(); // rank_group or http code if needed
+            $table->integer('http_code')->nullable(); // rank_group or http code if needed
 
             // full raw result JSON
             $table->json('raw')->nullable();

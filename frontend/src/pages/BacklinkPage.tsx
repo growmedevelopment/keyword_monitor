@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import backlinkService, { type BacklinkItem } from "../services/backlinkService";
-import BacklinkTable from "../components/Backlinks/BacklinkTable";
 import { Drawer, Box, Typography, Breadcrumbs, Link as MUILink } from "@mui/material";
 import { useParams, Link as RouterLink } from "react-router-dom";
 import pusher from "../pusher";
+import BacklinkTable from "../components/Tables/BacklinksTable/BacklinkTable.tsx";
 
 export default function BacklinkPage() {
     const { project } = useParams() as { project: string };
@@ -93,7 +93,7 @@ export default function BacklinkPage() {
                                 marginBottom: 2,
                             }}
                         >
-                            <Typography>Status: {h.status_code}</Typography>
+                            <Typography>Status: {h.http_code}</Typography>
                             <Typography>Indexed: {h.indexed ? "Yes" : "No"}</Typography>
                             <Typography>
                                 Checked At: {new Date(h.checked_at).toLocaleString()}

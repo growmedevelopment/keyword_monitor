@@ -83,11 +83,27 @@ class PollBacklinkTaskJob implements ShouldQueue
 
             $result = collect($items)->sortBy('rank_group')->first();
 
+
+            // Get the actual URL from DFS result
+            $pageUrl = $result['url'] ?? null;
+
+            $httpStatus = null;
+
+            if ($pageUrl) {
+                try {
+                    $httpStatus = Http::withHeaders([
+                        'User-Agent' => 'Mozilla/5.0',
+                    ])->get($pageUrl)->status();
+                } catch (\Throwable $e) {
+                    $httpStatus = 0; // unreachable
+                }
+            }
+
             BacklinkCheck::create([
                 'backlink_target_id' => $this->task->backlink_target_id,
                 'url' => $result['url'] ?? null,
                 'indexed' => ($result['rank_group'] ?? 0) > 0,
-                'status_code' => $result['rank_group'] ?? null,
+                'http_code' => $httpStatus,
                 'raw' => json_encode($result, JSON_THROW_ON_ERROR),
                 'checked_at' => now(),
             ]);

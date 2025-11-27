@@ -1,15 +1,13 @@
 import type { ColDef, ICellRendererParams } from "ag-grid-community";
-import type { BacklinkItem } from "../../services/backlinkService";
+import type { BacklinkItem } from "../../../services/backlinkService";
 
-// -------------------------------
-// INTERNAL CELL RENDERERS
-// -------------------------------
-
-// 🔵 Colored status code badge
+// Status Code Badge
 function StatusBadge(params: ICellRendererParams) {
     const code = params.value;
 
-    if (!code) return <span style={{ color: "#999" }}>—</span>;
+    if (!code) {
+        return <span style={{ color: "#999" }}>—</span>;
+    }
 
     const color =
         code >= 200 && code < 300
@@ -33,7 +31,7 @@ function StatusBadge(params: ICellRendererParams) {
     );
 }
 
-// 🟢 Indexed / Not Indexed badge
+// Indexed Badge
 function IndexBadge(params: ICellRendererParams) {
     const indexed = params.value;
 
@@ -55,10 +53,6 @@ function IndexBadge(params: ICellRendererParams) {
         </span>
     );
 }
-
-// -------------------------------
-// COLUMN DEFINITIONS
-// -------------------------------
 
 export function buildBacklinkColumnDefs(): ColDef<BacklinkItem>[] {
     return [
@@ -82,30 +76,37 @@ export function buildBacklinkColumnDefs(): ColDef<BacklinkItem>[] {
             ),
         },
 
+        // Latest status code
         {
             headerName: "Status Code",
-            field: "latest.status_code", // 🔥 FIXED
             width: 130,
+            valueGetter: (params) =>
+                params.data?.latest_result.http_code ?? null,
             cellRenderer: StatusBadge,
         },
 
+        // Latest indexed flag
         {
             headerName: "Indexed",
-            field: "latest.indexed", // 🔥 FIXED
             width: 130,
+            valueGetter: (params) =>
+                params.data?.latest_result.indexed ?? null,
             cellRenderer: IndexBadge,
         },
 
+        // Last checked datetime
         {
             headerName: "Last Checked",
-            field: "latest.checked_at", // 🔥 FIXED
             width: 180,
+            valueGetter: (params) =>
+                params.data?.latest_result.checked_at ?? null,
             valueFormatter: (p) => {
                 if (!p.value) return "-";
                 return new Date(p.value).toLocaleString();
             },
         },
 
+        // History button
         {
             headerName: "History",
             width: 120,
@@ -125,28 +126,5 @@ export function buildBacklinkColumnDefs(): ColDef<BacklinkItem>[] {
                 </button>
             ),
         },
-
-        // OPTIONAL: Uncomment if you want delete button in table
-        /*
-        {
-            headerName: "Remove",
-            width: 120,
-            cellRenderer: (p: ICellRendererParams) => (
-                <button
-                    style={{
-                        padding: "6px 12px",
-                        background: "#f44336",
-                        color: "white",
-                        border: "none",
-                        borderRadius: 6,
-                        cursor: "pointer",
-                    }}
-                    onClick={() => p.context.removeUrl(p.data.id)}
-                >
-                    Delete
-                </button>
-            ),
-        },
-        */
     ];
 }

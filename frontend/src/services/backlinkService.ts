@@ -5,15 +5,15 @@ export interface BacklinkItem {
     id: number;
     url: string;
 
-    latest: {
-        status_code: number | null;
+    latest_result: {
+        http_code: number | null;
         indexed: boolean | null;
         title: string | null;
         checked_at: string | null;
     };
 
     history: {
-        status_code: number | null;
+        http_code: number | null;
         indexed: boolean;
         title: string | null;
         checked_at: string;

@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Http;
 
+//todo make  service for all these actions
 class BacklinkController extends Controller
 {
     /**
@@ -36,14 +37,14 @@ class BacklinkController extends Controller
                 'url'   => $t->url,
 
                 'latest_result' => $latest ? [
-                    'status_code' => $latest->status_code,
+                    'http_code' => $latest->http_code,
                     'indexed'     => $latest->indexed,
                     'checked_at'  => $latest->checked_at,
-                ] : null,
+                ] : (object)[],
 
                 'history' => $t->checks->map(function ($h) {
                     return [
-                        'status_code' => $h->status_code,
+                        'http_code' => $h->http_code,
                         'indexed'     => $h->indexed,
                         'checked_at'  => $h->checked_at,
                     ];
@@ -131,27 +132,6 @@ class BacklinkController extends Controller
 //        return response()->json([
 //            'message' => 'Backlink URL removed successfully.'
 //        ]);
-    }
-
-
-    private function submitIndexingTask(string $url): ?string
-    {
-        $payload = [
-            "target" => $url,
-        ];
-
-        $credentials = [
-            'username' => config('services.dataforseo.username'),
-            'password' => config('services.dataforseo.password'),
-        ];
-
-        $response = Http::withBasicAuth($credentials['username'], $credentials['password'])
-            ->post('https://api.dataforseo.com/v3/backlinks/indexing/task_post', $payload);
-
-        $json = $response->json();
-
-        // extract task_id
-        return $json['tasks'][0]['id'] ?? null;
     }
 
 
