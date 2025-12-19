@@ -72,6 +72,7 @@ export const columnDefs: ColDef[] = [
         headerName: "URL",
         field: "url",
         width: 350,
+        filter: "agTextColumnFilter",
         cellRenderer: (p: ICellRendererParams) => (
             <a
                 href={p.value}
@@ -163,6 +164,7 @@ export const columnDefs: ColDef[] = [
                     onConfirm={async () => {
                         const response = await backlinkService.delete(id);
                         toast.success(response.message);
+                        params.context.onDelete?.(id);
                     }}
                     onError={(err) => {
                         const message =

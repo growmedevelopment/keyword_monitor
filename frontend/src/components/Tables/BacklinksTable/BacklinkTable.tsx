@@ -1,9 +1,7 @@
 import { useMemo, useState } from "react";
 import {
-    Box,
-    Button,
-    TextField,
-    Stack,
+    Button, Paper,
+    Stack, Typography,
 } from "@mui/material";
 import { AgGridReact } from "ag-grid-react";
 import {columnDefs} from "./columns.tsx";
@@ -16,6 +14,7 @@ interface Props {
     backlinks: BacklinkItem[];
     loading: boolean;
     onRefresh?: () => void;
+    onDelete?: (id: number) => void;
     projectId: string;
     openHistory: (item: BacklinkItem) => void;
 }
@@ -26,8 +25,8 @@ export default function BacklinkTable({
                                           projectId,
                                           openHistory,
                                           onRefresh,
+                                          onDelete,
                                       }: Props) {
-    const [search, setSearch] = useState("");
     const [addingUrlDialog, setAddingUrlDialog] = useState(false);
 
     const handleAddUrl = async (urls: string[]) => {
@@ -54,21 +53,12 @@ export default function BacklinkTable({
     );
 
 
-    const filteredData = backlinks.filter((row) =>
-        row.url.toLowerCase().includes(search.toLowerCase())
-    );
-
     return (
-        <Box>
+        <Paper sx={{ p: 2 }}>
             {/* Action bar */}
-            <Stack direction="row" spacing={2} sx={{ mb: 2 }} alignItems="center">
-                <TextField
-                    label="Search URL"
-                    size="small"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    sx={{ width: 300 }}
-                />
+            <Stack direction="row" spacing={2} sx={{ mb: 2 }} alignItems="center" justifyContent="space-between">
+
+                <Typography variant="h6">Assigned Backlinks</Typography>
 
                 <Button variant="contained" onClick={() => setAddingUrlDialog(true)}>
                     + Add URL
@@ -78,15 +68,15 @@ export default function BacklinkTable({
             {/* TABLE */}
             <div className="ag-theme-alpine" style={{ height: 600, width: "100%" }}>
                 <AgGridReact
-                    rowData={filteredData}
+                    rowData={backlinks}
                     columnDefs={columnDefs}
                     defaultColDef={defaultColDef}
-                    context={{ openHistory }}
+                    context={{ openHistory, onDelete }}
                     pagination={true}
                     paginationPageSize={20}
                     animateRows={true}
                     groupDisplayType="groupRows"
-                    rowGroupPanelShow="always"
+                    rowGroupPanelShow="never"
                     loading={loading}
                     overlayLoadingTemplate={
                         `<span class="ag-overlay-loading-center">Loading backlinks…</span>`
@@ -101,6 +91,6 @@ export default function BacklinkTable({
                     onSubmit={handleAddUrl}
                 />
             )}
-        </Box>
+        </Paper>
     );
 }

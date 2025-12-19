@@ -38,6 +38,8 @@ class BacklinkService
                 'history' => $t->checks->map(fn($h) => [
                     'http_code'  => $h->http_code,
                     'indexed'    => $h->indexed,
+                    'link_found' => $h->link_found,
+                    'title'      => $h->title,
                     'checked_at' => $h->checked_at,
                 ]),
             ];
@@ -49,9 +51,6 @@ class BacklinkService
      */
     public function addUrls(Project $project, array $urls): array
     {
-        $username = config('services.dataforseo.username');
-        $password = config('services.dataforseo.password');
-
         $created = [];
 
         foreach ($urls as $url) {
@@ -59,27 +58,38 @@ class BacklinkService
                 'url' => trim($url),
             ]);
 
-            $payload = $this->buildPayload($target);
-
-            $response = Http::withBasicAuth($username, $password)
-                ->post("https://api.dataforseo.com/v3/serp/google/organic/task_post", $payload)
-                ->json();
-
-            $task = $response['tasks'][0] ?? null;
-
-            if ($task) {
-                BacklinkTask::create([
-                    'backlink_target_id' => $target->id,
-                    'task_id'            => $task['id'],
-                    'status_code'        => $task['status_code'],
-                    'status_message'     => $task['status_message'],
-                ]);
-            }
+            $this->checkBacklink($target);
 
             $created[] = $target;
         }
 
         return $created;
+    }
+
+    /**
+     * Trigger a check for a single backlink target
+     */
+    public function checkBacklink(BacklinkTarget $target): void
+    {
+        $username = config('services.dataforseo.username');
+        $password = config('services.dataforseo.password');
+
+        $payload = $this->buildPayload($target);
+
+        $response = Http::withBasicAuth($username, $password)
+            ->post("https://api.dataforseo.com/v3/serp/google/organic/task_post", $payload)
+            ->json();
+
+        $task = $response['tasks'][0] ?? null;
+
+        if ($task) {
+            BacklinkTask::create([
+                'backlink_target_id' => $target->id,
+                'task_id'            => $task['id'],
+                'status_code'        => $task['status_code'],
+                'status_message'     => $task['status_message'],
+            ]);
+        }
     }
 
     /**
