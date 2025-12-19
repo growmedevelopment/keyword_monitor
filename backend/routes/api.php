@@ -58,11 +58,15 @@ Route::middleware('auth:sanctum')->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::prefix('/projects/{project}/backlinks')->group(function () {
-
         Route::get('/', [BacklinkController::class, 'index']);
         Route::post('/', [BacklinkController::class, 'store']);
-        Route::delete('/{target}', [BacklinkController::class, 'destroy']);
+
     });
+
+    Route::prefix('/projects/backlinks')->group(function () {
+        Route::delete('/{backlink}', [BacklinkController::class, 'destroy']);
+    });
+
 
     /*
     |--------------------------------------------------------------------------

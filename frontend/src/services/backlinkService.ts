@@ -20,32 +20,32 @@ export interface BacklinkItem {
     }[];
 }
 
+type CreateResponseType = {
+    status: string;
+    message: string;
+};
+
+type DeleteResponseType = {
+    status: string;
+    message: string;
+}
+
 export default {
     async getAll(projectId: string): Promise<{ backlinks: BacklinkItem[] }> {
         const res = await axios.get(`${API}/api/projects/${projectId}/backlinks`);
         return res.data;
     },
 
-    // async checkStatus(projectId: string, backlinkId: number): Promise<any> {
-    //     const res = await axios.get(`${API}/api/projects/${projectId}/backlinks/${backlinkId}/status`);
-    //     return res.data;
-    // },
-    //
-    // async checkIndexing(projectId: string, backlinkId: number): Promise<any> {
-    //     const res = await axios.get(`${API}/api/projects/${projectId}/backlinks/${backlinkId}/indexing`);
-    //     return res.data;
-    // },
-    //
-    // async delete(projectId: string, backlinkId: number): Promise<any> {
-    //     const res = await axios.delete(`${API}/api/projects/${projectId}/backlinks/${backlinkId}`);
-    //     return res.data;
-    // },
-
-    async create(projectId: string, urls: string[]): Promise<{ backlinks: BacklinkItem[] }> {
+    async create(projectId: string, urls: string[]): Promise<CreateResponseType> {
         const res = await axios.post(`${API}/api/projects/${projectId}/backlinks`, {
             urls
         });
 
         return res.data;
-    }
+    },
+
+    async delete(backlinkId: number): Promise<DeleteResponseType> {
+        const res = await axios.delete(`${API}/api/projects/backlinks/${backlinkId}`);
+        return res.data;
+    },
 };

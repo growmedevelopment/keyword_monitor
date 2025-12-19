@@ -1,5 +1,8 @@
 import type { ColDef, ICellRendererParams } from "ag-grid-community";
-import type { BacklinkItem } from "../../../services/backlinkService";
+import ConfirmDeleteButton from "../ConfirmDeleteButton.tsx";
+import toast from "react-hot-toast";
+import CancelIcon from '@mui/icons-material/Cancel';
+import backlinkService from "../../../services/backlinkService.ts";
 
 // Status Code Badge
 function StatusBadge(params: ICellRendererParams) {
@@ -54,77 +57,114 @@ function IndexBadge(params: ICellRendererParams) {
     );
 }
 
-export function buildBacklinkColumnDefs(): ColDef<BacklinkItem>[] {
-    return [
-        {
-            headerName: "URL",
-            field: "url",
-            width: 350,
-            cellRenderer: (p: ICellRendererParams) => (
-                <a
-                    href={p.value}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                        color: "#1976d2",
-                        textDecoration: "none",
-                        fontWeight: 500,
+
+export const columnDefs: ColDef[] = [
+    {
+        headerName: "URL",
+        field: "url",
+        width: 350,
+        cellRenderer: (p: ICellRendererParams) => (
+            <a
+                href={p.value}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                    color: "#1976d2",
+                    textDecoration: "none",
+                    fontWeight: 500,
+                }}
+            >
+                {p.value}
+            </a>
+        ),
+    },
+
+    // Latest status code
+    {
+        headerName: "Status Code",
+        width: 70,
+        valueGetter: (params) =>
+            params.data?.latest_result.http_code ?? null,
+        cellRenderer: StatusBadge,
+    },
+
+    // Latest indexed flag
+    {
+        headerName: "Indexed",
+        width: 70,
+        valueGetter: (params) =>
+            params.data?.latest_result.indexed ?? null,
+        cellRenderer: IndexBadge,
+    },
+
+    // Last checked datetime
+    {
+        headerName: "Last Checked",
+        width: 180,
+        valueGetter: (params) =>
+            params.data?.latest_result.checked_at ?? null,
+        valueFormatter: (p) => {
+            if (!p.value) return "-";
+            return new Date(p.value).toLocaleString();
+        },
+    },
+
+    // History button
+    {
+        headerName: "History",
+        width: 120,
+        cellRenderer: (p: ICellRendererParams) => (
+            <button
+                style={{
+                    padding: "6px 12px",
+                    background: "#1976d2",
+                    color: "white",
+                    border: "none",
+                    borderRadius: 6,
+                    cursor: "pointer",
+                }}
+                onClick={() => p.context.openHistory(p.data)}
+            >
+                View
+            </button>
+        ),
+    },
+    {
+        headerName: 'Actions',
+        field: 'id',
+        maxWidth: 100,
+        sortable: false,
+        filter: false,
+        cellRenderer: (params: ICellRendererParams) => {
+            const id = params.data.id as number;
+            const url = params.data.url as string;
+
+            return (
+                <ConfirmDeleteButton
+                    title="Remove Backlink?"
+                    description={
+                        <>Are you sure you want to remove <strong>{url}</strong>? URL will not be saved</>
+                    }
+                    confirmLabel="Remove Backlink"
+                    color="error"
+                    tooltip="Backlink removed"
+                    onConfirm={async () => {
+                        const response = await backlinkService.delete(id);
+                        toast.success(response.message);
                     }}
-                >
-                    {p.value}
-                </a>
-            ),
-        },
-
-        // Latest status code
-        {
-            headerName: "Status Code",
-            width: 130,
-            valueGetter: (params) =>
-                params.data?.latest_result.http_code ?? null,
-            cellRenderer: StatusBadge,
-        },
-
-        // Latest indexed flag
-        {
-            headerName: "Indexed",
-            width: 130,
-            valueGetter: (params) =>
-                params.data?.latest_result.indexed ?? null,
-            cellRenderer: IndexBadge,
-        },
-
-        // Last checked datetime
-        {
-            headerName: "Last Checked",
-            width: 180,
-            valueGetter: (params) =>
-                params.data?.latest_result.checked_at ?? null,
-            valueFormatter: (p) => {
-                if (!p.value) return "-";
-                return new Date(p.value).toLocaleString();
-            },
-        },
-
-        // History button
-        {
-            headerName: "History",
-            width: 120,
-            cellRenderer: (p: ICellRendererParams) => (
-                <button
-                    style={{
-                        padding: "6px 12px",
-                        background: "#1976d2",
-                        color: "white",
-                        border: "none",
-                        borderRadius: 6,
-                        cursor: "pointer",
+                    onError={(err) => {
+                        const message =
+                            err instanceof Error ? err.message : String(err);
+                        toast.error(`Something went wrong: ${message}`);
                     }}
-                    onClick={() => p.context.openHistory(p.data)}
-                >
-                    View
-                </button>
-            ),
+                    ariaLabel="Backlink removed"
+                    icon={<CancelIcon fontSize="medium" />}
+                />
+            );
         },
-    ];
-}
+    },
+
+
+
+
+];

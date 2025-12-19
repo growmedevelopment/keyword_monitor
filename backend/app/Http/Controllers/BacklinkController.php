@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BacklinkTarget;
 use App\Models\Project;
 use App\Services\BacklinkService;
 use Illuminate\Http\Request;
@@ -39,5 +40,25 @@ class BacklinkController extends Controller
             'message' => 'Backlink URLs queued for indexing check.',
             'urls'    => $created,
         ], 201);
+    }
+
+    public function destroy(string $id):JsonResponse {
+
+        try {
+            $backlink = BacklinkTarget::findOrFail($id);
+
+            $this->service->removeBacklink($backlink);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Backlink has been deleted'
+            ]);
+        }catch (\Exception $e) {
+            return response()->json([
+                    'status' => 'error',
+                    'message' => $e->getMessage()]
+                , 500);
+        }
+
     }
 }

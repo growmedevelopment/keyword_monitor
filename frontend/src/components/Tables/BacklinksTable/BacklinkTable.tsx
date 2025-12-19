@@ -6,7 +6,7 @@ import {
     Stack,
 } from "@mui/material";
 import { AgGridReact } from "ag-grid-react";
-import { buildBacklinkColumnDefs } from "./columns.tsx";
+import {columnDefs} from "./columns.tsx";
 import type { BacklinkItem } from "../../../services/backlinkService.ts";
 import backlinkService from "../../../services/backlinkService.ts";
 import toast from "react-hot-toast";
@@ -32,18 +32,15 @@ export default function BacklinkTable({
 
     const handleAddUrl = async (urls: string[]) => {
         try {
-            await backlinkService.create(projectId, urls);
-            toast.success("URLs added successfully!");
-            onRefresh?.();                 // FIXED
+            const response = await backlinkService.create(projectId, urls);
+            toast.success(response.message);
+            onRefresh?.();
         } catch (e) {
             console.error(e);
             toast.error("Failed to add URLs");
         }
     };
 
-    const handleDelete = async (id: number) => {
-        console.log("Deleting backlink with id: ", id);
-    }
 
     // --- AG GRID ---
     const defaultColDef = useMemo(
@@ -56,34 +53,6 @@ export default function BacklinkTable({
         []
     );
 
-    const columnDefs = useMemo(() => {
-        const cols = buildBacklinkColumnDefs();
-
-        // Add Delete button
-        cols.push({
-            headerName: "Delete",
-            width: 120,
-            sortable: false,
-            filter: false,
-            cellRenderer: (p: any) => (
-                <button
-                    style={{
-                        padding: "6px 12px",
-                        background: "#f44336",
-                        color: "white",
-                        border: "none",
-                        borderRadius: 6,
-                        cursor: "pointer",
-                    }}
-                    onClick={() => handleDelete(p.data.id)}
-                >
-                    Remove
-                </button>
-            ),
-        });
-
-        return cols;
-    }, []);
 
     const filteredData = backlinks.filter((row) =>
         row.url.toLowerCase().includes(search.toLowerCase())

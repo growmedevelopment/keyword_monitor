@@ -92,4 +92,8 @@ class BacklinkService
                     "keyword"       => "site:{$target->url}",
                 ]];
     }
+
+    public function removeBacklink(BacklinkTarget $target) {
+        $target->delete();
+    }
 }
