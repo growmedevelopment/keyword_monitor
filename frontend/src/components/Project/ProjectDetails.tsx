@@ -1,8 +1,9 @@
-import { Paper, List, ListItem, ListItemIcon, ListItemText } from "@mui/material";
+import { Paper, Typography, Grid, Box, Link } from "@mui/material";
 import PublicIcon from "@mui/icons-material/Public";
 import LanguageIcon from "@mui/icons-material/Language";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import LaunchIcon from '@mui/icons-material/Launch';
 import type { Project } from "../types/projectTypes";
 
 interface ProjectDetailsProps {
@@ -11,46 +12,111 @@ interface ProjectDetailsProps {
 
 export default function ProjectDetails({ project }: ProjectDetailsProps) {
     return (
-        <Paper sx={{ mb: 3}}>
-            <List dense>
-                <ListItem>
-                    <ListItemIcon>
-                        <LanguageIcon color="primary" />
-                    </ListItemIcon>
-                    <ListItemText
-                        primary="Website"
-                        secondary={
-                            <a href={project.url} target="_blank" rel="noopener noreferrer">
-                                {project.url}
-                            </a>
-                        }
-                    />
-                </ListItem>
+        <Paper
+            elevation={0}
+            sx={{
+                borderRadius: '16px',
+                overflow: 'hidden',
+                backgroundColor: 'transparent' // Let the parent container handle background or use #ffffff
+            }}
+        >
+            <Grid container spacing={0.5}>
+                {/* Website Item */}
+                <DetailItem
+                    icon={<LanguageIcon fontSize="small" />}
+                    label="Website"
+                    value={
+                        <Link
+                            href={project.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 0.5,
+                                textDecoration: 'none',
+                                fontWeight: 600,
+                                color: 'primary.main',
+                                '&:hover': { textDecoration: 'underline' }
+                            }}
+                        >
+                            {project.url.replace(/^https?:\/\//, '')}
+                            <LaunchIcon sx={{ fontSize: 12 }} />
+                        </Link>
+                    }
+                />
 
-                <ListItem>
-                    <ListItemIcon>
-                        <PublicIcon color="primary" />
-                    </ListItemIcon>
-                    <ListItemText primary="Country" secondary={project.country} />
-                </ListItem>
+                {/* Country Item */}
+                <DetailItem
+                    icon={<PublicIcon fontSize="small" />}
+                    label="Country Code"
+                    value={project.country}
+                />
 
-                <ListItem>
-                    <ListItemIcon>
-                        <LocationOnIcon color="primary" />
-                    </ListItemIcon>
-                    <ListItemText primary="Location" secondary={project.location_name} />
-                </ListItem>
+                {/* Location Item */}
+                <DetailItem
+                    icon={<LocationOnIcon fontSize="small" />}
+                    label="Target Location"
+                    value={project.location_name}
+                />
 
-                <ListItem>
-                    <ListItemIcon>
-                        <CalendarTodayIcon color="primary" />
-                    </ListItemIcon>
-                    <ListItemText
-                        primary="Created At"
-                        secondary={new Date(project.created_at).toLocaleString()}
-                    />
-                </ListItem>
-            </List>
+                {/* Date Item */}
+                <DetailItem
+                    icon={<CalendarTodayIcon fontSize="small" />}
+                    label="Date Created"
+                    value={new Date(project.created_at).toLocaleDateString(undefined, {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    })}
+                />
+            </Grid>
         </Paper>
     );
 }
+
+/**
+ * Helper Sub-component for Grid Items
+ */
+function DetailItem({ icon, label, value }: { icon: React.ReactNode, label: string, value: React.ReactNode }) {
+    return (
+        <Grid size={{xs: 12}} >
+            <Box sx={{
+                p: 2,
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 0.5,
+                border: '1px solid #f1f5f9',
+                borderRadius: '12px',
+                transition: 'background-color 0.2s',
+                '&:hover': { bgcolor: '#f8fafc' }
+            }}>
+                <Stack direction="row" spacing={1} alignItems="center">
+                    <Box sx={{ color: 'primary.main', display: 'flex' }}>
+                        {icon}
+                    </Box>
+                    <Typography
+                        variant="caption"
+                        sx={{
+                            textTransform: 'uppercase',
+                            fontWeight: 700,
+                            letterSpacing: 0.5,
+                            color: 'text.secondary'
+                        }}
+                    >
+                        {label}
+                    </Typography>
+                </Stack>
+                <Box sx={{ pl: 3.5 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 500, color: '#1e293b' }}>
+                        {value}
+                    </Typography>
+                </Box>
+            </Box>
+        </Grid>
+    );
+}
+
+// Add this import if not present
+import { Stack } from "@mui/material";

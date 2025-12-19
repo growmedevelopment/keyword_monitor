@@ -19,15 +19,16 @@ export default function ProjectsTable({ projects }: { projects: Project[] }) {
     }), []);
 
     return (
-        <div className="ag-theme-alpine" style={{ height: 400, width: '100%' }}>
+        <div className="ag-theme-alpine" style={{ width: '100%' }}>
             <AgGridReact
                 theme={themeAlpine}
                 rowData={projects}
                 columnDefs={columnDefs}
                 defaultColDef={defaultColDef}
                 pagination
-                paginationPageSize={10}
-                paginationPageSizeSelector={[10, 20, 50, 100]}
+                paginationPageSize={20}
+                paginationPageSizeSelector={[ 20, 35, 50, 100]}
+                domLayout="autoHeight"
             />
         </div>
     );

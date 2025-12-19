@@ -1,13 +1,17 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BacklinkController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\KeywordController;
 use App\Http\Controllers\KeywordGroupController;
 use App\Http\Controllers\SerpLocationController;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProjectController;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
+
+// Force {project} to be numeric
+Route::pattern('project', '[0-9]+');
 
 Route::middleware('guest')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
@@ -16,48 +20,72 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware('auth:sanctum')->group(function () {
 
+    // USER
     Route::get('/dashboard', [DashboardController::class, 'index']);
-
-    Route::get('/user', static function (Request $request) {
-        return response()->json($request->user());
-    });
-
+    Route::get('/user', fn(Request $request) => response()->json($request->user()));
     Route::get('/user/api-data', [AuthController::class, 'getAPIUserData']);
-
     Route::get('/logout', [AuthController::class, 'logout']);
 
+    // SERP
     Route::post('/serp/locations', [SerpLocationController::class, 'index']);
 
-    Route::get('/projects/archived', [ProjectController::class, 'archived'])->name('projects.archived');
+    /*
+    |--------------------------------------------------------------------------
+    | PROJECTS (NO CONFLICTS)
+    |--------------------------------------------------------------------------
+    */
 
-    Route::patch('/projects/{id}/restore', [ProjectController::class, 'restore'])->name('projects.restore');
-
+    // List + create
     Route::get('/projects', [ProjectController::class, 'index']);
     Route::get('/projects/archived', [ProjectController::class, 'archived']);
     Route::post('/projects', [ProjectController::class, 'store']);
-    Route::post('/projects/{id}', [ProjectController::class, 'show']);
-    Route::delete('/projects/{id}', [ProjectController::class, 'destroy']);
-    Route::patch('/projects/{id}/restore', [ProjectController::class, 'restore']);
 
+    // MUST COME AFTER "/projects" to avoid conflicts
+    Route::get('/projects/{project}', [ProjectController::class, 'show']);
+    Route::delete('/projects/{project}', [ProjectController::class, 'destroy']);
+    Route::patch('/projects/{project}/restore', [ProjectController::class, 'restore']);
+
+    /*
+    |--------------------------------------------------------------------------
+    | KEYWORDS (inside project)
+    |--------------------------------------------------------------------------
+    */
     Route::post('/projects/{project}/keywords/create', [KeywordController::class, 'addKeywordToProject']);
 
+    /*
+    |--------------------------------------------------------------------------
+    | BACKLINKS (inside project)
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('/projects/{project}/backlinks')->group(function () {
+        Route::get('/', [BacklinkController::class, 'index']);
+        Route::post('/', [BacklinkController::class, 'store']);
+
+    });
+
+    Route::prefix('/projects/backlinks')->group(function () {
+        Route::delete('/{backlink}', [BacklinkController::class, 'destroy']);
+    });
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | KEYWORDS (global)
+    |--------------------------------------------------------------------------
+    */
     Route::get('/keywords/{keyword}', [KeywordController::class, 'show']);
-
-    Route::post('keywords/{id}/filteredResults', [KeywordController::class, 'filteredResults']);
-
+    Route::post('/keywords/{keyword}/filteredResults', [KeywordController::class, 'filteredResults']);
     Route::delete('/keywords/{keyword}', [KeywordController::class, 'destroy']);
 
+    /*
+    |--------------------------------------------------------------------------
+    | KEYWORD GROUPS
+    |--------------------------------------------------------------------------
+    */
     Route::get('/keyword-groups', [KeywordGroupController::class, 'index']);
-
     Route::post('/keyword-groups', [KeywordGroupController::class, 'store']);
-
-    Route::get('/keyword-groups/project/{project_id}', [KeywordGroupController::class, 'getProjectKeywordGroups']);;
-
-    Route::post('/keyword-groups/set-for-keyword', [KeywordGroupController::class, 'setProjectKeywordGroups']);;
-
-    Route::post('/keyword-groups/unset-for-keyword/{keyword_id}', [KeywordGroupController::class, 'unsetProjectKeywordGroup']);
-
-    Route::delete('/keyword-groups/{id}', [KeywordGroupController::class, 'destroy']);
+    Route::get('/keyword-groups/project/{project}', [KeywordGroupController::class, 'getProjectKeywordGroups']);
+    Route::post('/keyword-groups/set-for-keyword', [KeywordGroupController::class, 'setProjectKeywordGroups']);
+    Route::post('/keyword-groups/unset-for-keyword/{keyword}', [KeywordGroupController::class, 'unsetProjectKeywordGroup']);
+    Route::delete('/keyword-groups/{group}', [KeywordGroupController::class, 'destroy']);
 });
-
-

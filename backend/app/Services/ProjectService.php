@@ -89,7 +89,9 @@ class ProjectService
 
                 $q->orderBy('tracked_at', 'desc');
             }
-        ])->findOrFail($id);
+        ])
+            ->withCount(['keywords', 'backlink_urls'])
+            ->findOrFail($id);
 
         if ($project->user_id !== auth()->id()) {
             abort(403, 'Unauthorized');

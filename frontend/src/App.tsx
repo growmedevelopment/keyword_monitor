@@ -3,12 +3,14 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import ProjectsPage from './pages/ProjectsPage';
 import ProjectShowPage from './pages/ProjectShowPage';
+import ProjectKeywordsPage from './pages/ProjectKeywordsPage';
 import KeywordShowPage from './pages/KeywordShowPage';
 import UserRegisterPage from './pages/UserRegisterPage';
 import UserLoginPage from './pages/UserLoginPage';
 import ProjectsArchivedPage from "./pages/ProjectsArchivedPage";
 import { useAuth } from './context/AuthContext';
 import AppLayout from "./layouts/AppLayout.tsx";
+import BacklinkPage from "./pages/BacklinkPage.tsx";
 
 export default function App() {
     const { user, loading } = useAuth();
@@ -41,8 +43,10 @@ export default function App() {
                         <Route path="/projects" element={<ProjectsPage />} />
                         <Route path="/projects/archived" element={<ProjectsArchivedPage />} />
                         <Route path="/projects/:id" element={<ProjectShowPage />} />
+                        <Route path="/projects/:id/keywords" element={<ProjectKeywordsPage />} />
                         <Route path="/keywords/:id" element={<KeywordShowPage />} />
                         <Route path="/register" element={<UserRegisterPage />} />
+                        <Route path="/projects/:project/backlinks" element={<BacklinkPage />} />
                         {/* Already authenticated: redirect away from /login */}
                         <Route path="/login" element={<Navigate to="/dashboard" replace />} />
                         {/* Catch-all to dashboard */}

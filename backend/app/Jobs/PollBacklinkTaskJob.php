@@ -1,0 +1,147 @@
+<?php
+
+namespace App\Jobs;
+
+use App\Enums\DataForSeoTaskStatus;
+use App\Models\BacklinkTask;
+use App\Models\BacklinkCheck;
+use App\Events\BacklinkUpdatedEvent;
+use Illuminate\Bus\Queueable;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+
+class PollBacklinkTaskJob implements ShouldQueue
+{
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    public BacklinkTask $task;
+
+    public function __construct(BacklinkTask $task)
+    {
+        $this->task = $task;
+    }
+
+    public function handle(): void
+    {
+
+        sleep(8);
+
+        try {
+            $username = config('services.dataforseo.username');
+            $password = config('services.dataforseo.password');
+
+            $url = "https://api.dataforseo.com/v3/serp/google/organic/task_get/regular/{$this->task->task_id}";
+
+            $response = Http::withBasicAuth($username, $password)->get($url);
+            $json = $response->json();
+
+            Log::info("Backlink polling result", [
+                'task_id' => $this->task->task_id,
+                'json' => $json
+            ]);
+
+            $taskData = $json['tasks'][0] ?? null;
+            if (!$taskData) {
+                return;
+            }
+
+            $status = (int)$taskData['status_code'];
+
+            if ( in_array($status, [
+                DataForSeoTaskStatus::PROCESSING,
+                DataForSeoTaskStatus::QUEUED
+            ], true) ) {
+                Log::info("Backlink task still pending – retrying", [
+                    'task_id' => $this->task->task_id,
+                    'status_code' => $status
+                ]);
+
+                self::dispatch($this->task)->delay(now()->addSeconds(10));
+                return;
+            }
+
+            // final update
+            $this->task->update([
+                'status_code' => $taskData['status_code'],
+                'status_message' => $taskData['status_message'],
+                'completed_at' => now(),
+                'raw_response' => json_encode($taskData)
+            ]);
+
+            $items = $taskData['result'][0]['items'] ?? [];
+
+            if (empty($items)) {
+                Log::warning("SERP result empty", [
+                    'task_id' => $this->task->task_id
+                ]);
+                return;
+            }
+
+            $result = collect($items)->sortBy('rank_group')->first();
+
+
+            // Get the actual URL from DFS result
+            $pageUrl = $result['url'] ?? null;
+
+            $projectId = $this->task->target->project_id;
+            $project = \App\Models\Project::find($projectId);
+            $projectUrl = $project ? $project->url : null;
+
+            $linkFound = false;
+            $pageTitle = null;
+
+            if ($pageUrl) {
+                try {
+                    $pageResponse = Http::withHeaders([
+                        'User-Agent' => 'Mozilla/5.0',
+                    ])->get($pageUrl);
+
+                    $httpStatus = $pageResponse->status();
+                    $html = $pageResponse->body();
+
+                    // 1. Check if project URL is mentioned in the HTML
+                    if ($projectUrl && $html) {
+                        // Simple check for now: does the HTML contain the project domain?
+                        $domain = parse_url($projectUrl, PHP_URL_HOST);
+                        if ($domain && str_contains($html, $domain)) {
+                            $linkFound = true;
+                        }
+                    }
+
+                    // 2. Extract Title
+                    if (preg_match('/<title>(.*?)<\/title>/is', $html, $matches)) {
+                        $pageTitle = trim($matches[1]);
+                    }
+
+                } catch (\Throwable $e) {
+                    $httpStatus = 0; // unreachable
+                }
+            }
+
+            BacklinkCheck::create([
+                'backlink_target_id' => $this->task->backlink_target_id,
+                'url' => $result['url'] ?? null,
+                'indexed' => ($result['rank_group'] ?? 0) > 0,
+                'http_code' => $httpStatus,
+                'link_found' => $linkFound,
+                'title' => $pageTitle,
+                'raw' => json_encode($result, JSON_THROW_ON_ERROR),
+                'checked_at' => now(),
+            ]);
+
+            $projectId = $this->task->target->project_id;
+
+            event(new BacklinkUpdatedEvent($projectId));
+
+        } catch (\Throwable $e) {
+            Log::error("Backlink Polling Error", [
+                'task_id' => $this->task->task_id,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+}
