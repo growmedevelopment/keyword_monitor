@@ -9,6 +9,7 @@ import CancelRoundedIcon from '@mui/icons-material/CancelRounded';
 import LanguageIcon from '@mui/icons-material/Language';
 import HistoryIcon from '@mui/icons-material/History';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import BackButton from "../components/Common/BackButton.tsx";
 
 
 interface StatusBadgeProps {
@@ -70,7 +71,7 @@ export default function BacklinkPage() {
     );
 
     return (
-        <>
+        <Box p={3}>
             <Box sx={{ mb: 3 }}>
                 <Breadcrumbs aria-label="breadcrumb">
                     <MUILink component={RouterLink} to="/projects" underline="hover" color="inherit">
@@ -89,6 +90,9 @@ export default function BacklinkPage() {
                     <Typography color="text.primary">Backlinks</Typography>
                 </Breadcrumbs>
             </Box>
+
+
+            <BackButton fallbackPath={`/projects/${project}`} />
 
             <BacklinkTable
                 backlinks={backlinks}
@@ -248,7 +252,6 @@ export default function BacklinkPage() {
                     </Box>
                 </Box>
             </Drawer>
-
-        </>
+        </Box>
     );
 }

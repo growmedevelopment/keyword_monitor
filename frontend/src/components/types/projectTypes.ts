@@ -13,4 +13,6 @@ export interface Project {
     mode: 'range' | 'compare';
     created_at: string;
     deleted_at: string;
+    keywords_count?: number;
+    backlinks_count?: number;
 }

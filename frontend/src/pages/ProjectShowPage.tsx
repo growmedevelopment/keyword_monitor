@@ -1,278 +1,166 @@
-import {useCallback, useEffect, useState} from "react";
-import {useParams} from "react-router-dom";
-import {Box, CircularProgress, Grid, Typography, Button} from "@mui/material";
-import { Link } from "react-router-dom";
+import { useCallback, useEffect, useState } from "react";
+import { useParams, Link as RouterLink } from "react-router-dom";
+import { Box, Grid, Typography, Badge, Paper, Stack, CardActionArea } from "@mui/material";
 import LinkIcon from "@mui/icons-material/Link";
-import pusher from "../pusher";
+import QueryStatsIcon from '@mui/icons-material/QueryStats';
+import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import projectService from "../services/projectService";
-import keywordService from "../services/keywordService.ts";
-import AddKeywordDialog from "../components/Dialogs/AddKeywordDialog/AddKeywordDialog.tsx";
-import type {Project} from "../components/types/projectTypes";
+import type { Project } from "../components/types/projectTypes";
 import ProjectDetails from "../components/Project/ProjectDetails.tsx";
-import ProjectKeywordsSection from "../components/Project/ProjectKeywordsSection.tsx";
 import DataStateHandler from "../components/Common/DataStateHandler.tsx";
-import toast from "react-hot-toast";
-import KeywordGroups from "../components/Project/KeywordGroups.tsx";
 import BackButton from "../components/Common/BackButton.tsx";
-import Rechart from "../components/Project/SeoPerformanceRechart/Rechart.tsx";
-import dayjs, {type Dayjs} from "dayjs";
-
+import dayjs from "dayjs";
 
 export default function ProjectShowPage() {
-    const {id} = useParams<{ id: string }>();
+    const { id } = useParams<{ id: string }>();
     const [project, setProject] = useState<Project | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [isDialogOpen, setDialogOpen] = useState(false);
-    const [addingKeywords, setAddingKeywords] = useState(false);
-    const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>([
-        dayjs().subtract(3, "day"),
-        dayjs(),
-    ]);
-    const [mode, setMode] = useState<"range" | "compare">(project?.mode?? "range");
 
     const loadProject = useCallback(() => {
         if (!id) return;
-
         setLoading(true);
+        const defaultRange: [any, any] = [dayjs().subtract(3, "day"), dayjs()];
         projectService
-            .getById(id, dateRange, mode)
+            .getById(id, defaultRange, "range")
             .then(setProject)
             .catch(() => setError("Failed to load project"))
             .finally(() => setLoading(false));
-    }, [id, dateRange]);
+    }, [id]);
 
     useEffect(() => {
         loadProject();
     }, [loadProject]);
 
-    // WebSocket subscription
-    useEffect(() => {
-        if (!id) return;
-
-        // Subscribe to project-specific channel
-        const channelName = `project-${id}`;
-        const channel = pusher.subscribe(channelName);
-
-        // Event handler for keyword updates
-        const handleKeywordUpdate = (data: any) => {
-
-            const updatedKeyword = data.keyword;
-
-            // -----------------------------
-            // NORMALIZE RESULTS
-            // Backend sends:
-            //     results: { rank_group, url, title }
-            //
-            // Frontend expects:
-            //     results: [{ position, url, title, tracked_at, raw }]
-            // -----------------------------
-
-            const rawResults = updatedKeyword.results;
-
-            let normalizedResults: any[] = [];
-
-            if (Array.isArray(rawResults)) {
-                normalizedResults = rawResults.map((r) => ({
-                    position: r.rank_group ?? r.position ?? "-",
-                    url: r.url ?? "",
-                    title: r.title ?? "",
-                    tracked_at: r.tracked_at ?? new Date().toISOString(),
-                    raw: r,
-                    created_at : r.created_at,
-                }));
-            } else if (rawResults) {
-                normalizedResults = [
-                    {
-                        position: rawResults.rank_group ?? rawResults.position ?? "-",
-                        url: rawResults.url ?? "",
-                        title: rawResults.title ?? "",
-                        tracked_at: rawResults.tracked_at ?? new Date().toISOString(),
-                        raw: rawResults,
-                        created_at: rawResults.created_at,
-                    }
-                ];
-            }
-
-            const first = normalizedResults[0] || {};
-
-            const enrichedKeyword = {
-                ...updatedKeyword,
-                results: normalizedResults,
-                title: first.title ?? "-",
-                position: first.position ?? "-" // always normalized
-            };
-
-            // -----------------------------
-            // MERGE INTO PROJECT STATE
-            // -----------------------------
-
-            setProject((prevProject) => {
-
-                if (!prevProject) {
-                    return prevProject;
-                }
-
-                const updatedKeywords = prevProject.keywords.map((k) => {
-                    if (k.id === enrichedKeyword.id) {
-                        return { ...k, ...enrichedKeyword };
-                    }
-                    return k;
-                });
-
-                return {
-                    ...prevProject,
-                    keywords: updatedKeywords,
-                };
-            });
-        };
-
-        // Bind to event
-        channel.bind("keyword-updated", handleKeywordUpdate);
-
-        // Cleanup on unmount
-        return () => {
-            channel.unbind("keyword-updated", handleKeywordUpdate);
-            pusher.unsubscribe(channelName);
-        };
-    }, [id]);
-
-    const handleAddKeyword = async (newKeywords: string[], groupId: number | null) => {
-        if (!project || !id) return;
-
-        try {
-            setAddingKeywords(true);
-            const response = await keywordService.create(id, newKeywords, groupId);
-
-            const createdKeywords = response.keywords;
-
-            setProject((prev) =>
-                prev
-                    ? { ...prev, keywords: [...prev.keywords, ...createdKeywords] }
-                    : prev
-            );
-
-            toast.success("Keywords added successfully!");
-        } catch (error: any) {
-            console.error("Bulk keyword add failed", error);
-            toast.error(error?.response?.data?.message || "Failed to add keywords");
-        }
-        setAddingKeywords(false);
-        setDialogOpen(false);
-    };
-
     return (
-        <Box p={3}>
-            <BackButton />
+        <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: '1200px', margin: '0 auto' }}>
+            <Box mb={3}>
+                <BackButton />
+            </Box>
+
             <DataStateHandler<Project>
                 loading={loading}
                 error={error}
                 data={project}
                 emptyMessage="No project found"
             >
-
                 {(projectData: Project) => (
-
                     <>
-                        <Box
-                            sx={{
-                                display: "flex",
-                                justifyContent: "center",
-                                alignItems: "center",
-                                textAlign: "center",
-                                mb: 6,
-                            }}
-                        >
+                        {/* Header Section */}
+                        <Box sx={{ mb: 6, textAlign: 'center' }}>
+
                             <Typography
-                                variant="h1"
+                                variant="h3"
                                 sx={{
-                                    fontSize: { xs: "2rem", md: "3rem" },
-                                    fontWeight: 700,
-                                    color: "primary.main",
-                                    letterSpacing: 0.5,
+                                    fontWeight: 800,
+                                    color: '#1e293b',
+                                    mt: 1,
                                     textTransform: "capitalize",
-                                    borderBottom: "3px solid",
-                                    borderColor: "primary.main",
-                                    display: "inline-block",
-                                    pb: 0.5,
-                                    lineHeight: 1.2,
                                 }}
                             >
                                 {projectData.name}
                             </Typography>
+                            <Box sx={{ width: 60, height: 4, bgcolor: 'primary.main', mx: 'auto', mt: 2, borderRadius: 2 }} />
                         </Box>
 
-                        <Grid container spacing={3} alignItems="stretch">
-                            <Grid size={{ xs: 12, md: 4, lg: 3.5 }}>
-                                <ProjectDetails project={projectData} />
-                                <KeywordGroups keywordGroups={projectData.keyword_groups}/>
-                                <Box mt={3}>
-                                    <Button
-                                        variant="contained"
-                                        color="secondary"
-                                        fullWidth
-                                        component={Link}
-                                        to={`/projects/${projectData.id}/backlinks`}
-                                        startIcon={<LinkIcon />}
-                                        sx={{ fontWeight: 600, py: 1.5 }}
-                                    >
-                                        Backlink Monitoring
-                                    </Button>
-                                </Box>
-                            </Grid>
-
-                            <Grid size={{ xs: 12, md: 8, lg: 8.5 }}>
-                                <Rechart
-                                    keywords={projectData.keywords}
-                                    datePeriod={dateRange}
-                                    selectedMode={mode}
-                                    setDateRangeFunction={(range) => {
-                                        setDateRange(range);
-                                    }}
-                                    setDateModeFunction={(selectedMode)=>{
-                                        setMode(selectedMode);
-                                    }}
-                                />
-                            </Grid>
-                        </Grid>
-
-
-                        <Box position="relative">
-                            <ProjectKeywordsSection
-                                keywords={projectData.keywords}
-                                keywordGroups={projectData.keyword_groups}
-                                onAddKeyword={() => setDialogOpen(true)}
-                                selectedDateRange={dateRange}
-                                selectedMode={mode}
-                            />
-
-                            {addingKeywords && (
-                                <Box
+                        <Grid container spacing={4}>
+                            {/* Left Side: Details */}
+                            <Grid size={{xs: 12, md: 7}}>
+                                <Paper
+                                    elevation={0}
                                     sx={{
-                                        position: "absolute",
-                                        inset: 0,
-                                        backgroundColor: "rgba(255,255,255,0.6)",
-                                        backdropFilter: "blur(3px)",
-                                        zIndex: 100,
-                                        display: "flex",
-                                        justifyContent: "center",
-                                        alignItems: "center",
+                                        p: 3,
+                                        borderRadius: 4,
+                                        border: '1px solid #e2e8f0',
+                                        bgcolor: '#ffffff'
                                     }}
                                 >
-                                    <CircularProgress size={50} />
-                                </Box>
-                            )}
-                        </Box>
+                                    <Typography variant="h6" sx={{ mb: 3, fontWeight: 700, color: '#334155' }}>
+                                        Project Overview
+                                    </Typography>
+                                    <ProjectDetails project={projectData} />
+                                </Paper>
+                            </Grid>
 
-                        {isDialogOpen &&
-                            <AddKeywordDialog
-                                onClose={() => setDialogOpen(false)}
-                                onSubmit={handleAddKeyword}
-                            />
-                        }
+                            {/* Right Side: Quick Actions */}
+                            <Grid  size={{xs: 12, md: 5}} >
+
+                                <Stack spacing={3}>
+                                    <ActionCard
+                                        title="Keyword Analysis"
+                                        subtitle="Track search rankings and performance"
+                                        count={projectData.keywords_count}
+                                        to={`/projects/${projectData.id}/keywords`}
+                                        icon={<QueryStatsIcon sx={{ fontSize: 32 }} />}
+                                        color="#3b82f6"
+                                    />
+
+                                    <ActionCard
+                                        title="Backlink Monitoring"
+                                        subtitle="Audit indexing and link health"
+                                        count={projectData.backlinks_count}
+                                        to={`/projects/${projectData.id}/backlinks`}
+                                        icon={<LinkIcon sx={{ fontSize: 32 }} />}
+                                        color="#8b5cf6"
+                                    />
+                                </Stack>
+                            </Grid>
+                        </Grid>
                     </>
                 )}
             </DataStateHandler>
         </Box>
+    );
+}
+
+/** * Sub-component for the Action Cards
+ */
+function ActionCard({ title, subtitle, count, to, icon, color }: any) {
+    return (
+        <Paper
+            elevation={0}
+            sx={{
+                borderRadius: 4,
+                overflow: 'hidden',
+                border: '1px solid #e2e8f0',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: '0 12px 24px rgba(0,0,0,0.05)',
+                    borderColor: color,
+                }
+            }}
+        >
+            <CardActionArea component={RouterLink} to={to} sx={{ p: 3 }}>
+                <Stack direction="row" alignItems="center" spacing={2}>
+                    <Box sx={{
+                        p: 1.5,
+                        borderRadius: 3,
+                        bgcolor: `${color}15`,
+                        color: color,
+                        display: 'flex'
+                    }}>
+                        {icon}
+                    </Box>
+                    <Box sx={{ flex: 1 }}>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#1e293b' }}>
+                            {title}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: '#64748b' }}>
+                            {subtitle}
+                        </Typography>
+                    </Box>
+                    <Stack alignItems="flex-end" spacing={1}>
+                        <Badge
+                            badgeContent={count}
+                            color="primary"
+                            max={999}
+                            sx={{ '& .MuiBadge-badge': { fontWeight: 700, position: 'static', transform: 'none' } }}
+                        />
+                        <ArrowForwardIosIcon sx={{ fontSize: 14, color: '#cbd5e1' }} />
+                    </Stack>
+                </Stack>
+            </CardActionArea>
+        </Paper>
     );
 }

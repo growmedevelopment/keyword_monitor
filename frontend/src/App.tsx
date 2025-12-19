@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import ProjectsPage from './pages/ProjectsPage';
 import ProjectShowPage from './pages/ProjectShowPage';
+import ProjectKeywordsPage from './pages/ProjectKeywordsPage';
 import KeywordShowPage from './pages/KeywordShowPage';
 import UserRegisterPage from './pages/UserRegisterPage';
 import UserLoginPage from './pages/UserLoginPage';
@@ -42,6 +43,7 @@ export default function App() {
                         <Route path="/projects" element={<ProjectsPage />} />
                         <Route path="/projects/archived" element={<ProjectsArchivedPage />} />
                         <Route path="/projects/:id" element={<ProjectShowPage />} />
+                        <Route path="/projects/:id/keywords" element={<ProjectKeywordsPage />} />
                         <Route path="/keywords/:id" element={<KeywordShowPage />} />
                         <Route path="/register" element={<UserRegisterPage />} />
                         <Route path="/projects/:project/backlinks" element={<BacklinkPage />} />
