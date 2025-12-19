@@ -4,6 +4,7 @@ const API = import.meta.env.VITE_API_BACKEND_ENDPOINT;
 export interface BacklinkItem {
     id: number;
     url: string;
+    is_checking: boolean;
 
     latest_result: {
         http_code: number | null;

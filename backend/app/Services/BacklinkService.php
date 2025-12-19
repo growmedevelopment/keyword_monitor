@@ -22,10 +22,12 @@ class BacklinkService
 
         return $targets->map(function ($t) {
             $latest = $t->checks->first();
+            $isChecking = $t->tasks()->whereNull('completed_at')->exists();
 
             return [
                 'id'  => $t->id,
                 'url' => $t->url,
+                'is_checking' => $isChecking,
 
                 'latest_result' => $latest ? [
                     'http_code'   => $latest->http_code,

@@ -3,9 +3,14 @@ import ConfirmDeleteButton from "../ConfirmDeleteButton.tsx";
 import toast from "react-hot-toast";
 import CancelIcon from '@mui/icons-material/Cancel';
 import backlinkService from "../../../services/backlinkService.ts";
+import { CircularProgress } from "@mui/material";
 
 // Status Code Badge
 function StatusBadge(params: ICellRendererParams) {
+    if (params.data?.is_checking) {
+        return <CircularProgress size={20} />;
+    }
+
     const code = params.value;
 
     if (!code) {
@@ -36,6 +41,10 @@ function StatusBadge(params: ICellRendererParams) {
 
 // Indexed Badge
 function IndexBadge(params: ICellRendererParams) {
+    if (params.data?.is_checking) {
+        return <CircularProgress size={20} />;
+    }
+
     const indexed = params.value;
 
     if (indexed === null || indexed === undefined) {
@@ -103,7 +112,10 @@ export const columnDefs: ColDef[] = [
         width: 180,
         valueGetter: (params) =>
             params.data?.latest_result.checked_at ?? null,
-        valueFormatter: (p) => {
+        cellRenderer: (p: ICellRendererParams) => {
+            if (p.data?.is_checking) {
+                return <span style={{ color: "#999", fontStyle: "italic" }}>Checking...</span>;
+            }
             if (!p.value) return "-";
             return new Date(p.value).toLocaleString();
         },

@@ -78,6 +78,7 @@ export default function BacklinkPage() {
                 anchor="right"
                 open={!!historyData}
                 onClose={() => setHistoryData(null)}
+                sx={{ zIndex: 10000 }}
             >
                 <Box sx={{ width: 400, padding: 3 }}>
                     <Typography variant="h5" mb={2}>
