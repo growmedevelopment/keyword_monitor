@@ -46,8 +46,6 @@ export default function BacklinkTable({
         () => ({
             resizable: true,
             sortable: true,
-            flex: 1,
-            minWidth: 120,
         }),
         []
     );
@@ -71,6 +69,9 @@ export default function BacklinkTable({
                     rowData={backlinks}
                     columnDefs={columnDefs}
                     defaultColDef={defaultColDef}
+                    autoSizeStrategy={{
+                        type: 'fitCellContents'
+                    }}
                     context={{ openHistory, onDelete }}
                     pagination={true}
                     paginationPageSize={20}

@@ -41,6 +41,7 @@ function StatusBadge(params: ICellRendererParams) {
 
 // Indexed Badge
 function IndexBadge(params: ICellRendererParams) {
+
     if (params.data?.is_checking) {
         return <CircularProgress size={20} />;
     }
@@ -55,10 +56,11 @@ function IndexBadge(params: ICellRendererParams) {
         <span
             style={{
                 background: indexed ? "#4CAF50" : "#F44336",
-                padding: "3px 8px",
+                padding: "6px 12px",
                 borderRadius: 6,
                 color: "white",
                 fontWeight: 600,
+                display: 'block'
             }}
         >
             {indexed ? "Indexed" : "Not indexed"}
@@ -71,8 +73,9 @@ export const columnDefs: ColDef[] = [
     {
         headerName: "URL",
         field: "url",
-        width: 350,
         filter: "agTextColumnFilter",
+        flex: 1,
+        minWidth: 200,
         cellRenderer: (p: ICellRendererParams) => (
             <a
                 href={p.value}
@@ -92,6 +95,7 @@ export const columnDefs: ColDef[] = [
     // Latest status code
     {
         headerName: "Status Code",
+        colId: "latest_result.http_code",
         width: 70,
         valueGetter: (params) =>
             params.data?.latest_result.http_code ?? null,
@@ -101,6 +105,7 @@ export const columnDefs: ColDef[] = [
     // Latest indexed flag
     {
         headerName: "Indexed",
+        colId: "latest_result.indexed",
         width: 70,
         valueGetter: (params) =>
             params.data?.latest_result.indexed ?? null,
@@ -110,6 +115,7 @@ export const columnDefs: ColDef[] = [
     // Last checked datetime
     {
         headerName: "Last Checked",
+        colId: "latest_result.checked_at",
         width: 180,
         valueGetter: (params) =>
             params.data?.latest_result.checked_at ?? null,
@@ -125,6 +131,7 @@ export const columnDefs: ColDef[] = [
     // History button
     {
         headerName: "History",
+        colId: "history_btn",
         width: 120,
         cellRenderer: (p: ICellRendererParams) => (
             <button
@@ -145,6 +152,7 @@ export const columnDefs: ColDef[] = [
     {
         headerName: 'Actions',
         field: 'id',
+        colId: 'actions',
         maxWidth: 100,
         sortable: false,
         filter: false,
