@@ -60,8 +60,6 @@ class ProjectController extends Controller
     }
 
 
-
-
     public function destroy(int $project_id): JsonResponse
     {
         $this->projectService->delete($project_id);
