@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Http\Resources\ProjectDetailedViewResource;
 use App\Http\Resources\ProjectsResource;
 use App\Http\Resources\ProjectViewResource;
 use App\Models\Project;
@@ -63,6 +64,19 @@ class ProjectService
     }
 
     public function show(Request $request, string $id): ProjectViewResource {
+
+        $project = Project::withCount(['keywords', 'backlink_urls'])->findOrFail($id);
+
+        if ($project->user_id !== auth()->id()) {
+            abort(403, 'Unauthorized');
+        }
+
+        return new ProjectViewResource($project);
+    }
+
+
+    public function showDetailed(Request $request, string $id): ProjectDetailedViewResource {
+
         $mode = $request->input('mode', 'range');
 
         $startDate = $request->input('date_range.start_date');
@@ -98,6 +112,7 @@ class ProjectService
             abort(403, 'Unauthorized');
         }
 
-        return new ProjectViewResource($project, $mode);
+        return new ProjectDetailedViewResource($project, $mode);
+
     }
 }

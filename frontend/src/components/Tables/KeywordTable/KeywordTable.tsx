@@ -40,7 +40,7 @@ export default function KeywordTable({keywords, keywordGroups, dateRange, mode}:
     }
 
     return (
-        <div className="ag-theme-alpine" style={{ height: 400, width: '100%' }}>
+        <div className="ag-theme-alpine" style={{ width: '100%' }}>
             <AgGridReact
                 rowData={keywords}
                 columnDefs={columnDefs}

@@ -33,7 +33,7 @@ export default function ProjectKeywordsPage() {
 
         setLoading(true);
         projectService
-            .getById(id, dateRange, mode)
+            .getDetailedById(id, dateRange, mode)
             .then(setProject)
             .catch(() => setError("Failed to load project"))
             .finally(() => setLoading(false));

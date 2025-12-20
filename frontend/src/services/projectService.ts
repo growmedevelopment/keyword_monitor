@@ -18,14 +18,19 @@ const projectService = {
         return response.data;
     },
 
-    async getById(id: string, dateRange: [Dayjs, Dayjs], mode: "range" | "compare") {
+    async getById(id: string) {
+        const response = await axios.get<Project>(`${API}/api/projects/${id}`);
+        return response.data;
+    },
+
+    async getDetailedById(id: string, dateRange: [Dayjs, Dayjs], mode: "range" | "compare") {
 
         const [start, end] = dateRange;
 
         const startDate = start.format("YYYY-MM-DD");
         const endDate = end.format("YYYY-MM-DD");
 
-        const response = await axios.get<Project>(`${API}/api/projects/${id}`,{
+        const response = await axios.get<Project>(`${API}/api/projects/${id}/detailed`,{
             params: {
                 mode,
                 start_date: startDate,
