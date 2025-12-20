@@ -7,13 +7,6 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class ProjectViewResource extends JsonResource
 {
-    private string $mode;
-
-    public function __construct($resource, string $mode = 'range')
-    {
-        parent::__construct($resource);
-        $this->mode = $mode;
-    }
 
     public function toArray(Request $request): array
     {
