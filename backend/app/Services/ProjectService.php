@@ -93,6 +93,7 @@ class ProjectService
             ->withCount(['keywords', 'backlink_urls'])
             ->findOrFail($id);
 
+
         if ($project->user_id !== auth()->id()) {
             abort(403, 'Unauthorized');
         }
