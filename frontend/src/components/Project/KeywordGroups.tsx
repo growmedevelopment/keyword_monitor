@@ -12,10 +12,7 @@ const KeywordGroups = ({ keywordGroups: initialKeywordGroups }: { keywordGroups:
     const [realKeywordGroups, setRealKeywordGroups] = useState<KeywordGroup[]>(initialKeywordGroups);
     const [tempIdCounter, setTempIdCounter] = useState(-1);
 
-    const [optimisticKeywordGroups, addOptimisticKeywordGroup] = useOptimistic<
-        KeywordGroup[],
-        KeywordGroup
-    >(realKeywordGroups, (prev, newGroup) => [...prev, newGroup]);
+    const [optimisticKeywordGroups, addOptimisticKeywordGroup] = useOptimistic<KeywordGroup[], KeywordGroup>(realKeywordGroups, (prev, newGroup) => [...prev, newGroup]);
 
 
     const [confirmOpen, setConfirmOpen] = useState(false);

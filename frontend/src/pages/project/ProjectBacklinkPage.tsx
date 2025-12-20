@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
-import backlinkService, { type BacklinkItem } from "../services/backlinkService";
+import backlinkService, { type BacklinkItem } from "../../services/backlinkService.ts";
 import {Drawer, Box, Typography, Breadcrumbs, Link as MUILink, Stack, Chip, Divider,} from "@mui/material";
 import { useParams, Link as RouterLink } from "react-router-dom";
-import pusher from "../pusher";
-import BacklinkTable from "../components/Tables/BacklinksTable/BacklinkTable.tsx";
+import pusher from "../../pusher.ts";
+import BacklinkTable from "../../components/Tables/BacklinksTable/BacklinkTable.tsx";
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import CancelRoundedIcon from '@mui/icons-material/CancelRounded';
 import LanguageIcon from '@mui/icons-material/Language';
 import HistoryIcon from '@mui/icons-material/History';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import BackButton from "../components/Common/BackButton.tsx";
+import BackButton from "../../components/Common/BackButton.tsx";
 
 
 interface StatusBadgeProps {
@@ -18,7 +18,7 @@ interface StatusBadgeProps {
     active: boolean | number | undefined;
 }
 
-export default function BacklinkPage() {
+export default function ProjectBacklinkPage() {
     const { project } = useParams() as { project: string };
 
     const [backlinks, setBacklinks] = useState<BacklinkItem[]>([]);

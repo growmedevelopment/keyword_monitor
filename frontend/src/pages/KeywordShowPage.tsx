@@ -36,8 +36,8 @@ export default function KeywordShowPage() {
             .then(async (keywordData) => {
                 setKeyword(keywordData);
 
-                if (keywordData.keyword_groups) {
-                    setSelectedKeywordGroup(keywordData.keyword_groups.id);
+                if (keywordData.keyword_group_id) {
+                    setSelectedKeywordGroup(keywordData.keyword_group_id);
                 }
 
                 // Load groups only once OR always if needed

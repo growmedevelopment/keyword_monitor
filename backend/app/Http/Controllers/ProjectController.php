@@ -51,6 +51,15 @@ class ProjectController extends Controller
         return response()->json($project);
     }
 
+    public function showDetailed(Request $request, $id): JsonResponse
+    {
+
+        $project = $this->projectService->showDetailed( $request, $id);
+
+        return response()->json($project);
+    }
+
+
     public function destroy(int $project_id): JsonResponse
     {
         $this->projectService->delete($project_id);

@@ -42,6 +42,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // MUST COME AFTER "/projects" to avoid conflicts
     Route::get('/projects/{project}', [ProjectController::class, 'show']);
+    Route::get('/projects/{project}/detailed', [ProjectController::class, 'showDetailed']);
     Route::delete('/projects/{project}', [ProjectController::class, 'destroy']);
     Route::patch('/projects/{project}/restore', [ProjectController::class, 'restore']);
 

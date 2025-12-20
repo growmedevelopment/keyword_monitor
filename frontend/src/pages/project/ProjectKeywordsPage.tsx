@@ -2,18 +2,18 @@ import {useCallback, useEffect, useState} from "react";
 import {useParams} from "react-router-dom";
 import {Box, CircularProgress, Typography, Breadcrumbs, Link as MUILink} from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
-import pusher from "../pusher";
-import projectService from "../services/projectService";
-import keywordService from "../services/keywordService.ts";
-import AddKeywordDialog from "../components/Dialogs/AddKeywordDialog/AddKeywordDialog.tsx";
-import type {Project} from "../components/types/projectTypes";
-import ProjectKeywordsSection from "../components/Project/ProjectKeywordsSection.tsx";
-import KeywordGroups from "../components/Project/KeywordGroups.tsx";
-import DataStateHandler from "../components/Common/DataStateHandler.tsx";
+import pusher from "../../pusher.ts";
+import projectService from "../../services/projectService.ts";
+import keywordService from "../../services/keywordService.ts";
+import AddKeywordDialog from "../../components/Dialogs/AddKeywordDialog/AddKeywordDialog.tsx";
+import type {Project} from "../../components/types/projectTypes.ts";
+import ProjectKeywordsSection from "../../components/Project/ProjectKeywordsSection.tsx";
+import KeywordGroups from "../../components/Project/KeywordGroups.tsx";
+import DataStateHandler from "../../components/Common/DataStateHandler.tsx";
 import toast from "react-hot-toast";
-import Rechart from "../components/Project/SeoPerformanceRechart/Rechart.tsx";
+import Rechart from "../../components/Project/SeoPerformanceRechart/Rechart.tsx";
 import dayjs, {type Dayjs} from "dayjs";
-import BackButton from "../components/Common/BackButton.tsx";
+import BackButton from "../../components/Common/BackButton.tsx";
 
 export default function ProjectKeywordsPage() {
     const {id} = useParams<{ id: string }>();
@@ -33,7 +33,7 @@ export default function ProjectKeywordsPage() {
 
         setLoading(true);
         projectService
-            .getById(id, dateRange, mode)
+            .getDetailedById(id, dateRange, mode)
             .then(setProject)
             .catch(() => setError("Failed to load project"))
             .finally(() => setLoading(false));

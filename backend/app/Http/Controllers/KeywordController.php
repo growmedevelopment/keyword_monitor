@@ -136,8 +136,8 @@ class KeywordController extends Controller
             ]);
         }catch (\Exception $e) {
             return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage()]
+                    'status' => 'error',
+                    'message' => $e->getMessage()]
                 , 500);
         }
     }
@@ -154,6 +154,7 @@ class KeywordController extends Controller
 
         $start = Carbon::parse($startDate)->startOfDay();
         $end   = Carbon::parse($endDate)->endOfDay();
+
 
         $keyword = Keyword::with(['keywordsRank' => function ($q) use ($mode, $start, $end, $startDate, $endDate) {
 

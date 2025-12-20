@@ -4,12 +4,12 @@ import { Box, Grid, Typography, Badge, Paper, Stack, CardActionArea } from "@mui
 import LinkIcon from "@mui/icons-material/Link";
 import QueryStatsIcon from '@mui/icons-material/QueryStats';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
-import projectService from "../services/projectService";
-import type { Project } from "../components/types/projectTypes";
-import ProjectDetails from "../components/Project/ProjectDetails.tsx";
-import DataStateHandler from "../components/Common/DataStateHandler.tsx";
-import BackButton from "../components/Common/BackButton.tsx";
-import dayjs from "dayjs";
+import projectService from "../../services/projectService.ts";
+import type { Project } from "../../components/types/projectTypes.ts";
+import ProjectDetails from "../../components/Project/ProjectDetails.tsx";
+import DataStateHandler from "../../components/Common/DataStateHandler.tsx";
+import BackButton from "../../components/Common/BackButton.tsx";
+
 
 export default function ProjectShowPage() {
     const { id } = useParams<{ id: string }>();
@@ -20,9 +20,8 @@ export default function ProjectShowPage() {
     const loadProject = useCallback(() => {
         if (!id) return;
         setLoading(true);
-        const defaultRange: [any, any] = [dayjs().subtract(3, "day"), dayjs()];
         projectService
-            .getById(id, defaultRange, "range")
+            .getById(id)
             .then(setProject)
             .catch(() => setError("Failed to load project"))
             .finally(() => setLoading(false));

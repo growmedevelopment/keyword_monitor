@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Http\Resources\ProjectDetailedViewResource;
 use App\Http\Resources\ProjectsResource;
 use App\Http\Resources\ProjectViewResource;
 use App\Models\Project;
@@ -63,21 +64,30 @@ class ProjectService
     }
 
     public function show(Request $request, string $id): ProjectViewResource {
+
+        $project = Project::withCount(['keywords', 'backlink_urls'])->findOrFail($id);
+
+        if ($project->user_id !== auth()->id()) {
+            abort(403, 'Unauthorized');
+        }
+
+        return new ProjectViewResource($project);
+    }
+
+    public function showDetailed(Request $request, string $id): ProjectDetailedViewResource {
+
         $mode = $request->input('mode', 'range');
 
-        $startDate = $request->input('date_range.start_date');
-        $endDate   = $request->input('date_range.end_date');
-
-        $start = Carbon::parse($startDate)->startOfDay();
-        $end   = Carbon::parse($endDate)->endOfDay();
+        $startDate = $request->input('start_date');
+        $endDate   = $request->input('end_date');
 
         $project = Project::with([
             'keyword_groups',
             'keywords',
-            'keywords.keywordsRank' => function ($q) use ($mode, $start, $end, $startDate, $endDate) {
+            'keywords.keywordsRank' => function ($q) use ($mode,$startDate, $endDate) {
 
                 if ($mode === 'range') {
-                    $q->whereBetween('tracked_at', [$start, $end]);
+                    $q->whereBetween('tracked_at', [$startDate, $endDate]);
                 }
 
                 if ($mode === 'compare') {
@@ -89,14 +99,15 @@ class ProjectService
 
                 $q->orderBy('tracked_at', 'desc');
             }
-        ])
-            ->withCount(['keywords', 'backlink_urls'])
-            ->findOrFail($id);
+        ])->findOrFail($id);
+
+
 
         if ($project->user_id !== auth()->id()) {
             abort(403, 'Unauthorized');
         }
 
-        return new ProjectViewResource($project, $mode);
+        return new ProjectDetailedViewResource($project, $mode);
+
     }
 }
