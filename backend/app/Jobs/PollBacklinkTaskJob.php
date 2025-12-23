@@ -82,9 +82,6 @@ class PollBacklinkTaskJob implements ShouldQueue
             }
 
             $result = collect($items)->sortBy('rank_group')->first();
-
-
-            // Get the actual URL from DFS result
             $pageUrl = $result['url'] ?? null;
 
             if ($pageUrl) {
