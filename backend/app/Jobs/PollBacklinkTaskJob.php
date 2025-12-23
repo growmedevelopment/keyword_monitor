@@ -87,13 +87,6 @@ class PollBacklinkTaskJob implements ShouldQueue
             // Get the actual URL from DFS result
             $pageUrl = $result['url'] ?? null;
 
-            $projectId = $this->task->target->project_id;
-            $project = \App\Models\Project::find($projectId);
-            $projectUrl = $project ? $project->url : null;
-
-            $linkFound = false;
-            $pageTitle = null;
-
             if ($pageUrl) {
                 try {
                     $pageResponse = Http::withHeaders([
@@ -101,24 +94,9 @@ class PollBacklinkTaskJob implements ShouldQueue
                     ])->get($pageUrl);
 
                     $httpStatus = $pageResponse->status();
-                    $html = $pageResponse->body();
-
-                    // 1. Check if project URL is mentioned in the HTML
-                    if ($projectUrl && $html) {
-                        // Simple check for now: does the HTML contain the project domain?
-                        $domain = parse_url($projectUrl, PHP_URL_HOST);
-                        if ($domain && str_contains($html, $domain)) {
-                            $linkFound = true;
-                        }
-                    }
-
-                    // 2. Extract Title
-                    if (preg_match('/<title>(.*?)<\/title>/is', $html, $matches)) {
-                        $pageTitle = trim($matches[1]);
-                    }
 
                 } catch (\Throwable $e) {
-                    $httpStatus = 0; // unreachable
+                    $httpStatus = 0;
                 }
             }
 
@@ -127,8 +105,6 @@ class PollBacklinkTaskJob implements ShouldQueue
                 'url' => $result['url'] ?? null,
                 'indexed' => ($result['rank_group'] ?? 0) > 0,
                 'http_code' => $httpStatus,
-                'link_found' => $linkFound,
-                'title' => $pageTitle,
                 'raw' => json_encode($result, JSON_THROW_ON_ERROR),
                 'checked_at' => now(),
             ]);

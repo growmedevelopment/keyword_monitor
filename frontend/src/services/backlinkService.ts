@@ -16,7 +16,6 @@ export interface BacklinkItem {
     history: {
         http_code: number | null;
         indexed: boolean;
-        link_found: boolean | null;
         title: string | null;
         checked_at: string;
     }[];

@@ -38,7 +38,6 @@ class BacklinkService
                 'history' => $t->checks->map(fn($h) => [
                     'http_code'  => $h->http_code,
                     'indexed'    => $h->indexed,
-                    'link_found' => $h->link_found,
                     'title'      => $h->title,
                     'checked_at' => $h->checked_at,
                 ]),

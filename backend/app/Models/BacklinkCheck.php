@@ -11,7 +11,6 @@ class BacklinkCheck extends Model
 
     protected $casts = [
         'indexed'      => 'boolean',
-        'link_found'   => 'boolean',
         'raw_response' => 'array',
         'checked_at'   => 'datetime',
     ];
