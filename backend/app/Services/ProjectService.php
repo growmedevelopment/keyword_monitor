@@ -98,7 +98,7 @@ class ProjectService
                 }
 
                 $q->orderBy('tracked_at', 'desc');
-            }
+            },
         ])->findOrFail($id);
 
 
@@ -108,6 +108,11 @@ class ProjectService
         }
 
         return new ProjectDetailedViewResource($project, $mode);
+
+    }
+
+    public function getProjectName (int $project_id): string {
+        return Project::where('user_id', auth()->id())->findOrFail($project_id)->name;
 
     }
 }

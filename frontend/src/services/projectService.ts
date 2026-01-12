@@ -18,6 +18,11 @@ const projectService = {
         return response.data;
     },
 
+    async getProjectName(id: string) {
+        const response = await axios.get<{project_name: string}>(`${API}/api/projects/${id}/name`);
+        return response.data.project_name;
+    },
+
     async getById(id: string) {
         const response = await axios.get<Project>(`${API}/api/projects/${id}`);
         return response.data;

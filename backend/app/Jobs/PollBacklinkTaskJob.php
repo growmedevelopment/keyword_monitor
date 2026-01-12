@@ -27,7 +27,6 @@ class PollBacklinkTaskJob implements ShouldQueue
 
     public function handle(): void
     {
-
         sleep(8);
 
         try {
@@ -51,10 +50,10 @@ class PollBacklinkTaskJob implements ShouldQueue
 
             $status = (int)$taskData['status_code'];
 
-            if ( in_array($status, [
+            if (in_array($status, [
                 DataForSeoTaskStatus::PROCESSING,
                 DataForSeoTaskStatus::QUEUED
-            ], true) ) {
+            ], true)) {
                 Log::info("Backlink task still pending – retrying", [
                     'task_id' => $this->task->task_id,
                     'status_code' => $status
@@ -64,7 +63,7 @@ class PollBacklinkTaskJob implements ShouldQueue
                 return;
             }
 
-            // final update
+            // Final update for the Task model
             $this->task->update([
                 'status_code' => $taskData['status_code'],
                 'status_message' => $taskData['status_message'],
@@ -72,42 +71,64 @@ class PollBacklinkTaskJob implements ShouldQueue
                 'raw_response' => json_encode($taskData)
             ]);
 
-            $items = $taskData['result'][0]['items'] ?? [];
+            // ---------------------------------------------------------
+            // 1. INDEPENDENT HTTP CHECK
+            // ---------------------------------------------------------
+            // We extract the URL we were checking from the keyword (removing "site:")
+            // This ensures we can check if the page is live even if Google hasn't indexed it.
+            $targetUrl = str_replace('site:', '', $taskData['data']['keyword'] ?? '');
 
-            if (empty($items)) {
-                Log::warning("SERP result empty", [
-                    'task_id' => $this->task->task_id
-                ]);
-                return;
+            // Use the URL from the model if the keyword parse fails, or fallback to null
+            if (empty($targetUrl) && $this->task->target) {
+                $targetUrl = $this->task->target->url;
             }
 
-            $result = collect($items)->sortBy('rank_group')->first();
-            $pageUrl = $result['url'] ?? null;
+            $httpStatus = 0;
 
-            if ($pageUrl) {
+            if ($targetUrl) {
                 try {
                     $pageResponse = Http::withHeaders([
                         'User-Agent' => 'Mozilla/5.0',
-                    ])->get($pageUrl);
+                    ])->timeout(10)->get($targetUrl);
 
                     $httpStatus = $pageResponse->status();
-
                 } catch (\Throwable $e) {
-                    $httpStatus = 0;
+                    $httpStatus = 0; // Request failed (DNS, Timeout, etc)
                 }
             }
 
+            // ---------------------------------------------------------
+            // 2. CHECK GOOGLE INDEXING (SERP RESULTS)
+            // ---------------------------------------------------------
+            $items = $taskData['result'][0]['items'] ?? [];
+            $result = null;
+
+            if (empty($items)) {
+                Log::warning("SERP result empty (Target not indexed)", [
+                    'task_id' => $this->task->task_id,
+                    'result'=>$result,
+                ]);
+                // Result remains null, indexed will be false
+            } else {
+                // Find the best match if items exist
+                $result = collect($items)->sortBy('rank_group')->first();
+            }
+
+
+
+            // ---------------------------------------------------------
+            // 3. CREATE CHECK RECORD
+            // ---------------------------------------------------------
             BacklinkCheck::create([
                 'backlink_target_id' => $this->task->backlink_target_id,
-                'url' => $result['url'] ?? null,
+                'url' => $result['url'] ?? $targetUrl,
                 'indexed' => ($result['rank_group'] ?? 0) > 0,
-                'http_code' => $httpStatus,
-                'raw' => json_encode($result, JSON_THROW_ON_ERROR),
+                'http_code' => $httpStatus, // This is now populated regardless of indexing
+                'raw' => $result ? json_encode($result, JSON_THROW_ON_ERROR) : null,
                 'checked_at' => now(),
             ]);
 
             $projectId = $this->task->target->project_id;
-
             event(new BacklinkUpdatedEvent($projectId));
 
         } catch (\Throwable $e) {
@@ -117,4 +138,97 @@ class PollBacklinkTaskJob implements ShouldQueue
             ]);
         }
     }
+
+//    public function handle(): void
+//    {
+//
+//        sleep(8);
+//
+//        try {
+//            $username = config('services.dataforseo.username');
+//            $password = config('services.dataforseo.password');
+//
+//            $url = "https://api.dataforseo.com/v3/serp/google/organic/task_get/regular/{$this->task->task_id}";
+//
+//            $response = Http::withBasicAuth($username, $password)->get($url);
+//            $json = $response->json();
+//
+//            Log::info("Backlink polling result", [
+//                'task_id' => $this->task->task_id,
+//                'json' => $json
+//            ]);
+//
+//            $taskData = $json['tasks'][0] ?? null;
+//            if (!$taskData) {
+//                return;
+//            }
+//
+//            $status = (int)$taskData['status_code'];
+//
+//            if ( in_array($status, [
+//                DataForSeoTaskStatus::PROCESSING,
+//                DataForSeoTaskStatus::QUEUED
+//            ], true) ) {
+//                Log::info("Backlink task still pending – retrying", [
+//                    'task_id' => $this->task->task_id,
+//                    'status_code' => $status
+//                ]);
+//
+//                self::dispatch($this->task)->delay(now()->addSeconds(10));
+//                return;
+//            }
+//
+//            // final update
+//            $this->task->update([
+//                'status_code' => $taskData['status_code'],
+//                'status_message' => $taskData['status_message'],
+//                'completed_at' => now(),
+//                'raw_response' => json_encode($taskData)
+//            ]);
+//
+//            $items = $taskData['result'][0]['items'] ?? [];
+//
+//            if (empty($items)) {
+//                Log::warning("SERP result empty", [
+//                    'task_id' => $this->task->task_id
+//                ]);
+//                return;
+//            }
+//
+//            $result = collect($items)->sortBy('rank_group')->first();
+//            $pageUrl = $result['url'] ?? null;
+//
+//            if ($pageUrl) {
+//                try {
+//                    $pageResponse = Http::withHeaders([
+//                        'User-Agent' => 'Mozilla/5.0',
+//                    ])->get($pageUrl);
+//
+//                    $httpStatus = $pageResponse->status();
+//
+//                } catch (\Throwable $e) {
+//                    $httpStatus = 0;
+//                }
+//            }
+//
+//            BacklinkCheck::create([
+//                'backlink_target_id' => $this->task->backlink_target_id,
+//                'url' => $result['url'] ?? null,
+//                'indexed' => ($result['rank_group'] ?? 0) > 0,
+//                'http_code' => $httpStatus,
+//                'raw' => json_encode($result, JSON_THROW_ON_ERROR),
+//                'checked_at' => now(),
+//            ]);
+//
+//            $projectId = $this->task->target->project_id;
+//
+//            event(new BacklinkUpdatedEvent($projectId));
+//
+//        } catch (\Throwable $e) {
+//            Log::error("Backlink Polling Error", [
+//                'task_id' => $this->task->task_id,
+//                'error' => $e->getMessage()
+//            ]);
+//        }
+//    }
 }
