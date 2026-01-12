@@ -88,12 +88,23 @@ class PollBacklinkTaskJob implements ShouldQueue
             if ($targetUrl) {
                 try {
                     $pageResponse = Http::withHeaders([
-                        'User-Agent' => 'Mozilla/5.0',
-                    ])->timeout(10)->get($targetUrl);
+                        'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                        'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                        'Accept-Language' => 'en-US,en;q=0.5',
+                        'Connection' => 'keep-alive',
+                    ])
+                        ->withOptions([
+                            'verify' => false,
+                            'allow_redirects' => true,
+                        ])
+                        ->timeout(15)
+                        ->get($targetUrl);
 
                     $httpStatus = $pageResponse->status();
+
                 } catch (\Throwable $e) {
-                    $httpStatus = 0; // Request failed (DNS, Timeout, etc)
+                    // Log the actual error message to see if it's DNS, SSL, or Connection Reset
+                    Log::error("HTTP Check Failed for $targetUrl", ['error' => $e->getMessage()]);
                 }
             }
 
