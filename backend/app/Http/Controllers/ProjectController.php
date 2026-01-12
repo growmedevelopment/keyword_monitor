@@ -79,5 +79,13 @@ class ProjectController extends Controller
         return response()->json(['message' => 'Project has been restored successfully.']);
     }
 
+    public function getProjectName(int $project_id): JsonResponse {
+
+        return response()->json([
+            'project_name' => $this->projectService->getProjectName($project_id)
+        ]);
+
+    }
+
 
 }

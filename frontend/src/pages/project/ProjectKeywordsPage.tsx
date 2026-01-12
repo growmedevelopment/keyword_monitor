@@ -159,7 +159,7 @@ export default function ProjectKeywordsPage() {
                         underline="hover"
                         color="inherit"
                     >
-                        Project #{id}
+                        {project?.name}
                     </MUILink>
 
                     <Typography color="text.primary">Keywords</Typography>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import backlinkService, { type BacklinkItem } from "../../services/backlinkService.ts";
 import {Drawer, Box, Typography, Breadcrumbs, Link as MUILink, Stack, Chip, Divider,} from "@mui/material";
 import { useParams, Link as RouterLink } from "react-router-dom";
@@ -10,6 +10,7 @@ import LanguageIcon from '@mui/icons-material/Language';
 import HistoryIcon from '@mui/icons-material/History';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import BackButton from "../../components/Common/BackButton.tsx";
+import projectService from "../../services/projectService.ts";
 
 
 interface StatusBadgeProps {
@@ -18,33 +19,39 @@ interface StatusBadgeProps {
     active: boolean | number | undefined;
 }
 
-export default function ProjectBacklinkPage() {
-    const { project } = useParams() as { project: string };
 
+export default function ProjectBacklinkPage() {
+    const { project : project_id } = useParams() as { project: string };
     const [backlinks, setBacklinks] = useState<BacklinkItem[]>([]);
+    const [projectName, setProjectName] = useState<string>("");
     const [loading, setLoading] = useState(true);
     const [historyData, setHistoryData] = useState<BacklinkItem | null>(null);
 
     const reloadBacklinks = () => {
         setLoading(true);
-        backlinkService.getAll(project).then((res) => {
+        backlinkService.getAll(project_id).then((res) => {
             setBacklinks(res.backlinks);
             setLoading(false);
         });
     };
 
+    const getProjectName = () => {
+        projectService.getProjectName(project_id).then(res => setProjectName(res) );
+    };
+
     useEffect(() => {
         reloadBacklinks();
-    }, [project]);
+        getProjectName();
+    }, [project_id]);
 
 
     // --------------------------------------------
     // Pusher: Auto-reload backlink table on update
     // --------------------------------------------
     useEffect(() => {
-        if (!project) return;
+        if (!project_id) return;
 
-        const channel = pusher.subscribe(`backlinks.${project}`);
+        const channel = pusher.subscribe(`backlinks.${project_id}`);
 
         channel.bind("backlink-updated", () => {
             reloadBacklinks();
@@ -52,9 +59,9 @@ export default function ProjectBacklinkPage() {
 
         return () => {
             channel.unbind("backlink-updated");
-            pusher.unsubscribe(`backlinks.${project}`);
+            pusher.unsubscribe(`backlinks.${project_id}`);
         };
-    }, [project]);
+    }, [project_id]);
     // --------------------------------------------
 
     const StatusBadge = ({ icon, label, active } : StatusBadgeProps) => (
@@ -80,11 +87,11 @@ export default function ProjectBacklinkPage() {
 
                     <MUILink
                         component={RouterLink}
-                        to={`/projects/${project}`}
+                        to={`/projects/${project_id}`}
                         underline="hover"
                         color="inherit"
                     >
-                        Project #{project}
+                        {projectName}
                     </MUILink>
 
                     <Typography color="text.primary">Backlinks</Typography>
@@ -92,12 +99,12 @@ export default function ProjectBacklinkPage() {
             </Box>
 
 
-            <BackButton fallbackPath={`/projects/${project}`} />
+            <BackButton fallbackPath={`/projects/${project_id}`} />
 
             <BacklinkTable
                 backlinks={backlinks}
                 loading={loading}
-                projectId={project}
+                projectId={project_id}
                 onRefresh={reloadBacklinks}
                 onDelete={(id) => {
                     setBacklinks(prev => prev.filter(b => b.id !== id));
