@@ -5,6 +5,7 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import backlinkService from "../../../services/backlinkService.ts";
 import { CircularProgress } from "@mui/material";
 
+
 // Status Code Badge
 function StatusBadge(params: ICellRendererParams) {
     if (params.data?.is_checking) {
@@ -13,16 +14,38 @@ function StatusBadge(params: ICellRendererParams) {
 
     const code = params.value;
 
-    if (!code) {
+    // 1. Handle Empty/Null
+    if (code === null || code === undefined) {
         return <span style={{ color: "#999" }}>—</span>;
     }
 
+    // 2. Handle Status 0 (Protected/Blocked)
+    if (code === 0) {
+        return (
+            <span
+                style={{
+                    background: "#546E7A", // Dark Grey (distinct from Red error)
+                    padding: "3px 8px",
+                    borderRadius: 6,
+                    color: "white",
+                    fontWeight: 600,
+                    fontSize: "12px",
+                    cursor: "help"
+                }}
+                title="Connection failed (likely blocked by firewall or bot protection)"
+            >
+                Protected
+            </span>
+        );
+    }
+
+    // 3. Handle Standard HTTP Codes
     const color =
         code >= 200 && code < 300
-            ? "#4CAF50"
+            ? "#4CAF50" // Green (Success)
             : code >= 300 && code < 400
-                ? "#FFC107"
-                : "#F44336";
+                ? "#FFC107" // Yellow (Redirect)
+                : "#F44336"; // Red (Error 4xx/5xx)
 
     return (
         <span
@@ -98,7 +121,7 @@ export const columnDefs: ColDef[] = [
         colId: "latest_result.http_code",
         width: 70,
         valueGetter: (params) =>
-            params.data?.latest_result.http_code ?? null,
+            params.data?.latest_result.http_code,
         cellRenderer: StatusBadge,
     },
 
