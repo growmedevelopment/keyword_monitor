@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schedule;
 Schedule::call(static function () {
     ProcessDailyKeywordRanksJob::dispatch();
 })
-    ->dailyAt('01:00')
+    ->twiceMonthly(1, 16, '01:00')
     ->timezone('America/Edmonton')
     ->name('daily-keyword-rank-job')
     ->onSuccess(fn () => info('[Scheduler] Keyword rank job dispatched to queue'))
