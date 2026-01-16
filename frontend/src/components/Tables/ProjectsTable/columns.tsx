@@ -8,6 +8,7 @@ export const columnDefs: ColDef[] = [
     {
         headerName: 'Project Name',
         field: 'name',
+        filter: false,
         flex: 1,
         cellRenderer: (params: ICellRendererParams) => {
             return (
