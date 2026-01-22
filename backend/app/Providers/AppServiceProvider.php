@@ -8,7 +8,7 @@ use Illuminate\Support\ServiceProvider;
 use Laravel\Sanctum\PersonalAccessToken;
 use Laravel\Sanctum\Sanctum;
 use Illuminate\Support\Facades\Route;
-use App\Models\BacklinkTask;
+use App\Models\LinkTask;
 use App\Observers\BacklinkTaskObserver;
 
 class AppServiceProvider extends ServiceProvider
@@ -32,6 +32,6 @@ class AppServiceProvider extends ServiceProvider
         DataForSeoTask::observe(DataForSeoTaskObserver::class);
 
         //observing backlink tasks
-        BacklinkTask::observe(BacklinkTaskObserver::class);
+        LinkTask::observe(BacklinkTaskObserver::class);
     }
 }

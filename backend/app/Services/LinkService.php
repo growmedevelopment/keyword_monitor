@@ -2,20 +2,22 @@
 
 namespace App\Services;
 
+use App\Enums\LinkType;
 use App\Models\Project;
-use App\Models\BacklinkTarget;
-use App\Models\BacklinkTask;
+use App\Models\LinkTarget;
+use App\Models\LinkTask;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\DB;
 
-class BacklinkService
+class LinkService
 {
     /**
-     * Return all backlink data for project (latest result + history)
+     * Universal shared function to get targets by type
      */
-    public function getBacklinkList(Project $project)
-    {
-        $targets = $project->backlink_urls()
+    public function getLinksByType(Project $project, string $type): Collection|\Illuminate\Support\Collection {
+        // We filter by the 'type' column here
+        $targets = $project->link_urls()
+            ->where('type', $type)
             ->with(['checks' => fn($q) => $q->orderBy('checked_at', 'desc')])
             ->orderBy('id')
             ->get();
@@ -25,9 +27,10 @@ class BacklinkService
             $isChecking = $t->tasks()->whereNull('completed_at')->exists();
 
             return [
-                'id'  => $t->id,
-                'url' => $t->url,
-                'is_checking' => $isChecking,
+                'id'            => $t->id,
+                'url'           => $t->url,
+                'type'          => $t->type, // Useful to see in the response
+                'is_checking'   => $isChecking,
 
                 'latest_result' => $latest ? [
                     'http_code'   => $latest->http_code,
@@ -35,10 +38,10 @@ class BacklinkService
                     'checked_at'  => $latest->checked_at,
                 ] : (object)[],
 
-                'history' => $t->checks->map(fn($h) => [
+                'history'       => $t->checks->map(fn($h) => [
                     'http_code'  => $h->http_code,
                     'indexed'    => $h->indexed,
-                    'title'      => $h->title,
+                    'title'      => $h->title ?? null, // Added null check safety
                     'checked_at' => $h->checked_at,
                 ]),
             ];
@@ -46,16 +49,40 @@ class BacklinkService
     }
 
     /**
+     * Return only Backlinks
+     */
+    public function getBacklinkList(Project $project): Collection|\Illuminate\Support\Collection {
+        return $this->getLinksByType($project, 'backlink');
+    }
+
+    /**
+     * Return only Citations
+     */
+    public function getCitationList(Project $project): Collection|\Illuminate\Support\Collection {
+        return $this->getLinksByType($project, 'citation');
+    }
+
+
+    /**
      * Add URLs and create DFS tasks
      */
-    public function addUrls(Project $project, array $urls): array
+    public function addUrls(Project $project, array $urls, string $type): array
     {
         $created = [];
 
+        $enum = LinkType::tryFrom($type);
+        $dbType = match($enum) {
+            LinkType::Backlinks => 'backlink',
+            LinkType::Citations => 'citation',
+        };
+
         foreach ($urls as $url) {
-            $target = $project->backlink_urls()->create([
-                'url' => trim($url),
-            ]);
+            $target = $project
+                ->link_urls()
+                ->create([
+                    'url' => trim($url),
+                    'type' => $dbType,
+                ]);
 
             $this->checkBacklink($target);
 
@@ -68,7 +95,7 @@ class BacklinkService
     /**
      * Trigger a check for a single backlink target
      */
-    public function checkBacklink(BacklinkTarget $target): void
+    public function checkBacklink(LinkTarget $target): void
     {
         $username = config('services.dataforseo.username');
         $password = config('services.dataforseo.password');
@@ -82,7 +109,7 @@ class BacklinkService
         $task = $response['tasks'][0] ?? null;
 
         if ($task) {
-            BacklinkTask::create([
+            LinkTask::create([
                 'backlink_target_id' => $target->id,
                 'task_id'            => $task['id'],
                 'status_code'        => $task['status_code'],
@@ -94,7 +121,7 @@ class BacklinkService
     /**
      * Build DFS payload
      */
-    protected function buildPayload(BacklinkTarget $target): array
+    protected function buildPayload(LinkTarget $target): array
     {
         return [[
                     "language_name" => "English",
@@ -104,7 +131,7 @@ class BacklinkService
                 ]];
     }
 
-    public function removeBacklink(BacklinkTarget $target) {
+    public function removeBacklink(LinkTarget $target) {
         $target->delete();
     }
 }

@@ -1,7 +1,7 @@
 import axios from "../axios";
 const API = import.meta.env.VITE_API_BACKEND_ENDPOINT;
 
-export interface BacklinkItem {
+export interface LinkItem {
     id: number;
     url: string;
     is_checking: boolean;
@@ -32,21 +32,27 @@ type DeleteResponseType = {
 }
 
 export default {
-    async getAll(projectId: string): Promise<{ backlinks: BacklinkItem[] }> {
-        const res = await axios.get(`${API}/api/projects/${projectId}/backlinks`);
+    async getAll(projectId: string): Promise<LinkItem[] > {
+        const res = await axios.get(`${API}/api/projects/${projectId}/links`);
         return res.data;
     },
 
-    async create(projectId: string, urls: string[]): Promise<CreateResponseType> {
-        const res = await axios.post(`${API}/api/projects/${projectId}/backlinks`, {
-            urls
+    async getLinksByType(type: 'backlinks' | 'citations', projectId: string): Promise<LinkItem[] > {
+        const res = await axios.get(`${API}/api/projects/${projectId}/links/${type}`);
+        return res.data;
+    },
+
+    async create(projectId: string, urls: string[], type: 'backlinks' | 'citations'): Promise<CreateResponseType> {
+        const res = await axios.post(`${API}/api/projects/${projectId}/links`, {
+            urls,
+            type,
         });
 
         return res.data;
     },
 
     async delete(backlinkId: number): Promise<DeleteResponseType> {
-        const res = await axios.delete(`${API}/api/projects/backlinks/${backlinkId}`);
+        const res = await axios.delete(`${API}/api/projects/links/${backlinkId}`);
         return res.data;
     },
 };

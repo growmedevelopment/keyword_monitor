@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useParams, Link as RouterLink } from "react-router-dom";
 import { Box, Grid, Typography, Badge, Paper, Stack, CardActionArea } from "@mui/material";
 import LinkIcon from "@mui/icons-material/Link";
+import MonitorHeartIcon from '@mui/icons-material/MonitorHeart';
 import QueryStatsIcon from '@mui/icons-material/QueryStats';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import projectService from "../../services/projectService.ts";
@@ -95,10 +96,19 @@ export default function ProjectShowPage() {
                                     />
 
                                     <ActionCard
-                                        title="Backlink Monitoring"
+                                        title="Backlinks Monitoring"
                                         subtitle="Audit indexing and link health"
                                         count={projectData.backlinks_count}
-                                        to={`/projects/${projectData.id}/backlinks`}
+                                        to={`/projects/${projectData.id}/links/backlinks`}
+                                        icon={<MonitorHeartIcon sx={{ fontSize: 32 }} />}
+                                        color="#8b5cf6"
+                                    />
+
+                                    <ActionCard
+                                        title="Citations Monitoring"
+                                        subtitle="Audit indexing and link health"
+                                        count={projectData.citations_count}
+                                        to={`/projects/${projectData.id}/links/citations`}
                                         icon={<LinkIcon sx={{ fontSize: 32 }} />}
                                         color="#8b5cf6"
                                     />

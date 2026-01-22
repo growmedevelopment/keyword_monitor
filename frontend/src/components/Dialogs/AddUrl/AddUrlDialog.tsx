@@ -12,9 +12,10 @@ import { useState } from 'react';
 interface Props {
     onClose: () => void;
     onSubmit: (urls: string[]) => void;
+    dialogTitle: string;
 }
 
-export default function AddBacklinkUrlDialog({ onClose, onSubmit }: Props) {
+export default function AddUrlDialog({ onClose, onSubmit, dialogTitle }: Props) {
     const [input, setInput] = useState('');
 
     const handleSubmit = () => {
@@ -32,11 +33,11 @@ export default function AddBacklinkUrlDialog({ onClose, onSubmit }: Props) {
 
     return (
         <Dialog open={true} onClose={onClose} maxWidth="sm" fullWidth>
-            <DialogTitle>Add Backlink URLs</DialogTitle>
+            <DialogTitle>{dialogTitle}</DialogTitle>
 
             <DialogContent>
                 <Typography variant="body2" mb={1}>
-                    Enter or paste URLs below. Each line will be added as a backlink URL.
+                    Enter or paste URLs below. Each line will be added as a URL.
                 </Typography>
 
                 <TextField

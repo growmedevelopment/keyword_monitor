@@ -5,8 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class BacklinkTask extends Model
+class LinkTask extends Model
 {
+    protected $table = 'backlink_tasks';
     protected $fillable = [
         'backlink_target_id',
         'task_id',
@@ -19,6 +20,6 @@ class BacklinkTask extends Model
 
     public function target(): BelongsTo
     {
-        return $this->belongsTo(BacklinkTarget::class, 'backlink_target_id');
+        return $this->belongsTo(LinkTarget::class, 'backlink_target_id');
     }
 }

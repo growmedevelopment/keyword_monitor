@@ -21,7 +21,8 @@ class ProjectViewResource extends JsonResource
             'location_name' => $project->location_name,
             'country' => $project->country,
             'keywords_count' => $project->keywords_count,
-            'backlinks_count' => $project->backlink_urls_count,
+            'backlinks_count' => $project->backlinks_count,
+            'citations_count' => $project->citations_count,
         ];
     }
 }

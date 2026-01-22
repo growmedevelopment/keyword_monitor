@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
-import backlinkService, { type BacklinkItem } from "../../services/backlinkService.ts";
+import linkService, { type LinkItem } from "../../services/linkService.ts";
 import {Drawer, Box, Typography, Breadcrumbs, Link as MUILink, Stack, Chip, Divider,} from "@mui/material";
 import { useParams, Link as RouterLink } from "react-router-dom";
 import pusher from "../../pusher.ts";
-import BacklinkTable from "../../components/Tables/BacklinksTable/BacklinkTable.tsx";
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import CancelRoundedIcon from '@mui/icons-material/CancelRounded';
 import LanguageIcon from '@mui/icons-material/Language';
@@ -11,6 +10,7 @@ import HistoryIcon from '@mui/icons-material/History';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import BackButton from "../../components/Common/BackButton.tsx";
 import projectService from "../../services/projectService.ts";
+import LinksTable from "../../components/Tables/LinksTable/LinksTable.tsx";
 
 
 interface StatusBadgeProps {
@@ -20,17 +20,19 @@ interface StatusBadgeProps {
 }
 
 
-export default function ProjectBacklinkPage() {
-    const { project : project_id } = useParams() as { project: string };
-    const [backlinks, setBacklinks] = useState<BacklinkItem[]>([]);
+export default function ProjectLinkPage() {
+    const { project : project_id , type } = useParams() as { project: string , type: 'backlinks'| 'citations' };
+    const [links, setLinks] = useState<LinkItem[]>([]);
     const [projectName, setProjectName] = useState<string>("");
     const [loading, setLoading] = useState(true);
-    const [historyData, setHistoryData] = useState<BacklinkItem | null>(null);
+    const [historyData, setHistoryData] = useState<LinkItem | null>(null);
 
-    const reloadBacklinks = () => {
+    const link_type = type === 'backlinks' ? 'Backlinks' : 'Citations';
+
+    const reloadLinks = () => {
         setLoading(true);
-        backlinkService.getAll(project_id).then((res) => {
-            setBacklinks(res.backlinks);
+        linkService.getLinksByType(type, project_id).then((response) => {
+            setLinks(response);
             setLoading(false);
         });
     };
@@ -40,7 +42,7 @@ export default function ProjectBacklinkPage() {
     };
 
     useEffect(() => {
-        reloadBacklinks();
+        reloadLinks();
         getProjectName();
     }, [project_id]);
 
@@ -54,7 +56,7 @@ export default function ProjectBacklinkPage() {
         const channel = pusher.subscribe(`backlinks.${project_id}`);
 
         channel.bind("backlink-updated", () => {
-            reloadBacklinks();
+            reloadLinks();
         });
 
         return () => {
@@ -94,20 +96,21 @@ export default function ProjectBacklinkPage() {
                         {projectName}
                     </MUILink>
 
-                    <Typography color="text.primary">Backlinks</Typography>
+                    <Typography color="text.primary">{link_type}</Typography>
                 </Breadcrumbs>
             </Box>
 
 
             <BackButton fallbackPath={`/projects/${project_id}`} />
 
-            <BacklinkTable
-                backlinks={backlinks}
+            <LinksTable
+                type={type}
+                links={links}
                 loading={loading}
                 projectId={project_id}
-                onRefresh={reloadBacklinks}
+                onRefresh={reloadLinks}
                 onDelete={(id) => {
-                    setBacklinks(prev => prev.filter(b => b.id !== id));
+                    setLinks(prev => prev.filter(b => b.id !== id));
                 }}
                 openHistory={(item) => setHistoryData(item)}
             />

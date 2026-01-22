@@ -23,7 +23,7 @@ Schedule::call(static function (): void {
 |--------------------------------------------------------------------------
 */
 
-Schedule::command('telescope:prune --hours=72')
+Schedule::command('telescope:prune --hours=48')
     ->daily()
     ->timezone('America/Edmonton')
     ->name('telescope-prune')
