@@ -3,8 +3,8 @@
 namespace App\Jobs;
 
 use App\Enums\DataForSeoTaskStatus;
-use App\Models\BacklinkTask;
-use App\Models\BacklinkCheck;
+use App\Models\LinkTask;
+use App\Models\LinkCheck;
 use App\Events\BacklinkUpdatedEvent;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\Http;
@@ -18,9 +18,9 @@ class PollBacklinkTaskJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public BacklinkTask $task;
+    public LinkTask $task;
 
-    public function __construct(BacklinkTask $task)
+    public function __construct(LinkTask $task)
     {
         $this->task = $task;
     }
@@ -130,7 +130,7 @@ class PollBacklinkTaskJob implements ShouldQueue
             // ---------------------------------------------------------
             // 3. CREATE CHECK RECORD
             // ---------------------------------------------------------
-            BacklinkCheck::create([
+            LinkCheck::create([
                 'backlink_target_id' => $this->task->backlink_target_id,
                 'url' => $result['url'] ?? $targetUrl,
                 'indexed' => ($result['rank_group'] ?? 0) > 0,

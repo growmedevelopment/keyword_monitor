@@ -65,7 +65,7 @@ class ProjectService
 
     public function show(Request $request, string $id): ProjectViewResource {
 
-        $project = Project::withCount(['keywords', 'backlink_urls'])->findOrFail($id);
+        $project = Project::withCount(['keywords', 'backlinks', 'citations'])->findOrFail($id);
 
         if ($project->user_id !== auth()->id()) {
             abort(403, 'Unauthorized');

@@ -2,8 +2,8 @@
 
 namespace App\Jobs;
 
-use App\Models\BacklinkTarget;
-use App\Services\BacklinkService;
+use App\Models\LinkTarget;
+use App\Services\LinkService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -26,11 +26,11 @@ class CheckBacklinksJob implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(BacklinkService $backlinkService): void
+    public function handle(LinkService $backlinkService): void
     {
         Log::info('Starting weekly backlink re-check job.');
 
-        $targets = BacklinkTarget::all();
+        $targets = LinkTarget::all();
 
         foreach ($targets as $target) {
             try {

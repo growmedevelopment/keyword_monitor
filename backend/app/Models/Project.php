@@ -31,9 +31,17 @@ class Project extends Model
         return $this->hasMany(KeywordGroup::class);
     }
 
-    public function backlink_urls(): HasMany
+    public function link_urls(): HasMany
     {
-        return $this->hasMany(BacklinkTarget::class);
+        return $this->hasMany(LinkTarget::class);
+    }
+
+    public function backlinks(): HasMany {
+        return $this->hasMany(LinkTarget::class)->where('type', 'backlink');
+    }
+
+    public function citations(): HasMany {
+        return $this->hasMany(LinkTarget::class)->where('type', 'citation');
     }
 
 }

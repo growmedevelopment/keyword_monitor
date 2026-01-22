@@ -15,4 +15,5 @@ export interface Project {
     deleted_at: string;
     keywords_count?: number;
     backlinks_count?: number;
+    citations_count?: number;
 }

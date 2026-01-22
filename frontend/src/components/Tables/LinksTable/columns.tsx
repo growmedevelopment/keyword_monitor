@@ -2,7 +2,7 @@ import type { ColDef, ICellRendererParams } from "ag-grid-community";
 import ConfirmDeleteButton from "../ConfirmDeleteButton.tsx";
 import toast from "react-hot-toast";
 import CancelIcon from '@mui/icons-material/Cancel';
-import backlinkService from "../../../services/backlinkService.ts";
+import linkService from "../../../services/linkService.ts";
 import { CircularProgress } from "@mui/material";
 
 
@@ -193,7 +193,7 @@ export const columnDefs: ColDef[] = [
                     color="error"
                     tooltip="Backlink removed"
                     onConfirm={async () => {
-                        const response = await backlinkService.delete(id);
+                        const response = await linkService.delete(id);
                         toast.success(response.message);
                         params.context.onDelete?.(id);
                     }}

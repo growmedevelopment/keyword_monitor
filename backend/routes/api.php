@@ -1,10 +1,10 @@
 <?php
 
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\BacklinkController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\KeywordController;
 use App\Http\Controllers\KeywordGroupController;
+use App\Http\Controllers\LinkController;
 use App\Http\Controllers\SerpLocationController;
 use App\Http\Controllers\ProjectController;
 use Illuminate\Support\Facades\Route;
@@ -56,17 +56,18 @@ Route::middleware('auth:sanctum')->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | BACKLINKS (inside project)
+    | LINKS (inside project)
     |--------------------------------------------------------------------------
     */
-    Route::prefix('/projects/{project}/backlinks')->group(function () {
-        Route::get('/', [BacklinkController::class, 'index']);
-        Route::post('/', [BacklinkController::class, 'store']);
+
+    Route::prefix('/projects/{project}/links')->group(function () {
+        Route::get('/{type}', [LinkController::class, 'index']);
+        Route::post('/', [LinkController::class, 'store']);
 
     });
 
-    Route::prefix('/projects/backlinks')->group(function () {
-        Route::delete('/{backlink}', [BacklinkController::class, 'destroy']);
+    Route::prefix('/projects/links')->group(function () {
+        Route::delete('/{link}', [LinkController::class, 'destroy']);
     });
 
 

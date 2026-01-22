@@ -10,7 +10,7 @@ import UserLoginPage from './pages/UserLoginPage';
 import ProjectsArchivedPage from "./pages/ProjectsArchivedPage";
 import { useAuth } from './context/AuthContext';
 import AppLayout from "./layouts/AppLayout.tsx";
-import ProjectBacklinkPage from "./pages/project/ProjectBacklinkPage.tsx";
+import ProjectLinkPage from "./pages/project/ProjectLinkPage.tsx";
 
 export default function App() {
     const { user, loading } = useAuth();
@@ -46,15 +46,12 @@ export default function App() {
                         <Route path="/projects/:id/keywords" element={<ProjectKeywordsPage />} />
                         <Route path="/keywords/:id" element={<KeywordShowPage />} />
                         <Route path="/register" element={<UserRegisterPage />} />
-                        <Route path="/projects/:project/backlinks" element={<ProjectBacklinkPage />} />
-                        {/* Already authenticated: redirect away from /login */}
+                        <Route path="/projects/:project/links/:type" element={<ProjectLinkPage />} />
                         <Route path="/login" element={<Navigate to="/dashboard" replace />} />
-                        {/* Catch-all to dashboard */}
                         <Route path="/*" element={<Navigate to="/dashboard" replace />} />
                     </Routes>
                 </AppLayout>
             ) : (
-                // PUBLIC (UNAUTHENTICATED) AREA — centered, soft background
                 <Box
                     sx={{
                         display: 'grid',
@@ -68,7 +65,6 @@ export default function App() {
                     <Routes>
                         <Route path="/login" element={<UserLoginPage />} />
                         <Route path="/register" element={<UserRegisterPage />} />
-                        {/* Send everything else to login */}
                         <Route path="/*" element={<Navigate to="/login" replace />} />
                     </Routes>
                 </Box>

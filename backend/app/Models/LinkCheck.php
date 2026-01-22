@@ -5,8 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class BacklinkCheck extends Model
+class LinkCheck extends Model
 {
+    protected $table = 'backlink_checks';
     protected $guarded = [];
 
     protected $casts = [
@@ -20,6 +21,6 @@ class BacklinkCheck extends Model
      */
     public function target(): BelongsTo
     {
-        return $this->belongsTo(BacklinkTarget::class, 'backlink_target_id');
+        return $this->belongsTo(LinkTarget::class, 'backlink_target_id');
     }
 }

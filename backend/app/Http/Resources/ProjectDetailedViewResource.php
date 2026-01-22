@@ -35,8 +35,8 @@ class ProjectDetailedViewResource extends JsonResource
             'location_code' => $project->location_code,
             'location_name' => $project->location_name,
             'country' => $project->country,
-            'keywords_count' => $project->keywords_count,
-            'backlinks_count' => $project->backlink_urls_count,
+//            'keywords_count' => $project->keywords_count,
+//            'backlinks_count' => $project->backlinks_count,
         ];
     }
 }

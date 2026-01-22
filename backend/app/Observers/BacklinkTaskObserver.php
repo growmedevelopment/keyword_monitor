@@ -2,13 +2,13 @@
 
 namespace App\Observers;
 
-use App\Models\BacklinkTask;
+use App\Models\LinkTask;
 use App\Jobs\PollBacklinkTaskJob;
 use Illuminate\Support\Facades\Log;
 
 class BacklinkTaskObserver
 {
-    public function created(BacklinkTask $task): void
+    public function created(LinkTask $task): void
     {
         Log::info('BacklinkTaskObserver fired', [
             'task_id'     => $task->task_id,
@@ -25,7 +25,7 @@ class BacklinkTaskObserver
         }
     }
 
-    protected function queuePolling(BacklinkTask $task): void
+    protected function queuePolling(LinkTask $task): void
     {
         $initialDelay = config('dataforseo.polling.initial_delay', 20);
 
