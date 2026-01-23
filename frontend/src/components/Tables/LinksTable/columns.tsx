@@ -30,7 +30,12 @@ function StatusBadge(params: ICellRendererParams) {
                     color: "white",
                     fontWeight: 600,
                     fontSize: "12px",
-                    cursor: "help"
+                    cursor: "help",
+                    height: "30px",
+                    display: "flex",
+                    alignItems: "center",
+                    alignContent: "center",
+
                 }}
                 title="Connection failed (likely blocked by firewall or bot protection)"
             >
@@ -55,6 +60,10 @@ function StatusBadge(params: ICellRendererParams) {
                 borderRadius: 6,
                 color: "white",
                 fontWeight: 600,
+                height: "30px",
+                display: "flex",
+                alignItems: "center",
+                alignContent: "center",
             }}
         >
             {code}
@@ -83,7 +92,10 @@ function IndexBadge(params: ICellRendererParams) {
                 borderRadius: 6,
                 color: "white",
                 fontWeight: 600,
-                display: 'block'
+                height: "30px",
+                display: "flex",
+                alignItems: "center",
+                alignContent: "center",
             }}
         >
             {indexed ? "Indexed" : "Not indexed"}
@@ -99,6 +111,7 @@ export const columnDefs: ColDef[] = [
         filter: "agTextColumnFilter",
         flex: 1,
         minWidth: 200,
+        maxWidth: 700,
         cellRenderer: (p: ICellRendererParams) => (
             <a
                 href={p.value}
@@ -108,6 +121,10 @@ export const columnDefs: ColDef[] = [
                     color: "#1976d2",
                     textDecoration: "none",
                     fontWeight: 500,
+                    height: "30px",
+                    display: "flex",
+                    alignItems: "center",
+                    alignContent: "center",
                 }}
             >
                 {p.value}
@@ -119,7 +136,7 @@ export const columnDefs: ColDef[] = [
     {
         headerName: "Status Code",
         colId: "latest_result.http_code",
-        width: 70,
+        width: 120,
         valueGetter: (params) =>
             params.data?.latest_result.http_code,
         cellRenderer: StatusBadge,
@@ -129,7 +146,7 @@ export const columnDefs: ColDef[] = [
     {
         headerName: "Indexed",
         colId: "latest_result.indexed",
-        width: 70,
+        width: 150,
         valueGetter: (params) =>
             params.data?.latest_result.indexed ?? null,
         cellRenderer: IndexBadge,
@@ -139,7 +156,7 @@ export const columnDefs: ColDef[] = [
     {
         headerName: "Last Checked",
         colId: "latest_result.checked_at",
-        width: 180,
+        width: 200,
         valueGetter: (params) =>
             params.data?.latest_result.checked_at ?? null,
         cellRenderer: (p: ICellRendererParams) => {
