@@ -51,8 +51,15 @@ export default {
         return res.data;
     },
 
-    async delete(backlinkId: number): Promise<DeleteResponseType> {
-        const res = await axios.delete(`${API}/api/projects/links/${backlinkId}`);
+    async delete(backlinkId: number, projectId: string): Promise<DeleteResponseType> {
+        const res = await axios.delete(`${API}/api/projects/${projectId}/links/${backlinkId}`);
+        return res.data;
+    },
+
+    async reCheckAllLinks(projectId: string, type: 'backlinks' | 'citations',):Promise<void> {
+        const res = await axios.post(`${API}/api/projects/${projectId}/links/recheck-all`, {
+            type
+        });
         return res.data;
     },
 };

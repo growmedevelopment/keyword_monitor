@@ -52,7 +52,7 @@ class LinkController extends Controller
         ], 201);
     }
 
-    public function destroy(string $id):JsonResponse {
+    public function destroy(string $projectId , string $id):JsonResponse {
 
         try {
             $backlink = LinkTarget::findOrFail($id);
@@ -61,7 +61,7 @@ class LinkController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Link has been deleted'
+                'message' => 'Link has been deleted',
             ]);
         }catch (\Exception $e) {
             return response()->json([
@@ -70,5 +70,22 @@ class LinkController extends Controller
                 , 500);
         }
 
+    }
+
+    public function reCheckAllLinks (Request $request, $projectId): JsonResponse {
+
+        $project = Project::findOrFail($projectId);
+        $project_links = $project->backlinks()->get();
+        if ($request->type === 'citations') {
+            $project_links = $project->citations()->get();
+        }
+
+        $project_links->each(function ($link) {
+            $this->linkService->checkBacklink($link);
+        });
+
+        return response()->json(
+            ['message' => 'All links have been rechecked.']
+        );
     }
 }
