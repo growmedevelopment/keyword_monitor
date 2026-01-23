@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\KeywordController;
@@ -91,4 +92,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/keyword-groups/set-for-keyword', [KeywordGroupController::class, 'setProjectKeywordGroups']);
     Route::post('/keyword-groups/unset-for-keyword/{keyword}', [KeywordGroupController::class, 'unsetProjectKeywordGroup']);
     Route::delete('/keyword-groups/{group}', [KeywordGroupController::class, 'destroy']);
+
+
+    Route::get('/admin/check-pending-tasks', [AdminController::class, 'checkPendingTasks']);
+    Route::post('/admin/update-created-tasks', [AdminController::class, 'updateCreatedDataForSEOTasks']);
 });

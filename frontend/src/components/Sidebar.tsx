@@ -11,6 +11,7 @@ import ExpandMore from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import {UpdateTasksNavItem} from "./Admin/UpdateTasksNavItem.tsx";
 
 const drawerWidth = 240;
 
@@ -140,7 +141,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
             <List sx={{ px: 0.5 }}>
                 <NavItem to="/dashboard" icon={<DashboardIcon />} label="Dashboard" />
                 <ProjectsGroup />
-
+                <UpdateTasksNavItem/>
             </List>
 
             <Box sx={{ flexGrow: 1 }} />
