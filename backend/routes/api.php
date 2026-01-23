@@ -62,13 +62,10 @@ Route::middleware('auth:sanctum')->group(function () {
     */
 
     Route::prefix('/projects/{project}/links')->group(function () {
-        Route::get('/{type}', [LinkController::class, 'index']);
+        Route::post('/recheck-all', [LinkController::class, 'reCheckAllLinks']);
         Route::post('/', [LinkController::class, 'store']);
-
-    });
-
-    Route::prefix('/projects/links')->group(function () {
         Route::delete('/{link}', [LinkController::class, 'destroy']);
+        Route::get('/{type}', [LinkController::class, 'index']);
     });
 
 

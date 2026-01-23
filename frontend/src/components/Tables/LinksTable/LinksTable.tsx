@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import {
-    Button, Paper,
+    Button, Grid, Paper,
     Stack, Typography,
 } from "@mui/material";
 import { AgGridReact } from "ag-grid-react";
@@ -9,7 +9,7 @@ import type { LinkItem } from "../../../services/linkService.ts";
 import linkService from "../../../services/linkService.ts";
 import toast from "react-hot-toast";
 import AddUrlDialog from "../../Dialogs/AddUrl/AddUrlDialog.tsx";
-
+import RotateLeftIcon from '@mui/icons-material/RotateLeft';
 
 interface Props {
     type: 'backlinks' | 'citations';
@@ -48,13 +48,33 @@ export default function LinksTable({type, links, loading, projectId, openHistory
 
                 <Typography variant="h6">Assigned {type} links</Typography>
 
-                <Button variant="contained" onClick={() => setAddingUrlDialog(true)}>
-                    + Add URL
-                </Button>
+
+                <Grid spacing={2} container alignItems="center" justifyContent="flex-end" >
+                    <Button
+                        variant="outlined"
+                        disabled={links.length < 1}
+                        sx={{display: 'flex', alignContent: 'center', alignItems: 'center', gap: '5px'}}
+                        onClick={()=>{
+                            linkService.reCheckAllLinks(projectId, type).then(
+                                (response: any) => {
+                                    toast.success(response.message || "Rechecking all links started.");
+                                    onRefresh?.();
+                                },
+                                () => toast.error("Failed to recheck all links.")
+                            )
+                    }}>
+                        <RotateLeftIcon/> <span>Recheck all links </span>
+                    </Button>
+
+                    <Button variant="contained" onClick={() => setAddingUrlDialog(true)}>
+                        + Add URL
+                    </Button>
+                </Grid>
+
             </Stack>
 
             {/* TABLE */}
-            <div className="ag-theme-alpine" style={{ height: 600, width: "100%" }}>
+            <div className="ag-theme-alpine" style={{ height: 900, width: "100%" }}>
                 <AgGridReact
                     rowData={links}
                     columnDefs={columnDefs}
@@ -62,7 +82,7 @@ export default function LinksTable({type, links, loading, projectId, openHistory
                     autoSizeStrategy={{
                         type: 'fitCellContents'
                     }}
-                    context={{ openHistory, onDelete }}
+                    context={{ openHistory, onDelete, projectId}}
                     pagination={true}
                     paginationPageSize={20}
                     animateRows={true}

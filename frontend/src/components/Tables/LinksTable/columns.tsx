@@ -199,6 +199,7 @@ export const columnDefs: ColDef[] = [
         cellRenderer: (params: ICellRendererParams) => {
             const id = params.data.id as number;
             const url = params.data.url as string;
+            const projectId = params.context.projectId;
 
             return (
                 <ConfirmDeleteButton
@@ -210,7 +211,7 @@ export const columnDefs: ColDef[] = [
                     color="error"
                     tooltip="Backlink removed"
                     onConfirm={async () => {
-                        const response = await linkService.delete(id);
+                        const response = await linkService.delete(id, projectId );
                         toast.success(response.message);
                         params.context.onDelete?.(id);
                     }}
