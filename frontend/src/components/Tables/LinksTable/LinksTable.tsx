@@ -10,6 +10,7 @@ import linkService from "../../../services/linkService.ts";
 import toast from "react-hot-toast";
 import AddUrlDialog from "../../Dialogs/AddUrl/AddUrlDialog.tsx";
 import RotateLeftIcon from '@mui/icons-material/RotateLeft';
+import ExportLinksButton from "./ExportLinksButton.tsx";
 
 interface Props {
     type: 'backlinks' | 'citations';
@@ -22,14 +23,12 @@ interface Props {
 }
 
 export default function LinksTable({type, links, loading, projectId, openHistory, onRefresh, onDelete}: Props) {
-
     const [addingUrlDialog, setAddingUrlDialog] = useState(false);
     const link_type = type === 'backlinks' ? 'Backlinks' : 'Citations';
 
     const handleAddUrl = async (urls: string[]) => {
         try {
             const response = await linkService.create(projectId, urls, type);
-            console.log(response);
             toast.success(response.message);
             if(response.data.skipped_urls.length > 0) {
                 toast.error(`Some URLs were skipped (It's already exist in table): ${response.data.skipped_urls.join(', ')}`);
@@ -52,8 +51,13 @@ export default function LinksTable({type, links, loading, projectId, openHistory
 
                 <Typography variant="h6">Assigned {type} links</Typography>
 
-
                 <Grid spacing={2} container alignItems="center" justifyContent="flex-end" >
+                    <ExportLinksButton
+                        links={links}
+                        type={type}
+                        disabled={links.length < 1}
+                    />
+
                     <Button
                         variant="outlined"
                         disabled={links.length < 1}
