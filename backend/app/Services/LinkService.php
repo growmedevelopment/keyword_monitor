@@ -12,6 +12,57 @@ use Illuminate\Support\Facades\Http;
 class LinkService
 {
     /**
+     * Add unique URLs and create DFS tasks.
+     * Skips URLs that already exist for this project and type.
+     */
+    public function addUrls(Project $project, array $urls, string $type): array
+    {
+        // 1. Resolve Type
+        $enum = LinkType::tryFrom($type);
+        // Fallback or throw error if invalid type (though validation catches this)
+        $dbType = match($enum) {
+            LinkType::Backlinks => 'backlink',
+            LinkType::Citations => 'citation',
+            default => 'backlink'
+        };
+
+        // 2. Normalize Input
+        $incomingUrls = collect($urls)->map(fn($u) => trim($u))->unique();
+
+        // 3. Find Existing URLs in DB (for this project & type)
+        $existingUrls = $project->link_urls()
+            ->where('type', $dbType)
+            ->whereIn('url', $incomingUrls)
+            ->pluck('url')
+            ->toArray();
+
+        // 4. Calculate New URLs (Diff)
+        $newUrls = $incomingUrls->diff($existingUrls);
+
+        $addedModels = [];
+
+        // 5. Create & Trigger Checks for NEW URLs only
+        foreach ($newUrls as $url) {
+            /** @var LinkTarget $target */
+            $target = $project->link_urls()->create([
+                'url'  => $url,
+                'type' => $dbType,
+            ]);
+
+            // Trigger the external API check immediately
+            $this->checkBacklink($target);
+
+            $addedModels[] = $target;
+        }
+
+        // 6. Return structured result
+        return [
+            'added'   => $addedModels,
+            'skipped' => $existingUrls, // List of URLs that were duplicates
+        ];
+    }
+
+    /**
      * Universal shared function to get targets by type
      */
     public function getLinksByType(Project $project, string $type): Collection|\Illuminate\Support\Collection {
@@ -62,36 +113,6 @@ class LinkService
         return $this->getLinksByType($project, 'citation');
     }
 
-
-    /**
-     * Add URLs and create DFS tasks
-     */
-    public function addUrls(Project $project, array $urls, string $type): array
-    {
-        $created = [];
-
-        $enum = LinkType::tryFrom($type);
-        $dbType = match($enum) {
-            LinkType::Backlinks => 'backlink',
-            LinkType::Citations => 'citation',
-        };
-
-        foreach ($urls as $url) {
-            $target = $project
-                ->link_urls()
-                ->create([
-                    'url' => trim($url),
-                    'type' => $dbType,
-                ]);
-
-            $this->checkBacklink($target);
-
-            $created[] = $target;
-        }
-
-        return $created;
-    }
-
     /**
      * Trigger a check for a single backlink target
      */
@@ -131,7 +152,11 @@ class LinkService
                 ]];
     }
 
-    public function removeBacklink(LinkTarget $target) {
+    /**
+     * Remove a backlink target from the project
+     */
+    public function removeBacklink(LinkTarget $target): void {
         $target->delete();
     }
+
 }

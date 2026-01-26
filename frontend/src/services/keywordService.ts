@@ -9,8 +9,19 @@ type DeleteResponse = {
     message: string,
 };
 
+export interface KeywordCreateResponse {
+    message: string;
+    data: {
+        added_count: number;
+        skipped_count: number;
+        added_keywords: Keyword[];
+        skipped_keywords: string[];
+    };
+}
+
+
 const keywordService = {
-    async create(projectId: string, keywords: string[], groupId: number | null): Promise<any> {
+    async create(projectId: string, keywords: string[], groupId: number | null): Promise<KeywordCreateResponse> {
         const response = await axios.post(`${API}/api/projects/${projectId}/keywords/create`, {
             keywords,
             keyword_group_id: groupId

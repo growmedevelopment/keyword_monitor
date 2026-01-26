@@ -27,65 +27,50 @@ class KeywordController extends Controller
         $this->keywordMetricsService = $keywordMetricsService;
     }
 
-    /**
-     * Add a new keyword to a project and submit it to the DataForSEO API for tracking.
-     *
-     * This method validates the incoming request, associates the keyword with the project,
-     * submits it to DataForSEO for SERP analysis, and immediately attempts to fetch
-     * initial results. If results are unavailable, the keyword is queued for
-     * background polling.
-     *
-     * @param \Illuminate\Http\Request $request     The HTTP request containing the keyword input.
-     * @param string                   $project_id  The ID of the project to which the keyword will be added.
-     *
-     * @return \Illuminate\Http\JsonResponse        JSON response with keyword details and status.
-     *
-     * @throws \Illuminate\Validation\ValidationException If the keyword validation fails.
-     * @throws \Exception                                 If keyword submission or processing fails.
-     */
     public function addKeywordToProject(Request $request, string $project_id): JsonResponse
     {
         try {
             $request->validate([
-                'keywords' => 'required|array',
-                'keywords.*' => 'string|max:255',
-                'keyword_group_id' => 'nullable|exists:keyword_groups,id',
+                'keywords'         => 'required|array|min:1',
+                'keywords.*'       => 'required|string|max:255',
+                'keyword_group_id' => 'nullable|integer|exists:keyword_groups,id',
             ]);
 
             $project = Project::findOrFail($project_id);
             $groupId = $request->input('keyword_group_id');
 
-            $createdKeywords = [];
+            // 1. Normalize & Deduplicate Input (Client-side dupes)
+            $incomingKeywords = collect($request->keywords)
+                ->map(fn($k) => strtolower(trim($k)))
+                ->unique();
 
-            foreach ($request->keywords as $keywordText) {
+            // 2. Find Duplicates in Database (Server-side dupes)
+            // We query once to find which of these keywords already exist for this project
+            $existingKeywords = $project->keywords()
+                ->whereIn('keyword', $incomingKeywords)
+                ->pluck('keyword')
+                ->toArray();
 
-                $keywordText = strtolower(trim($keywordText));
+            // 3. Calculate New Keywords
+            // "diff" removes the existing ones from the incoming list
+            $newKeywords = $incomingKeywords->diff($existingKeywords);
 
-                // Check if keyword already exists
-                $existing = $project->keywords()
-                    ->where('keyword', $keywordText)
-                    ->first();
+            $addedKeywords = [];
 
-                if ($existing) {
-                    $createdKeywords[] = array_merge(
-                        $existing->toArray(),
-                        [
-                            'keyword_group_name'  => $existing->keyword_groups?->name,
-                            'keyword_group_color' => $existing->keyword_groups?->color,
-                            'already_exists'      => true,
-                        ]
-                    );
-                    continue;
-                }
-
-                // Create keyword + submit to DataForSEO
+            // 4. Process Only New Keywords
+            foreach ($newKeywords as $keywordText) {
+                // Submit to DataForSEO (Service Logic)
                 $keyword = $this->keywordSubmissionService->submitKeyword(
                     $project,
                     $keywordText,
                     $groupId
                 );
 
-                $createdKeywords[] = array_merge(
+                // Format the output (load relationship for color/name)
+                // Ideally, ensure your service returns the model
+                $keyword->load('keyword_groups');
+
+                $addedKeywords[] = array_merge(
                     $keyword->toArray(),
                     [
                         'keyword_group_name'  => $keyword->keyword_groups?->name,
@@ -94,9 +79,15 @@ class KeywordController extends Controller
                 );
             }
 
+            // 5. Return Structured Response
             return response()->json([
-                'message'  => 'Keywords processed.',
-                'keywords' => $createdKeywords,
+                'message' => 'Keywords processed.',
+                'data'    => [
+                    'added_count'      => count($addedKeywords),
+                    'skipped_count'    => count($existingKeywords),
+                    'added_keywords'   => $addedKeywords,
+                    'skipped_keywords' => $existingKeywords,
+                ]
             ], 201);
 
         } catch (\Throwable $e) {
@@ -105,7 +96,6 @@ class KeywordController extends Controller
             ], 500);
         }
     }
-
     public function show(Request $request, string $id): JsonResponse
     {
         $keyword = Keyword::with([
