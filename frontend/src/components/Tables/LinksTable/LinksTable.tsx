@@ -29,7 +29,11 @@ export default function LinksTable({type, links, loading, projectId, openHistory
     const handleAddUrl = async (urls: string[]) => {
         try {
             const response = await linkService.create(projectId, urls, type);
+            console.log(response);
             toast.success(response.message);
+            if(response.data.skipped_urls.length > 0) {
+                toast.error(`Some URLs were skipped (It's already exist in table): ${response.data.skipped_urls.join(', ')}`);
+            }
             onRefresh?.();
         } catch (e) {
             console.error(e);

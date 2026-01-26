@@ -37,18 +37,22 @@ class LinkController extends Controller
     public function store(Request $request, $projectId): JsonResponse
     {
         $request->validate([
-            'urls' => 'required|array',
-            'urls.*' => 'url|max:255',
-            'type' => 'required|string|in:backlinks,citations',
+            'urls'   => 'required|array|min:1',
+            'urls.*' => 'required|url|max:255|distinct',
+            'type'   => 'required|string|in:backlinks,citations',
         ]);
 
         $project = Project::findOrFail($projectId);
-
-        $created = $this->linkService->addUrls($project, $request->urls, $request->type);
+        $result = $this->linkService->addUrls($project, $request->urls, $request->type);
 
         return response()->json([
-            'message' => 'Link URLs queued for indexing check.',
-            'urls'    => $created,
+            'message' => 'Processing complete.',
+            'data'    => [
+                'added_count'   => count($result['added']),
+                'skipped_count' => count($result['skipped']),
+                'added_urls'    => $result['added'],
+                'skipped_urls'  => $result['skipped'],
+            ]
         ], 201);
     }
 
