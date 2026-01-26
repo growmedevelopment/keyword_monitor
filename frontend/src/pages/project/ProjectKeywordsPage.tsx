@@ -126,23 +126,45 @@ export default function ProjectKeywordsPage() {
 
         try {
             setAddingKeywords(true);
+
+            // 1. Call the service
             const response = await keywordService.create(id, newKeywords, groupId);
 
-            const createdKeywords = response.keywords;
+            // 2. Destructure the "Smart Response" data
+            const {
+                added_count,
+                skipped_count,
+                added_keywords,
+                skipped_keywords,
+            } = response.data;
 
-            setProject((prev) =>
-                prev
-                    ? { ...prev, keywords: [...prev.keywords, ...createdKeywords] }
-                    : prev
-            );
+            // 3. Update State (Add only the NEW ones)
+            if (added_count > 0) {
+                setProject((prev) =>
+                    prev
+                        ? { ...prev, keywords: [...prev.keywords, ...added_keywords] }
+                        : prev
+                );
+            }
 
-            toast.success("Keywords added successfully!");
+            // 4. Smart User Feedback
+            if (added_count > 0 && skipped_count === 0) {
+                toast.success(`Successfully added ${added_count} keywords!`);
+
+            } else if (added_count > 0 && skipped_count > 0) {
+                toast.success(`Added ${added_count} keywords. Skipped ${skipped_count} duplicates. ${skipped_keywords.join(',')}`);
+
+            } else if (added_count === 0 && skipped_count > 0) {
+                toast.error(`All ${skipped_count} keywords were duplicates and skipped.`);
+            }
+
         } catch (error: any) {
             console.error("Bulk keyword add failed", error);
             toast.error(error?.response?.data?.message || "Failed to add keywords");
+        } finally {
+            setAddingKeywords(false);
+            setDialogOpen(false);
         }
-        setAddingKeywords(false);
-        setDialogOpen(false);
     };
 
     return (
