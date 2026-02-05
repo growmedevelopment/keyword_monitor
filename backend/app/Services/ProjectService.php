@@ -7,7 +7,6 @@ use App\Http\Resources\ProjectsResource;
 use App\Http\Resources\ProjectViewResource;
 use App\Models\Project;
 use App\Models\User;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -114,5 +113,23 @@ class ProjectService
     public function getProjectName (int $project_id): string {
         return Project::where('user_id', auth()->id())->findOrFail($project_id)->name;
 
+    }
+
+    /**
+     * Update project location details.
+     */
+    public function updateLocation(int $projectId, array $data): Project
+    {
+        // Find the project and ensure it belongs to the authenticated user
+        $project = Project::where('user_id', auth()->id())->findOrFail($projectId);
+
+        // Update only the location-related fields
+        $project->update([
+            'country'       => $data['country'],
+            'location_code' => $data['location_code'],
+            'location_name' => $data['location_name'],
+        ]);
+
+        return $project;
     }
 }

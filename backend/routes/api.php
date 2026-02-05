@@ -47,6 +47,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/projects/{project}/name', [ProjectController::class, 'getProjectName']);
     Route::delete('/projects/{project}', [ProjectController::class, 'destroy']);
     Route::patch('/projects/{project}/restore', [ProjectController::class, 'restore']);
+    Route::patch('/projects/{project}/location', [ProjectController::class, 'updateLocation']);
 
     /*
     |--------------------------------------------------------------------------
