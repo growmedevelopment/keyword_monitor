@@ -17,3 +17,10 @@ export interface Project {
     backlinks_count?: number;
     citations_count?: number;
 }
+
+
+export interface ProjectLocationUpdate {
+    country: string;
+    location_code: number;
+    location_name: string;
+}

@@ -1,5 +1,5 @@
 import axios from '../axios';
-import type {Project} from "../components/types/projectTypes.ts";
+import type {Project, ProjectLocationUpdate} from "../components/types/projectTypes.ts";
 import type {Dayjs} from "dayjs";
 const API = import.meta.env.VITE_API_BACKEND_ENDPOINT
 
@@ -58,8 +58,13 @@ const projectService = {
     },
 
     async restore (id: number) {
-        const res = await axios.patch(`${API}/api/projects/${id}/restore`);
-        return res.data;
+        const response = await axios.patch(`${API}/api/projects/${id}/restore`);
+        return response.data;
+    },
+
+    async updateLocation(id: number, newLocation: ProjectLocationUpdate) {
+        const response = await axios.patch(`${API}/api/projects/${id}/location`, newLocation);
+        return response.data;
     }
 };
 

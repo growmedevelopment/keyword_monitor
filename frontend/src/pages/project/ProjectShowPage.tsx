@@ -1,15 +1,16 @@
-import { useCallback, useEffect, useState } from "react";
-import { useParams, Link as RouterLink } from "react-router-dom";
-import { Box, Grid, Typography, Badge, Paper, Stack, CardActionArea } from "@mui/material";
+import {useCallback, useEffect, useState} from "react";
+import {Link as RouterLink, useParams} from "react-router-dom";
+import {Badge, Box, CardActionArea, Grid, Paper, Stack, Typography} from "@mui/material";
 import LinkIcon from "@mui/icons-material/Link";
 import MonitorHeartIcon from '@mui/icons-material/MonitorHeart';
 import QueryStatsIcon from '@mui/icons-material/QueryStats';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import projectService from "../../services/projectService.ts";
-import type { Project } from "../../components/types/projectTypes.ts";
+import type {Project, ProjectLocationUpdate} from "../../components/types/projectTypes.ts";
 import ProjectDetails from "../../components/Project/ProjectDetails.tsx";
 import DataStateHandler from "../../components/Common/DataStateHandler.tsx";
 import BackButton from "../../components/Common/BackButton.tsx";
+import toast from "react-hot-toast";
 
 
 export default function ProjectShowPage() {
@@ -27,6 +28,29 @@ export default function ProjectShowPage() {
             .catch(() => setError("Failed to load project"))
             .finally(() => setLoading(false));
     }, [id]);
+
+    const updateProjectLocation = useCallback(async (locationData: ProjectLocationUpdate) => {
+        if (!id || !project) return;
+
+        const updatePromise = projectService.updateLocation(project.id, locationData);
+
+        await toast.promise(updatePromise, {
+            loading: 'Updating location...',
+            success: (response) => {
+                setProject(response.project);
+                return response.message || "Location updated successfully!";
+            },
+            error: (err) => {
+                return err?.response?.data?.message || err?.response?.data?.error || "Failed to update location";
+            }
+        });
+
+        try {
+            await updatePromise;
+        } catch (error) {
+            console.error("Update failed:", error);
+        }
+    }, [id, project]);
 
     useEffect(() => {
         loadProject();
@@ -78,7 +102,7 @@ export default function ProjectShowPage() {
                                     <Typography variant="h6" sx={{ mb: 3, fontWeight: 700, color: '#334155' }}>
                                         Project Overview
                                     </Typography>
-                                    <ProjectDetails project={projectData} />
+                                    <ProjectDetails project={projectData} onLocationUpdate={updateProjectLocation} />
                                 </Paper>
                             </Grid>
 

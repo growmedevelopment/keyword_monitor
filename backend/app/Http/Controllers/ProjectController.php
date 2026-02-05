@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Project;
+use App\Http\Resources\ProjectViewResource;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Services\ProjectService;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
+
 
 class ProjectController extends Controller
 {
@@ -82,8 +82,32 @@ class ProjectController extends Controller
     public function getProjectName(int $project_id): JsonResponse {
 
         return response()->json([
-            'project_name' => $this->projectService->getProjectName($project_id)
+            'project_name' => $this->projectService->getProjectName($project_id),
         ]);
+
+    }
+
+    public function updateLocation (Request $request, int $project_id, ): ?JsonResponse {
+
+        $validated = $request->validate([
+            'country'       => 'required|string|max:10',
+            'location_code' => 'required|integer',
+            'location_name' => 'required|string|max:255',
+        ]);
+
+        try {
+            $project = $this->projectService->updateLocation($project_id, $validated);
+
+            return response()->json([
+                'message' => 'Location updated successfully',
+                'project' => new ProjectViewResource($project)
+            ]);
+
+        } catch ( ModelNotFoundException $e) {
+            return response()->json(['error' => 'Project not found or unauthorized'], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'An error occurred during update'], 500);
+        }
 
     }
 
