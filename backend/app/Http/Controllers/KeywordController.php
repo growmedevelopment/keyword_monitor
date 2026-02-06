@@ -87,15 +87,16 @@ class KeywordController extends Controller
                     'skipped_count'    => count($existingKeywords),
                     'added_keywords'   => $addedKeywords,
                     'skipped_keywords' => $existingKeywords,
-                ]
+                ],
             ], 201);
 
         } catch (\Throwable $e) {
             return response()->json([
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
+
     public function show(Request $request, string $id): JsonResponse
     {
         $keyword = Keyword::with([
@@ -122,7 +123,7 @@ class KeywordController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'keyword and all related results have been deleted'
+                'message' => 'keyword and all related results have been deleted',
             ]);
         }catch (\Exception $e) {
             return response()->json([
@@ -165,6 +166,18 @@ class KeywordController extends Controller
         return response()->json($keyword);
     }
 
+    /**
+     * Get only the IDs of the groups assigned to the keyword.
+     * This is used by the frontend to set the "originalGroupsRef" baseline.
+     */
+    public function getAssignedGroups(Request $request, string $id): JsonResponse
+    {
+        $keyword = Keyword::findOrFail($id);
+
+        $assignedIds = $keyword->keyword_groups()->pluck('keyword_groups.id');
+
+        return response()->json($assignedIds);
+    }
 
 }
 

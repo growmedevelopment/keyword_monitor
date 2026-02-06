@@ -6,28 +6,29 @@ import keywordGroupService from "../../../services/keywordGroupService.ts";
 import toast from "react-hot-toast";
 
 export const GroupCell = (
-    props: ICellRendererParams<Keyword> & { groups: KeywordGroup[] }
+    props: ICellRendererParams<Keyword>
 ) => {
-    const [selectedGroupId, setSelectedGroupId] = useState<number | null>(
-        props.data?.keyword_group_id ?? null
+    const currentGroups = (props.data?.keyword_groups as any) ?? [];
+    const [selectedGroupIds, setSelectedGroupIds] = useState<number[]>(
+        Array.isArray(currentGroups)
+            ? currentGroups.map((g: any) => g.id)
+            : []
     );
 
-    async function assignKeywordToGroup(keywordId: number, groupId: number | null) {
+    async function assignKeywordToGroups(keywordId: number, groupsId: number[]) {
         try {
-            if (!groupId) {
-                const response = await keywordGroupService.unsetProjectKeywordGroup(keywordId);
-                if (response.status === "success") {
-                    toast.success(response.message);
-                    setSelectedGroupId(null);
-                }
-                return;
-            }
-            const response = await keywordGroupService.setProjectKeywordGroup(keywordId, groupId);
+
+            const response = await keywordGroupService.setProjectKeywordGroup(keywordId, groupsId);
+
             if (response.status === "success") {
-                toast.success(response.message);
+                toast.success("Groups updated");
+
+                props.data!.keyword_groups = props.context.keywordGroups.filter((g: KeywordGroup) =>
+                    groupsId.includes(g.id)
+                );
             }
         } catch (error) {
-            toast.error("Failed to assign keyword group");
+            toast.error("Failed to assign keyword groups");
             console.error(error);
         }
     }
@@ -35,10 +36,10 @@ export const GroupCell = (
     return (
         <KeywordTagSelector
             groups={props.context.keywordGroups || []}
-            selectedGroupId={selectedGroupId}
-            onChange={(groupId) => {
-                setSelectedGroupId(groupId);
-                assignKeywordToGroup(props.data!.id, groupId).then();
+            selectedGroupIds={selectedGroupIds}
+            onChange={(groupsId) => {
+                setSelectedGroupIds(groupsId);
+                assignKeywordToGroups(props.data!.id, groupsId).then();
             }}
         />
     );

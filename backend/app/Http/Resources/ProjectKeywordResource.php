@@ -14,9 +14,10 @@ class ProjectKeywordResource extends JsonResource
             'keyword' => $this->keyword,
             'status_message' => $this->status_message,
             'status_code' => $this->status_code,
-            'keyword_group_id' => $this->keyword_groups?->id,
-            'keyword_group_name' => $this->keyword_groups?->name,
-            'keyword_group_color' => $this->keyword_groups?->color,
+            'keyword_groups' => $this->keyword_groups->map(fn($g) => ['id' => $g->id, 'name' => $g->name, 'color' => $g->color]),
+//            'keyword_group_id' => $this->keyword_groups?->id,
+//            'keyword_group_name' => $this->keyword_groups?->name,
+//            'keyword_group_color' => $this->keyword_groups?->color,
             'results' => KeywordRankResultResource::collection(
                 $this->whenLoaded('keywordsRank')
             ),

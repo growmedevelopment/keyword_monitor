@@ -29,7 +29,7 @@ const keywordGroupService = {
         return response.data;
     },
 
-    async setProjectKeywordGroup(keyword_id: number, keyword_groups_id: number): Promise<Response> {
+    async setProjectKeywordGroup(keyword_id: number, keyword_groups_id: number[]): Promise<Response> {
         const response = await axios.post(`${API}/api/keyword-groups/set-for-keyword`, {
             keyword_id,
             keyword_groups_id
@@ -37,10 +37,10 @@ const keywordGroupService = {
         return response.data;
     },
 
-    async unsetProjectKeywordGroup(keyword_id: number): Promise<{status: string, message: string}> {
-        const response = await axios.post(`${API}/api/keyword-groups/unset-for-keyword/${keyword_id}`);
-        return response.data;
-    },
+    // async unsetProjectKeywordGroup(keyword_id: number): Promise<{status: string, message: string}> {
+    //     const response = await axios.post(`${API}/api/keyword-groups/unset-for-keyword/${keyword_id}`);
+    //     return response.data;
+    // },
 
 };
 

@@ -52,6 +52,10 @@ const keywordService = {
     },
 
 
+    async getAssignedGroups(keywordId: string): Promise<number[]> {
+        const response = await axios.get(`${API}/api/keywords/${keywordId}/groups/assigned`);
+        return response.data; // Expected: [1, 2, 3]
+    },
 
     async deleteFromProject(keywordId: number): Promise<DeleteResponse> {
         const response = await axios.delete(`${API}/api/keywords/${keywordId}`);
