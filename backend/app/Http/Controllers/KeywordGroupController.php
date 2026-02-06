@@ -63,8 +63,9 @@ class KeywordGroupController extends Controller
     {
         try {
             $data = $request->validate([
-                'keyword_id'        => 'required|integer',
-                'keyword_groups_id' => 'required|integer',
+                'keyword_id'          => 'required|integer|exists:keywords,id',
+                'keyword_groups_id'   => 'present|array',
+                'keyword_groups_id.*' => 'integer|exists:keyword_groups,id',
             ]);
 
             $this->service->setKeywordGroup($data);

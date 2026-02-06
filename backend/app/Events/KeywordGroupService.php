@@ -44,7 +44,7 @@ class KeywordGroupService
     public function setKeywordGroup(array $data): void
     {
         $keyword = Keyword::findOrFail($data['keyword_id']);
-        $keyword->update(['keyword_group_id' => $data['keyword_groups_id']]);
+        $keyword->keyword_groups()->sync($data['keyword_groups_id']);
     }
 
     public function unsetKeywordGroup(int $keywordId): void

@@ -50,8 +50,8 @@ export function buildColumnDefs(
         },
         {
             headerName: "Group/Tag",
-            width: 150,
-            valueGetter: (p) => p.data?.keyword_group_name,
+            width: 200,
+            valueGetter: (p) => p.data?.keyword_groups,
             cellRenderer: GroupCell,
         },
         {

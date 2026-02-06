@@ -11,7 +11,10 @@ import {
     FormControl,
     InputLabel,
     Chip,
-    Box
+    Box,
+    Checkbox,
+    ListItemText,
+    type SelectChangeEvent
 } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useParams } from "react-router-dom";
@@ -19,13 +22,12 @@ import tinycolor from 'tinycolor2';
 
 import keywordGroupService from "../../../services/keywordGroupService.ts";
 import type { KeywordGroup } from "../../types/keywordTypes.ts";
-import {getUniqueKeywords, parseRawKeywords, validateKeywordList} from "../../../pages/project/KeywordHelpers.ts";
-
-
+import { getUniqueKeywords, parseRawKeywords, validateKeywordList } from "../../../pages/project/KeywordHelpers.ts";
 
 interface Props {
     onClose: () => void;
-    onSubmit: (keywords: string[], groupId: number | null) => void;
+    // Updated to accept an array of group IDs
+    onSubmit: (keywords: string[], groupIds: number[]) => void;
 }
 
 export default function AddKeywordDialog({ onClose, onSubmit }: Props) {
@@ -34,13 +36,15 @@ export default function AddKeywordDialog({ onClose, onSubmit }: Props) {
     // Form State
     const [input, setInput] = useState('');
     const [keywordGroups, setKeywordGroups] = useState<KeywordGroup[]>([]);
-    const [selectedGroup, setSelectedGroup] = useState<number | null>(null);
+
+    // Changed from number | null to number[] for multi-select
+    const [selectedGroups, setSelectedGroups] = useState<number[]>([]);
 
     // Validation State
     const [error, setError] = useState<string | null>(null);
     const [validCount, setValidCount] = useState(0);
 
-    // 1. Fetch Groups on Mount
+    // Fetch Groups on Mount
     useEffect(() => {
         const fetchGroups = async () => {
             if (!id) return;
@@ -54,12 +58,10 @@ export default function AddKeywordDialog({ onClose, onSubmit }: Props) {
         fetchGroups();
     }, [id]);
 
-    // 2. Debounced Validation (Runs 500ms after typing stops)
+    // Validation Effect (Remains the same)
     useEffect(() => {
         const timer = setTimeout(() => {
             setError(null);
-
-            // Note: input is already lowercased via onChange below
             const rawKeywords = parseRawKeywords(input);
 
             if (rawKeywords.length === 0) {
@@ -67,46 +69,43 @@ export default function AddKeywordDialog({ onClose, onSubmit }: Props) {
                 return;
             }
 
-            // Check Format (Length rules)
             const { valid, invalid } = validateKeywordList(rawKeywords);
 
             if (invalid.length > 0) {
-                // Warning about invalid formats
-                setError(`Found ${invalid.length} invalid keyword(s) (too short/long): "${invalid[0]}"...`);
+                setError(`Found ${invalid.length} invalid keyword(s): "${invalid[0]}"...`);
             }
 
-            // Check Duplicates within the list
             const unique = getUniqueKeywords(valid);
             setValidCount(unique.keywords.length);
 
-            // Prioritize duplicate warnings if format is okay
             if (invalid.length === 0 && unique.errors.length > 0) {
                 setError(`Found and removed ${unique.errors.length} duplicate(s).`);
             }
-
         }, 500);
 
         return () => clearTimeout(timer);
     }, [input]);
 
-    // 3. Synchronous Submit (Runs immediately on click)
+    const handleGroupChange = (event: SelectChangeEvent<number[]>) => {
+        const { target: { value } } = event;
+        // Material UI handles the array conversion automatically for multiple select
+        setSelectedGroups(typeof value === 'string' ? value.split(',').map(Number) : value);
+    };
+
     const handleSubmit = () => {
         setError(null);
-
         const rawKeywords = parseRawKeywords(input);
-
-        // Final Format Check
         const { valid, invalid } = validateKeywordList(rawKeywords);
+
         if (invalid.length > 0) {
             setError(`Cannot submit. Fix ${invalid.length} invalid keyword(s).`);
             return;
         }
 
-        // Final Deduplication
         const unique = getUniqueKeywords(valid);
 
         if (unique.keywords.length > 0) {
-            onSubmit(unique.keywords, selectedGroup);
+            onSubmit(unique.keywords, selectedGroups);
             setInput('');
             onClose();
         }
@@ -121,7 +120,6 @@ export default function AddKeywordDialog({ onClose, onSubmit }: Props) {
                     Enter or paste keywords below. Each line will be added as a keyword.
                 </Typography>
 
-                {/* Live Count Feedback */}
                 <Box mb={1} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Typography variant="caption" sx={{ fontWeight: 'bold', color: validCount > 0 ? 'success.main' : 'text.secondary' }}>
                         Keywords to add: {validCount}
@@ -131,7 +129,7 @@ export default function AddKeywordDialog({ onClose, onSubmit }: Props) {
                 <TextField
                     placeholder="Enter keywords here..."
                     multiline
-                    minRows={10}
+                    minRows={8}
                     fullWidth
                     value={input}
                     onChange={(e) => setInput(e.target.value.toLowerCase())}
@@ -140,44 +138,56 @@ export default function AddKeywordDialog({ onClose, onSubmit }: Props) {
                 />
 
                 <FormControl fullWidth margin="normal">
-                    <InputLabel id="keyword-group-label">Keyword Group</InputLabel>
+                    <InputLabel id="keyword-group-label">Keyword Groups</InputLabel>
                     <Select
                         labelId="keyword-group-label"
-                        value={selectedGroup ?? ''}
-                        label="Keyword Group"
-                        onChange={(e) => {
-                            const val = e.target.value as string | number;
-                            setSelectedGroup(val === '' ? null : Number(val));
-                        }}
+                        multiple
+                        value={selectedGroups}
+                        label="Keyword Groups"
+                        onChange={handleGroupChange}
+                        renderValue={(selected) => (
+                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                {selected.map((value) => {
+                                    const group = keywordGroups.find(g => g.id === value);
+                                    if (!group) return null;
+                                    const bgColor = group.color || '#ccc';
+                                    return (
+                                        <Chip
+                                            key={value}
+                                            label={group.name}
+                                            size="small"
+                                            sx={{
+                                                backgroundColor: bgColor,
+                                                color: tinycolor(bgColor).isLight() ? '#000' : '#fff',
+                                                height: 22
+                                            }}
+                                        />
+                                    );
+                                })}
+                            </Box>
+                        )}
                         MenuProps={{
-                            PaperProps: {
-                                style: {
-                                    maxHeight: 250,
-                                    overflowY: 'auto',
-                                },
-                            },
+                            PaperProps: { style: { maxHeight: 250 } },
                         }}
                     >
-                        <MenuItem value="">
-                            <em>None</em>
-                        </MenuItem>
                         {keywordGroups.map((group) => {
+                            const isChecked = selectedGroups.indexOf(group.id) > -1;
                             const bgColor = group.color || '#ccc';
-                            const textColor = tinycolor(bgColor).isLight() ? '#000' : '#fff';
 
                             return (
                                 <MenuItem key={group.id} value={group.id}>
-                                    <Chip
-                                        label={group.name}
-                                        size="small"
-                                        sx={{
-                                            backgroundColor: bgColor,
-                                            color: textColor,
-                                            fontWeight: 500,
-                                            borderRadius: 1,
-                                            cursor: 'pointer'
-                                        }}
-                                    />
+                                    <Checkbox checked={isChecked} size="small" />
+                                    <ListItemText>
+                                        <Chip
+                                            label={group.name}
+                                            size="small"
+                                            sx={{
+                                                backgroundColor: bgColor,
+                                                color: tinycolor(bgColor).isLight() ? '#000' : '#fff',
+                                                fontWeight: 500,
+                                            }}
+                                        />
+                                    </ListItemText>
                                 </MenuItem>
                             );
                         })}

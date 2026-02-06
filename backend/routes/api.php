@@ -76,6 +76,7 @@ Route::middleware('auth:sanctum')->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::get('/keywords/{keyword}', [KeywordController::class, 'show']);
+    Route::get('/keywords/{keyword}/groups/assigned', [KeywordController::class, 'getAssignedGroups']);
     Route::post('/keywords/{keyword}/filteredResults', [KeywordController::class, 'filteredResults']);
     Route::delete('/keywords/{keyword}', [KeywordController::class, 'destroy']);
 

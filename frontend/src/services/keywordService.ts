@@ -21,10 +21,10 @@ export interface KeywordCreateResponse {
 
 
 const keywordService = {
-    async create(projectId: string, keywords: string[], groupId: number | null): Promise<KeywordCreateResponse> {
+    async create(projectId: string, keywords: string[], groupId: number[] | null): Promise<KeywordCreateResponse> {
         const response = await axios.post(`${API}/api/projects/${projectId}/keywords/create`, {
             keywords,
-            keyword_group_id: groupId
+            keyword_groups: groupId
         });
 
         return response.data;
@@ -52,6 +52,10 @@ const keywordService = {
     },
 
 
+    async getAssignedGroups(keywordId: string): Promise<number[]> {
+        const response = await axios.get(`${API}/api/keywords/${keywordId}/groups/assigned`);
+        return response.data; // Expected: [1, 2, 3]
+    },
 
     async deleteFromProject(keywordId: number): Promise<DeleteResponse> {
         const response = await axios.delete(`${API}/api/keywords/${keywordId}`);

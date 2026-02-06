@@ -121,7 +121,7 @@ export default function ProjectKeywordsPage() {
         };
     }, [id]);
 
-    const handleAddKeyword = async (newKeywords: string[], groupId: number | null) => {
+    const handleAddKeyword = async (newKeywords: string[], groupId: number[] | null) => {
         if (!project || !id) return;
 
         try {
