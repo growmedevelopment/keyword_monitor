@@ -18,50 +18,47 @@ class KeywordSubmissionService
 
     /**
      * Submit a new keyword for tracking via the DataForSEO API.
+     * * @param Project $project      The project to associate the keyword with.
      *
-     * This method retrieves API credentials, creates and attaches the keyword
-     * to the given project, builds the API payload, and submits it to DataForSEO.
-     * A short delay is added to respect API rate limits.
+     * @param string  $newKeyword   The keyword string.
+     * @param array   $keywordGroupIds  Array of IDs for many-to-many groups.
      *
-     * @param Project $project     The project to associate the keyword with.
-     * @param string  $newKeyword  The keyword string to be submitted for tracking.
-     *
-     * @return Keyword             The created Keyword model instance.
-     *
-     * @throws \Exception          If credentials are missing or API submission fails.
+     * @return Keyword             The newly created and refreshed Keyword model instance.
      */
-    public function submitKeyword(Project $project, string $newKeyword, ?int $keywordGroupId = null): Keyword
+    public function submitKeyword(Project $project, string $newKeyword, array $keywordGroupIds = []): Keyword
     {
         $credentials = CredentialsService::get();
-        $keyword = $this->createAndAttachKeyword($project, $newKeyword, $keywordGroupId);
+
+        // Use the updated helper to create keyword and link groups
+        $keyword = $this->createAndAttachKeyword($project, $newKeyword, $keywordGroupIds);
 
         $payload = $this->buildPayload($keyword, $project);
         $this->submitToDataForSeo($payload, $keyword, $project, $credentials);
+
         usleep(200000); // Respect API rate limits
 
         return $keyword;
     }
 
     /**
-     * Create a new keyword and attach it to the given project.
-     *
-     * This method creates a keyword record associated with the provided project,
-     * using the project's location code, and returns the freshly created Keyword model.
-     *
-     * @param Project $project     The project to which the keyword will be attached.
-     * @param string  $newKeyword  The keyword string to be stored in the database.
-     *
-     * @return Keyword             The newly created and refreshed Keyword model instance.
+     * Create a new keyword and link it to multiple groups via pivot table.
      */
-    private function createAndAttachKeyword(Project $project, string $newKeyword,  ?int $keywordGroupId = null): Keyword
+    private function createAndAttachKeyword(Project $project, string $newKeyword, array $keywordGroupIds = []): Keyword
     {
-        $keyword = $project->keywords()->create([
-            'keyword'  => Str::lower($newKeyword),
-            'location' => $project->location_code,
-            'keyword_group_id'  => $keywordGroupId,
-        ]);
+        return DB::transaction(static function () use ($project, $newKeyword, $keywordGroupIds) {
+            // 1. Create the keyword (the old keyword_group_id column is removed)
+            $keyword = $project->keywords()->create([
+                'keyword'  => Str::lower($newKeyword),
+                'location' => $project->location_code,
+            ]);
 
-        return $keyword->refresh();
+            // 2. Attach multiple groups to the pivot table
+            if (!empty($keywordGroupIds)) {
+                $keyword->keyword_groups()->attach($keywordGroupIds);
+            }
+
+            return $keyword->refresh();
+        });
     }
     /**
      * Build the payload array for submitting a keyword task to the DataForSEO API.
@@ -160,34 +157,28 @@ class KeywordSubmissionService
 
     public function removeKeyword(Keyword $keyword): void
     {
-
         DB::transaction(static function () use ($keyword) {
-            // Collect task IDs for this keyword
+
             $taskIds = DataForSeoTask::query()
                 ->where('keyword_id', $keyword->id)
                 ->pluck('id');
 
-            // 1) Delete results for those tasks
             if ($taskIds->isNotEmpty()) {
                 DataForSeoResult::query()
                     ->whereIn('data_for_seo_task_id', $taskIds)
                     ->delete();
             }
 
-            // 2) Delete tasks
             DataForSeoTask::query()
                 ->where('keyword_id', $keyword->id)
                 ->delete();
 
-            // 3) Delete ranks
             KeywordRank::query()
                 ->where('keyword_id', $keyword->id)
                 ->delete();
 
-            // 4) Finally, delete the keyword (hard delete)
             $keyword->forceDelete();
         });
-
     }
 
 

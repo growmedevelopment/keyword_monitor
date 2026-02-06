@@ -21,10 +21,10 @@ export interface KeywordCreateResponse {
 
 
 const keywordService = {
-    async create(projectId: string, keywords: string[], groupId: number | null): Promise<KeywordCreateResponse> {
+    async create(projectId: string, keywords: string[], groupId: number[] | null): Promise<KeywordCreateResponse> {
         const response = await axios.post(`${API}/api/projects/${projectId}/keywords/create`, {
             keywords,
-            keyword_group_id: groupId
+            keyword_groups: groupId
         });
 
         return response.data;

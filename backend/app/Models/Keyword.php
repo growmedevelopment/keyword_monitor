@@ -56,7 +56,6 @@ class Keyword extends Model
 
     public function keyword_groups(): BelongsToMany
     {
-//        return $this->belongsTo(KeywordGroup::class, 'keyword_group_id');
         return $this->belongsToMany(KeywordGroup::class, 'keyword_keyword_group');
     }
 
