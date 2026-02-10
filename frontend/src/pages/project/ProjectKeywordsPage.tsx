@@ -27,6 +27,7 @@ export default function ProjectKeywordsPage() {
         dayjs(),
     ]);
     const [mode, setMode] = useState<"range" | "compare">(project?.mode?? "range");
+    const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
 
     const loadProject = useCallback(() => {
         if (!id) return;
@@ -216,12 +217,23 @@ export default function ProjectKeywordsPage() {
                         </Box>
 
                         <Box sx={{ mb: 4 }}>
-                            <KeywordGroups keywordGroups={projectData.keyword_groups}/>
+                            <KeywordGroups
+                                keywordGroups={projectData.keyword_groups}
+                                selectedGroupId={selectedGroupId}
+                                onSelectGroup={setSelectedGroupId}
+                            />
                         </Box>
 
                         <Box position="relative">
                             <ProjectKeywordsSection
-                                keywords={projectData.keywords}
+                                keywords={selectedGroupId
+                                    ? projectData.keywords.filter(k =>
+                                        Array.isArray(k.keyword_groups)
+                                            ? k.keyword_groups.some(g => g.id === selectedGroupId)
+                                            : (k.keyword_groups as any)?.id === selectedGroupId
+                                    )
+                                    : projectData.keywords
+                                }
                                 keywordGroups={projectData.keyword_groups}
                                 onAddKeyword={() => setDialogOpen(true)}
                                 selectedDateRange={dateRange}
