@@ -32,7 +32,7 @@ export default function KeywordTable({keywords, keywordGroups, dateRange, mode}:
             const cols = buildColumnDefs(dateRange[0], dateRange[1], mode);
             setColumnDefs(cols);
         }
-    }, [dateRange, mode]);
+    }, [dateRange, mode, keywordGroups]);
 
     if (!keywords || keywords.length === 0) {
         return <p>No keywords added yet.</p>;

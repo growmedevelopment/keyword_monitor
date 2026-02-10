@@ -11,12 +11,14 @@ interface KeywordGroupsProps {
     keywordGroups: KeywordGroup[];
     selectedGroupId?: number | null;
     onSelectGroup?: (id: number | null) => void;
+    onGroupsChange?: (groups: KeywordGroup[]) => void;
 }
 
 const KeywordGroups = ({
     keywordGroups: initialKeywordGroups,
     selectedGroupId,
     onSelectGroup,
+    onGroupsChange,
 }: KeywordGroupsProps) => {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [realKeywordGroups, setRealKeywordGroups] = useState<KeywordGroup[]>(initialKeywordGroups);
@@ -36,7 +38,11 @@ const KeywordGroups = ({
 
         startTransition(() => {
             setTempIdCounter((prev) => prev - 1);
-            setRealKeywordGroups((prev) => [...prev, tempGroup]);
+            setRealKeywordGroups((prev) => {
+                const updated = [...prev, tempGroup];
+                onGroupsChange?.(updated);
+                return updated;
+            });
             addOptimisticKeywordGroup(tempGroup);
         });
 
@@ -44,17 +50,27 @@ const KeywordGroups = ({
             const response = await keywordGroupService.create(newKeywordGroupData);
             const savedGroup = response.keyword_group;
 
+            if (!savedGroup || !savedGroup.id) {
+                throw new Error("Invalid response from server");
+            }
+
             startTransition(() => {
-                setRealKeywordGroups((prev) =>
-                    prev.map((group) => (group.id === tempId ? savedGroup : group))
-                );
+                setRealKeywordGroups((prev) => {
+                    const updated = prev.map((group) => (group.id === tempId ? savedGroup : group));
+                    onGroupsChange?.(updated);
+                    return updated;
+                });
             });
 
         } catch (error: any) {
             startTransition(() => {
-                setRealKeywordGroups((prev) => prev.filter((group) => group.id !== tempId));
+                setRealKeywordGroups((prev) => {
+                    const updated = prev.filter((group) => group.id !== tempId);
+                    onGroupsChange?.(updated);
+                    return updated;
+                });
             });
-            toast.error(error.response?.data?.error || "Network error");
+            toast.error(error.response?.data?.error || error.message || "Network error");
         }
     };
 
@@ -70,7 +86,11 @@ const KeywordGroups = ({
         const oldGroups = [...realKeywordGroups];
 
         startTransition(() => {
-            setRealKeywordGroups((prev) => prev.filter((group) => group.id !== id));
+            setRealKeywordGroups((prev) => {
+                const updated = prev.filter((group) => group.id !== id);
+                onGroupsChange?.(updated);
+                return updated;
+            });
         });
 
         try {
@@ -78,6 +98,7 @@ const KeywordGroups = ({
             toast.success("Keyword group deleted successfully");
         } catch (error: any) {
             setRealKeywordGroups(oldGroups);
+            onGroupsChange?.(oldGroups);
             toast.error(error.response?.data?.error || "Failed to delete keyword group");
         } finally {
             setConfirmOpen(false);

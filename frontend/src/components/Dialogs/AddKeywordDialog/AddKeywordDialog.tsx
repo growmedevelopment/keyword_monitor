@@ -17,10 +17,7 @@ import {
     type SelectChangeEvent
 } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { useParams } from "react-router-dom";
 import tinycolor from 'tinycolor2';
-
-import keywordGroupService from "../../../services/keywordGroupService.ts";
 import type { KeywordGroup } from "../../types/keywordTypes.ts";
 import { getUniqueKeywords, parseRawKeywords, validateKeywordList } from "../../../pages/project/KeywordHelpers.ts";
 
@@ -28,14 +25,12 @@ interface Props {
     onClose: () => void;
     // Updated to accept an array of group IDs
     onSubmit: (keywords: string[], groupIds: number[]) => void;
+    keywordGroups: KeywordGroup[];
 }
 
-export default function AddKeywordDialog({ onClose, onSubmit }: Props) {
-    const { id } = useParams<{ id: string }>();
-
+export default function AddKeywordDialog({ onClose, onSubmit, keywordGroups }: Props) {
     // Form State
     const [input, setInput] = useState('');
-    const [keywordGroups, setKeywordGroups] = useState<KeywordGroup[]>([]);
 
     // Changed from number | null to number[] for multi-select
     const [selectedGroups, setSelectedGroups] = useState<number[]>([]);
@@ -43,20 +38,6 @@ export default function AddKeywordDialog({ onClose, onSubmit }: Props) {
     // Validation State
     const [error, setError] = useState<string | null>(null);
     const [validCount, setValidCount] = useState(0);
-
-    // Fetch Groups on Mount
-    useEffect(() => {
-        const fetchGroups = async () => {
-            if (!id) return;
-            try {
-                const groups = await keywordGroupService.getByProject(parseInt(id, 10));
-                setKeywordGroups(groups);
-            } catch (err) {
-                console.error("Failed to load keyword groups", err);
-            }
-        };
-        fetchGroups();
-    }, [id]);
 
     // Validation Effect (Remains the same)
     useEffect(() => {

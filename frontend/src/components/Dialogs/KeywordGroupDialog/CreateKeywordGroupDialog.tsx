@@ -3,7 +3,6 @@ import { useParams } from 'react-router-dom';
 import {Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Typography, Box, Stack} from '@mui/material';
 import { MuiColorInput } from 'mui-color-input';
 import toast from 'react-hot-toast';
-import keywordGroupService from '../../../services/keywordGroupService.ts';
 
 interface Props {
     isOpen: boolean;
@@ -21,7 +20,6 @@ export default function CreateKeywordGroupDialog({ isOpen, onClose, onCreate }: 
         color: '#ffffff',
         project_id: parseInt(id ?? '0', 10),
     });
-    const [loading, setLoading] = useState(false);
 
     const handleChange = (field: 'name' | 'color', value: string) => {
         setForm(prev => ({ ...prev, [field]: value }));
@@ -34,19 +32,9 @@ export default function CreateKeywordGroupDialog({ isOpen, onClose, onCreate }: 
             return;
         }
 
-        setLoading(true);
-        try {
-            const response = await keywordGroupService.create(form);
-            toast.success(response.message || 'Keyword group created');
-
-            setForm({ name: '', color: '#ffffff', project_id: parseInt(id ?? '0', 10) });
-            onClose();
-            onCreate?.(form);
-        } catch (err: any) {
-            toast.error(err.response?.data?.details || 'Failed to create keyword group.');
-        } finally {
-            setLoading(false);
-        }
+        onCreate?.(form);
+        setForm({ name: '', color: '#ffffff', project_id: parseInt(id ?? '0', 10) });
+        onClose();
     };
 
     return (
@@ -76,8 +64,8 @@ export default function CreateKeywordGroupDialog({ isOpen, onClose, onCreate }: 
                 </form>
             </DialogContent>
             <DialogActions>
-                <Button onClick={onClose} disabled={loading}>Cancel</Button>
-                <Button onClick={handleSubmit} variant="contained" color="primary" disabled={loading}>
+                <Button onClick={onClose}>Cancel</Button>
+                <Button onClick={handleSubmit} variant="contained" color="primary">
                     Add Group
                 </Button>
             </DialogActions>

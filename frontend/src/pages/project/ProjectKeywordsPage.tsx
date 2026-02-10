@@ -221,6 +221,9 @@ export default function ProjectKeywordsPage() {
                                 keywordGroups={projectData.keyword_groups}
                                 selectedGroupId={selectedGroupId}
                                 onSelectGroup={setSelectedGroupId}
+                                onGroupsChange={(updatedGroups) => {
+                                    setProject(prev => prev ? { ...prev, keyword_groups: updatedGroups } : prev);
+                                }}
                             />
                         </Box>
 
@@ -262,6 +265,7 @@ export default function ProjectKeywordsPage() {
                             <AddKeywordDialog
                                 onClose={() => setDialogOpen(false)}
                                 onSubmit={handleAddKeyword}
+                                keywordGroups={projectData.keyword_groups}
                             />
                         }
                     </>

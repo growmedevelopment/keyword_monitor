@@ -32,7 +32,12 @@ class KeywordGroupController extends Controller
             $keywordGroup = $this->service->createGroup($data);
 
             return response()->json([
-                'keyword_group' => $keywordGroup,
+                'keyword_group' => [
+                    'id'         => $keywordGroup->id,
+                    'name'       => $keywordGroup->name,
+                    'color'      => $keywordGroup->color,
+                    'project_id' => $keywordGroup->project_id,
+                ],
                 'message'       => 'Keyword group created successfully',
             ], 201);
 
