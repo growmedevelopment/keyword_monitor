@@ -90,6 +90,16 @@ const KeywordGroups = ({
             <Paper sx={{ p: 2, mb: 3 }}>
                 <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
                     <Typography variant="h6">Keyword groups (tags)</Typography>
+                    {selectedGroupId !== null && (
+                        <Button
+                            size="small"
+                            onClick={() => onSelectGroup?.(null)}
+                            variant="text"
+                            sx={{ textTransform: "none" }}
+                        >
+                            Clear Filter
+                        </Button>
+                    )}
                 </Stack>
 
                 <Stack direction="row" flexWrap="wrap" gap={1} sx={{ mb: 2 }}>
