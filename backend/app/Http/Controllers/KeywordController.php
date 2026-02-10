@@ -138,12 +138,12 @@ class KeywordController extends Controller
         $startDate = $request->input('date_range.start_date');
         $endDate   = $request->input('date_range.end_date');
 
-        if (!$startDate || !$endDate) {
+        if ($mode !== 'latest' && (!$startDate || !$endDate)) {
             return response()->json(['error' => 'Missing date range'], 422);
         }
 
-        $start = Carbon::parse($startDate)->startOfDay();
-        $end   = Carbon::parse($endDate)->endOfDay();
+        $start = $startDate ? Carbon::parse($startDate)->startOfDay() : null;
+        $end   = $endDate ? Carbon::parse($endDate)->endOfDay() : null;
 
 
         $keyword = Keyword::with(['keywordsRank' => function ($q) use ($mode, $start, $end, $startDate, $endDate) {
@@ -159,7 +159,12 @@ class KeywordController extends Controller
                 });
             }
 
-            $q->orderBy('tracked_at', 'asc');
+            if ($mode === 'latest') {
+                $q->limit(2);
+                $q->orderBy('tracked_at', 'desc');
+            } else {
+                $q->orderBy('tracked_at', 'asc');
+            }
         }])->findOrFail($id);
 
         return response()->json($keyword);
