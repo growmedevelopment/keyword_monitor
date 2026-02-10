@@ -26,7 +26,7 @@ export default function ProjectKeywordsPage() {
         dayjs().subtract(3, "day"),
         dayjs(),
     ]);
-    const [mode, setMode] = useState<"range" | "compare">(project?.mode?? "range");
+    const [mode, setMode] = useState<"range" | "compare" | "latest">(project?.mode?? "latest");
     const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
 
     const loadProject = useCallback(() => {

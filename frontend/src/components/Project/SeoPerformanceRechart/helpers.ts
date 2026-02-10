@@ -10,10 +10,18 @@ import type {Keyword, KeywordGroup, KeywordRank, KeywordResult} from "../../type
 
 export const filterResultsByRange = (
     keywords: Keyword[],
-    [start, end]: [Dayjs, Dayjs]
+    [start, end]: [Dayjs, Dayjs],
+    mode: "range" | "compare" | "latest" = "range"
 ) => {
     return keywords.map((kw) => {
         const sourceResults = kw.results ?? kw.keywords_rank ?? [];
+
+        if (mode === "latest") {
+            return {
+                ...kw,
+                results: sourceResults.slice(0, 2),
+            };
+        }
 
         const filtered = sourceResults.filter((r) => {
             const t = dayjs(r.tracked_at);

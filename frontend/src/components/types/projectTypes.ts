@@ -10,7 +10,7 @@ export interface Project {
     location_name: string;
     keywords: Keyword[];
     keyword_groups: KeywordGroup[];
-    mode: 'range' | 'compare';
+    mode: 'range' | 'compare' | 'latest';
     created_at: string;
     deleted_at: string;
     keywords_count?: number;

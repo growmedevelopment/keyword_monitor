@@ -1,6 +1,6 @@
 import type { ColDef, ICellRendererParams } from "ag-grid-community";
 import CircularProgress from "@mui/material/CircularProgress";
-import { Dayjs } from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 import { Box, Link } from '@mui/material';
 import type { Keyword } from "../../types/keywordTypes";
 import {getPositionForExactDate, getUrlForToday} from "./helpers";
@@ -12,7 +12,8 @@ import RemoveKeywordCell from "./RemoveKeywordCell";
 export function buildColumnDefs(
     from: Dayjs,
     to: Dayjs,
-    mode: "range" | "compare"
+    mode: "range" | "compare" | "latest",
+    keywords: Keyword[] = []
 ): ColDef<Keyword>[] {
 
     // STATIC COLUMNS
@@ -135,6 +136,49 @@ export function buildColumnDefs(
                 cellRenderer: PositionWithTrend(toKey),
             },
 
+            removeCol,
+        ];
+    }
+
+    // LATEST MODE — two columns showing last 2 results
+    if (mode === "latest") {
+        const firstKw = keywords[0];
+        const latestTrackedAt = firstKw?.results?.[0]?.tracked_at;
+        const previousTrackedAt = firstKw?.results?.[1]?.tracked_at;
+
+        const latestHeader = latestTrackedAt ? dayjs(latestTrackedAt).format("MMM D") : "Latest Result";
+        const previousHeader = previousTrackedAt ? dayjs(previousTrackedAt).format("MMM D") : "Previous Result";
+
+        return [
+            ...staticCols,
+            {
+                headerName: previousHeader,
+                width: 130,
+                valueGetter: (p) => {
+                    const results = p.data?.results || [];
+                    return results.length >= 2 ? results[1].position : (results.length === 1 ? "-" : null);
+                },
+                cellRenderer: (p: ICellRendererParams) => {
+                    const results = p.data?.results || [];
+                    const date = results.length >= 2 ? results[1].tracked_at : null;
+                    if (!date) return <span>{p.value ?? "-"}</span>;
+                    return PositionWithTrend(dayjs(date).format("YYYY-MM-DD"))(p);
+                }
+            },
+            {
+                headerName: latestHeader,
+                width: 130,
+                valueGetter: (p) => {
+                    const results = p.data?.results || [];
+                    return results.length >= 1 ? results[0].position : null;
+                },
+                cellRenderer: (p: ICellRendererParams) => {
+                    const results = p.data?.results || [];
+                    const date = results.length >= 1 ? results[0].tracked_at : null;
+                    if (!date) return <span>{p.value ?? "-"}</span>;
+                    return PositionWithTrend(dayjs(date).format("YYYY-MM-DD"))(p);
+                }
+            },
             removeCol,
         ];
     }
