@@ -96,6 +96,10 @@ class ProjectService
                     });
                 }
 
+                if ($mode === 'latest') {
+                    $q->limit(2);
+                }
+
                 $q->orderBy('tracked_at', 'desc');
             },
         ])->findOrFail($id);

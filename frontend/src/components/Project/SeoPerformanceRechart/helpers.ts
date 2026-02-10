@@ -6,14 +6,22 @@ dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
 
 import type { SeoMetrics } from "./types";
-import type {Keyword, KeywordGroup, KeywordRank, KeywordResult} from "../../types/keywordTypes.ts";
+import type {Keyword} from "../../types/keywordTypes.ts";
 
 export const filterResultsByRange = (
     keywords: Keyword[],
-    [start, end]: [Dayjs, Dayjs]
+    [start, end]: [Dayjs, Dayjs],
+    mode: "range" | "compare" | "latest" = "range"
 ) => {
     return keywords.map((kw) => {
         const sourceResults = kw.results ?? kw.keywords_rank ?? [];
+
+        if (mode === "latest") {
+            return {
+                ...kw,
+                results: sourceResults.slice(0, 2),
+            };
+        }
 
         const filtered = sourceResults.filter((r) => {
             const t = dayjs(r.tracked_at);
@@ -27,19 +35,7 @@ export const filterResultsByRange = (
     });
 };
 
-export const buildMetrics = (keywords: {
-    id: number;
-    keyword: string;
-    status_code: number;
-    status_message: string;
-    project_id: number;
-    results: KeywordResult[];
-    keywords_rank: KeywordRank[];
-    keyword_groups: KeywordGroup;
-    keyword_group_id: KeywordGroup["id"] | null;
-    keyword_group_name: KeywordGroup["name"] | null;
-    keyword_group_color: KeywordGroup["color"] | null
-}[]): SeoMetrics => {
+export const buildMetrics = (keywords: Keyword[]): SeoMetrics => {
     const chartMap: Record<string, number[]> = {};
     const allRanks: number[] = [];
 

@@ -8,8 +8,8 @@ import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 
 interface Props {
     initialRange: [Dayjs | null, Dayjs | null];
-    mode: "range" | "compare";
-    onApply: (range: [Dayjs, Dayjs], mode: "range" | "compare") => void;
+    mode: "range" | "compare" | "latest";
+    onApply: (range: [Dayjs, Dayjs], mode: "range" | "compare" | "latest") => void;
 }
 
 export default function CalendarPicker({ initialRange, mode, onApply }: Props) {
@@ -17,7 +17,7 @@ export default function CalendarPicker({ initialRange, mode, onApply }: Props) {
     // -----------------------------
     // STATE
     // -----------------------------
-    const [pickerMode, setPickerMode] = useState(mode);
+    const [pickerMode, setPickerMode] = useState<"range" | "compare" | "latest">(mode);
     const [compareDates, setCompareDates] = useState<Date[]>([]);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
@@ -36,6 +36,7 @@ export default function CalendarPicker({ initialRange, mode, onApply }: Props) {
     // PRESETS
     // -----------------------------
     const presets = [
+        { label: "LAST 2 RESULTS", value: "latest" },
         { label: "YESTERDAY", value: [dayjs().subtract(1, "day"), dayjs().subtract(1, "day")] },
         { label: "LAST 2 DAYS", value: [dayjs().subtract(2, "day"), dayjs()] },
         { label: "7D", value: [dayjs().subtract(7, "day"), dayjs()] },
@@ -45,7 +46,8 @@ export default function CalendarPicker({ initialRange, mode, onApply }: Props) {
         { label: "1Y", value: [dayjs().subtract(12, "month"), dayjs()] }
     ];
 
-    const isActivePreset = (preset: [Dayjs, Dayjs]) => {
+    const isActivePreset = (preset: [Dayjs, Dayjs] | "latest") => {
+        if (preset === "latest") return pickerMode === "latest";
         if (pickerMode !== "range") return false;
         if (!range.from || !range.to) return false;
 
@@ -55,7 +57,11 @@ export default function CalendarPicker({ initialRange, mode, onApply }: Props) {
         );
     };
 
-    const applyPreset = (preset: [Dayjs, Dayjs]) => {
+    const applyPreset = (preset: [Dayjs, Dayjs] | "latest") => {
+        if (preset === "latest") {
+            setPickerMode("latest");
+            return;
+        }
         setPickerMode("range");
 
         const from = preset[0].toDate();
@@ -93,6 +99,12 @@ export default function CalendarPicker({ initialRange, mode, onApply }: Props) {
     // APPLY BUTTON
     // -----------------------------
     const apply = () => {
+        if (pickerMode === "latest") {
+            // For "latest", range doesn't matter much but we provide defaults to satisfy types
+            onApply([dayjs(), dayjs()], "latest");
+            setAnchorEl(null);
+            return;
+        }
         if (pickerMode === "range" && range.from && range.to) {
             onApply([dayjs(range.from), dayjs(range.to)], "range");
             setAnchorEl(null);
@@ -109,6 +121,7 @@ export default function CalendarPicker({ initialRange, mode, onApply }: Props) {
     // DATE LABEL FOR INPUT
     // -----------------------------
     const renderLabel = () => {
+        if (pickerMode === "latest") return "Last 2 Results";
         if (pickerMode === "range") {
             if (!range.from || !range.to) return "Select date range";
             return `${dayjs(range.from).format("MMM D")} – ${dayjs(range.to).format("MMM D")}`;
@@ -170,7 +183,7 @@ export default function CalendarPicker({ initialRange, mode, onApply }: Props) {
                     {/* PRESETS */}
                     <Box sx={{ display: "flex", gap: 1, mb: 2, flexWrap: "wrap" }}>
                         {presets.map((p) => {
-                            const v = p.value as [Dayjs, Dayjs];
+                            const v = p.value as [Dayjs, Dayjs] | "latest";
                             const active = isActivePreset(v);
 
                             return (

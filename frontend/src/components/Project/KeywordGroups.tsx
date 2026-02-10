@@ -7,7 +7,19 @@ import keywordGroupService from "../../services/keywordGroupService.ts";
 import CreateKeywordGroupDialog from "../Dialogs/KeywordGroupDialog/CreateKeywordGroupDialog.tsx";
 import ConfirmDialog from "../Common/ConfirmDialog.tsx";
 
-const KeywordGroups = ({ keywordGroups: initialKeywordGroups }: { keywordGroups: KeywordGroup[] }) => {
+interface KeywordGroupsProps {
+    keywordGroups: KeywordGroup[];
+    selectedGroupId?: number | null;
+    onSelectGroup?: (id: number | null) => void;
+    onGroupsChange?: (groups: KeywordGroup[]) => void;
+}
+
+const KeywordGroups = ({
+    keywordGroups: initialKeywordGroups,
+    selectedGroupId,
+    onSelectGroup,
+    onGroupsChange,
+}: KeywordGroupsProps) => {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [realKeywordGroups, setRealKeywordGroups] = useState<KeywordGroup[]>(initialKeywordGroups);
     const [tempIdCounter, setTempIdCounter] = useState(-1);
@@ -26,7 +38,11 @@ const KeywordGroups = ({ keywordGroups: initialKeywordGroups }: { keywordGroups:
 
         startTransition(() => {
             setTempIdCounter((prev) => prev - 1);
-            setRealKeywordGroups((prev) => [...prev, tempGroup]);
+            setRealKeywordGroups((prev) => {
+                const updated = [...prev, tempGroup];
+                onGroupsChange?.(updated);
+                return updated;
+            });
             addOptimisticKeywordGroup(tempGroup);
         });
 
@@ -34,17 +50,27 @@ const KeywordGroups = ({ keywordGroups: initialKeywordGroups }: { keywordGroups:
             const response = await keywordGroupService.create(newKeywordGroupData);
             const savedGroup = response.keyword_group;
 
+            if (!savedGroup || !savedGroup.id) {
+                throw new Error("Invalid response from server");
+            }
+
             startTransition(() => {
-                setRealKeywordGroups((prev) =>
-                    prev.map((group) => (group.id === tempId ? savedGroup : group))
-                );
+                setRealKeywordGroups((prev) => {
+                    const updated = prev.map((group) => (group.id === tempId ? savedGroup : group));
+                    onGroupsChange?.(updated);
+                    return updated;
+                });
             });
 
         } catch (error: any) {
             startTransition(() => {
-                setRealKeywordGroups((prev) => prev.filter((group) => group.id !== tempId));
+                setRealKeywordGroups((prev) => {
+                    const updated = prev.filter((group) => group.id !== tempId);
+                    onGroupsChange?.(updated);
+                    return updated;
+                });
             });
-            toast.error(error.response?.data?.error || "Network error");
+            toast.error(error.response?.data?.error || error.message || "Network error");
         }
     };
 
@@ -60,7 +86,11 @@ const KeywordGroups = ({ keywordGroups: initialKeywordGroups }: { keywordGroups:
         const oldGroups = [...realKeywordGroups];
 
         startTransition(() => {
-            setRealKeywordGroups((prev) => prev.filter((group) => group.id !== id));
+            setRealKeywordGroups((prev) => {
+                const updated = prev.filter((group) => group.id !== id);
+                onGroupsChange?.(updated);
+                return updated;
+            });
         });
 
         try {
@@ -68,6 +98,7 @@ const KeywordGroups = ({ keywordGroups: initialKeywordGroups }: { keywordGroups:
             toast.success("Keyword group deleted successfully");
         } catch (error: any) {
             setRealKeywordGroups(oldGroups);
+            onGroupsChange?.(oldGroups);
             toast.error(error.response?.data?.error || "Failed to delete keyword group");
         } finally {
             setConfirmOpen(false);
@@ -80,24 +111,51 @@ const KeywordGroups = ({ keywordGroups: initialKeywordGroups }: { keywordGroups:
             <Paper sx={{ p: 2, mb: 3 }}>
                 <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
                     <Typography variant="h6">Keyword groups (tags)</Typography>
+                    {selectedGroupId !== null && (
+                        <Button
+                            size="small"
+                            onClick={() => onSelectGroup?.(null)}
+                            variant="text"
+                            sx={{ textTransform: "none" }}
+                        >
+                            Clear Filter
+                        </Button>
+                    )}
                 </Stack>
 
                 <Stack direction="row" flexWrap="wrap" gap={1} sx={{ mb: 2 }}>
+                    <Chip
+                        label="All Keywords"
+                        onClick={() => onSelectGroup?.(null)}
+                        variant={selectedGroupId === null ? "filled" : "outlined"}
+                        color={selectedGroupId === null ? "primary" : "default"}
+                        sx={{
+                            fontWeight: "bold",
+                            boxShadow: selectedGroupId === null ? "rgba(100, 100, 111, 0.2) 0px 7px 29px 0px" : "none",
+                        }}
+                    />
                     {optimisticKeywordGroups.map((group) => {
+                        const isSelected = selectedGroupId === group.id;
                         const textColor = tinycolor(group.color).isLight() ? "#000" : "#fff";
                         return (
                             <Chip
                                 key={group.id}
                                 label={group.name}
+                                onClick={() => onSelectGroup?.(group.id)}
                                 onDelete={() => confirmDelete(group)}
+                                variant={isSelected ? "filled" : "outlined"}
                                 sx={{
-                                    boxShadow: "rgba(100, 100, 111, 0.2) 0px 7px 29px 0px",
-                                    backgroundColor: group.color,
-                                    color: textColor,
+                                    boxShadow: isSelected ? "rgba(100, 100, 111, 0.2) 0px 7px 29px 0px" : "none",
+                                    backgroundColor: isSelected ? group.color : "transparent",
+                                    color: isSelected ? textColor : "inherit",
+                                    borderColor: group.color,
                                     fontWeight: "bold",
                                     "& .MuiChip-deleteIcon": {
-                                        color: textColor,
+                                        color: isSelected ? textColor : "inherit",
                                     },
+                                    "&:hover": {
+                                        backgroundColor: isSelected ? tinycolor(group.color).darken(5).toString() : tinycolor(group.color).setAlpha(0.1).toString(),
+                                    }
                                 }}
                             />
                         );

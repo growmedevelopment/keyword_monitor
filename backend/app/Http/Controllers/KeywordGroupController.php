@@ -32,7 +32,12 @@ class KeywordGroupController extends Controller
             $keywordGroup = $this->service->createGroup($data);
 
             return response()->json([
-                'keyword_group' => $keywordGroup,
+                'keyword_group' => [
+                    'id'         => $keywordGroup->id,
+                    'name'       => $keywordGroup->name,
+                    'color'      => $keywordGroup->color,
+                    'project_id' => $keywordGroup->project_id,
+                ],
                 'message'       => 'Keyword group created successfully',
             ], 201);
 
@@ -82,10 +87,14 @@ class KeywordGroupController extends Controller
         }
     }
 
-    public function unsetProjectKeywordGroup(int $keyword_id): JsonResponse
+    public function unsetProjectKeywordGroup(Request $request, int $keyword_id): JsonResponse
     {
         try {
-            $this->service->unsetKeywordGroup($keyword_id);
+            $data = $request->validate([
+                'keyword_group_id' => 'required|integer|exists:keyword_groups,id',
+            ]);
+
+            $this->service->unsetKeywordGroup($keyword_id, $data['keyword_group_id']);
 
             return response()->json([
                 'status'  => 'success',

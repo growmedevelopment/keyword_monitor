@@ -36,7 +36,7 @@ const keywordService = {
     },
 
 
-    async getByFilteredResults(keywordId: string, dateRange: [Dayjs, Dayjs], mode: "range" | "compare"): Promise<Keyword> {
+    async getByFilteredResults(keywordId: string, dateRange: [Dayjs, Dayjs], mode: "range" | "compare" | "latest"): Promise<Keyword> {
         const [start, end] = dateRange;
 
         const startDate = start.format("YYYY-MM-DD");

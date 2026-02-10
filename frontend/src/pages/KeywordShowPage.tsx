@@ -28,7 +28,7 @@ export default function KeywordShowPage() {
         dayjs().subtract(3, "day"),
         dayjs(),
     ]);
-    const [mode, setMode] = useState<"range" | "compare">("range");
+    const [mode, setMode] = useState<"range" | "compare" | "latest">("latest");
 
     /**
      * 1. STATIC DATA LOADER (Runs only when ID changes)

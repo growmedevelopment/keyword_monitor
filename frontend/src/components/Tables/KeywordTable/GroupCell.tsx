@@ -9,6 +9,8 @@ export const GroupCell = (
     props: ICellRendererParams<Keyword>
 ) => {
     const currentGroups = (props.data?.keyword_groups as any) ?? [];
+    const allGroups = props.context.keywordGroups || [];
+
     const [selectedGroupIds, setSelectedGroupIds] = useState<number[]>(
         Array.isArray(currentGroups)
             ? currentGroups.map((g: any) => g.id)
@@ -35,7 +37,7 @@ export const GroupCell = (
 
     return (
         <KeywordTagSelector
-            groups={props.context.keywordGroups || []}
+            groups={allGroups}
             selectedGroupIds={selectedGroupIds}
             onChange={(groupsId) => {
                 setSelectedGroupIds(groupsId);

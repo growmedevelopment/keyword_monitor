@@ -8,7 +8,7 @@ interface ProjectKeywordsSectionProps {
     onAddKeyword: () => void;
     keywordGroups: KeywordGroup[];
     selectedDateRange: [Dayjs, Dayjs];
-    selectedMode : "range" | "compare";
+    selectedMode : "range" | "compare" | "latest";
 }
 
 export default function ProjectKeywordsSection({keywords, onAddKeyword, keywordGroups, selectedDateRange, selectedMode}: ProjectKeywordsSectionProps) {

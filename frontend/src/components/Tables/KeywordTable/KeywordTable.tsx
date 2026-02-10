@@ -11,7 +11,7 @@ interface Props {
     keywords: Keyword[];
     keywordGroups: KeywordGroup[];
     dateRange: [Dayjs, Dayjs];
-    mode: "range" | "compare";
+    mode: "range" | "compare" | "latest";
 }
 
 export default function KeywordTable({keywords, keywordGroups, dateRange, mode}: Props) {
@@ -29,10 +29,10 @@ export default function KeywordTable({keywords, keywordGroups, dateRange, mode}:
 
     useEffect(() => {
         if (dateRange[0] && dateRange[1]) {
-            const cols = buildColumnDefs(dateRange[0], dateRange[1], mode);
+            const cols = buildColumnDefs(dateRange[0], dateRange[1], mode, keywords);
             setColumnDefs(cols);
         }
-    }, [dateRange, mode]);
+    }, [dateRange, mode, keywordGroups, keywords]);
 
     if (!keywords || keywords.length === 0) {
         return <p>No keywords added yet.</p>;

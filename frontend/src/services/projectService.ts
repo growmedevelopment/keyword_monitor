@@ -28,7 +28,7 @@ const projectService = {
         return response.data;
     },
 
-    async getDetailedById(id: string, dateRange: [Dayjs, Dayjs], mode: "range" | "compare") {
+    async getDetailedById(id: string, dateRange: [Dayjs, Dayjs], mode: "range" | "compare" | "latest") {
 
         const [start, end] = dateRange;
 

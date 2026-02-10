@@ -31,7 +31,7 @@ class KeywordGroupService
         $group = KeywordGroup::findOrFail($id);
 
         // Detach keywords
-        $group->keywords()->update(['keyword_group_id' => null]);
+        $group->keywords()->detach();
 
         $group->delete();
     }
@@ -47,9 +47,9 @@ class KeywordGroupService
         $keyword->keyword_groups()->sync($data['keyword_groups_id']);
     }
 
-    public function unsetKeywordGroup(int $keywordId): void
+    public function unsetKeywordGroup(int $keywordId, int $keywordGroupId): void
     {
         $keyword = Keyword::findOrFail($keywordId);
-        $keyword->update(['keyword_group_id' => null]);
+        $keyword->keyword_groups()->detach($keywordGroupId);
     }
 }

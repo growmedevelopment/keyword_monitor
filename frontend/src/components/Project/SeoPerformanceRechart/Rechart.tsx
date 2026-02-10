@@ -15,19 +15,19 @@ const Rechart: React.FC<ComponentProps> = ({
                                                setDateModeFunction
                                            }) => {
 
-    const [pickerMode, setPickerMode] = useState<"range" | "compare">(selectedMode);
+    const [pickerMode, setPickerMode] = useState<"range" | "compare" | "latest">(selectedMode);
     const [localRange, setLocalRange] = useState<[Dayjs | null, Dayjs | null]>(externalDateRange);
     const [metrics, setMetrics] = useState<SeoMetrics | null>(null);
 
-    const recalc = (range: [Dayjs, Dayjs]) => {
-        const filtered = filterResultsByRange(keywords, range);
+    const recalc = (range: [Dayjs, Dayjs], mode: "range" | "compare" | "latest") => {
+        const filtered = filterResultsByRange(keywords, range, mode);
         setMetrics(buildMetrics(filtered));
     };
 
     useEffect(() => {
         setLocalRange(externalDateRange);
         setPickerMode(selectedMode);
-        recalc(externalDateRange);
+        recalc(externalDateRange, selectedMode);
     }, [keywords, externalDateRange, selectedMode]);
 
     if (!metrics) {
@@ -54,7 +54,7 @@ const Rechart: React.FC<ComponentProps> = ({
                         setDateModeFunction?.(mode);
 
                         // Recalculate metrics
-                        recalc(range);
+                        recalc(range, mode);
                     }}
                 />
 
