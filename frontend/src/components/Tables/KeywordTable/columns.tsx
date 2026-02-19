@@ -125,6 +125,7 @@ export function buildColumnDefs(
     if (mode === "compare") {
         const fromKey = from.format("YYYY-MM-DD");
         const toKey   = to.format("YYYY-MM-DD");
+        const todayKey = dayjs().format("YYYY-MM-DD");
 
         return [
             ...staticCols,
@@ -143,15 +144,35 @@ export function buildColumnDefs(
                 cellRenderer: PositionWithTrend(toKey),
             },
 
+            {
+                headerName: "Today",
+                width: 110,
+                valueGetter: (p) => getPositionForExactDate(p.data, todayKey),
+                cellRenderer: PositionWithTrend(todayKey),
+            },
+
             removeCol,
         ];
     }
 
-    // LATEST MODE — two columns showing last 2 results
+    // LATEST MODE — two columns showing last 2 results excluding today if Today is present
     if (mode === "latest") {
+        const todayKey = dayjs().format("YYYY-MM-DD");
+
+        // We want to find the latest 2 results that are NOT from today,
+        // because "Today" has its own column.
+        const getResultsExcludingToday = (kw: Keyword) => {
+            return (kw?.results || []).filter(r => {
+                const dateKey = r.tracked_at.substring(0, 10);
+                return dateKey !== todayKey;
+            });
+        };
+
         const firstKw = keywords[0];
-        const latestTrackedAt = firstKw?.results?.[0]?.tracked_at;
-        const previousTrackedAt = firstKw?.results?.[1]?.tracked_at;
+        const resultsExcludingToday = getResultsExcludingToday(firstKw);
+
+        const latestTrackedAt = resultsExcludingToday[0]?.tracked_at;
+        const previousTrackedAt = resultsExcludingToday[1]?.tracked_at;
 
         const latestHeader = latestTrackedAt ? dayjs(latestTrackedAt).format("MMM D") : "Latest Result";
         const previousHeader = previousTrackedAt ? dayjs(previousTrackedAt).format("MMM D") : "Previous Result";
@@ -162,12 +183,12 @@ export function buildColumnDefs(
                 headerName: previousHeader,
                 width: 130,
                 valueGetter: (p) => {
-                    const results = p.data?.results || [];
-                    return results.length >= 2 ? results[1].position : (results.length === 1 ? "-" : null);
+                    const res = getResultsExcludingToday(p.data!);
+                    return res.length >= 2 ? res[1].position : (res.length === 1 ? "-" : null);
                 },
                 cellRenderer: (p: ICellRendererParams) => {
-                    const results = p.data?.results || [];
-                    const date = results.length >= 2 ? results[1].tracked_at : null;
+                    const res = getResultsExcludingToday(p.data!);
+                    const date = res.length >= 2 ? res[1].tracked_at : null;
                     if (!date) return <span>{p.value ?? "-"}</span>;
                     return PositionWithTrend(dayjs(date).format("YYYY-MM-DD"))(p);
                 }
@@ -176,15 +197,21 @@ export function buildColumnDefs(
                 headerName: latestHeader,
                 width: 130,
                 valueGetter: (p) => {
-                    const results = p.data?.results || [];
-                    return results.length >= 1 ? results[0].position : null;
+                    const res = getResultsExcludingToday(p.data!);
+                    return res.length >= 1 ? res[0].position : null;
                 },
                 cellRenderer: (p: ICellRendererParams) => {
-                    const results = p.data?.results || [];
-                    const date = results.length >= 1 ? results[0].tracked_at : null;
+                    const res = getResultsExcludingToday(p.data!);
+                    const date = res.length >= 1 ? res[0].tracked_at : null;
                     if (!date) return <span>{p.value ?? "-"}</span>;
                     return PositionWithTrend(dayjs(date).format("YYYY-MM-DD"))(p);
                 }
+            },
+            {
+                headerName: "Today",
+                width: 130,
+                valueGetter: (p) => getPositionForExactDate(p.data, todayKey),
+                cellRenderer: PositionWithTrend(todayKey),
             },
             removeCol,
         ];
