@@ -7,6 +7,21 @@ export interface KeywordResult {
     title: string;
 }
 
+export interface SearchValue {
+    id: number;
+    keyword_id: number;
+    search_volume: number | null;
+    cpc: number | null;
+    competition: string | null;
+    competition_index: number | null;
+    low_top_of_page_bid: number | null;
+    high_top_of_page_bid: number | null;
+    search_partners: boolean;
+    currency: string;
+    created_at: string;
+    updated_at: string;
+}
+
 export interface KeywordRank {
     id: number;
     keyword_id: number;
@@ -46,6 +61,7 @@ export interface Keyword {
     keyword_group_id: KeywordGroup['id'] | null;
     keyword_group_name: KeywordGroup['name'] | null;
     keyword_group_color : KeywordGroup['color'] | null;
+    search_value: SearchValue | null;
     created_at: string;
 }
 

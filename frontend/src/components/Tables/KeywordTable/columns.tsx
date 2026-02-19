@@ -56,6 +56,13 @@ export function buildColumnDefs(
             cellRenderer: GroupCell,
         },
         {
+            headerName: "Search Volume",
+            width: 120,
+            sortable: true,
+            valueGetter: (p) => p.data?.search_value?.search_volume,
+            valueFormatter: (p) => p.value ? p.value.toLocaleString() : "-",
+        },
+        {
             headerName: "URL",
             width: 90,
             filter: false,

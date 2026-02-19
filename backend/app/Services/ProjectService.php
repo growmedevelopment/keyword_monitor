@@ -83,6 +83,7 @@ class ProjectService
         $project = Project::with([
             'keyword_groups',
             'keywords',
+            'keywords.searchValue',
             'keywords.keywordsRank' => function ($q) use ($mode,$startDate, $endDate) {
 
                 if ($mode === 'range') {

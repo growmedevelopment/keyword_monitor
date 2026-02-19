@@ -101,7 +101,7 @@ class KeywordController extends Controller
         $keyword = Keyword::with([
             'keywordsRank' => function ($query) {$query->orderBy('tracked_at', 'desc');},
             'keyword_groups',
-
+            'searchValue',
         ])->findOrFail($id);
 
         return response()->json([
@@ -109,6 +109,7 @@ class KeywordController extends Controller
             'project_id'    => $keyword->project_id,
             'keyword_groups' => $keyword->keyword_groups,
             'keyword'       => $keyword->keyword,
+            'search_value'  => $keyword->searchValue,
             'keywords_rank' => KeywordRankResultResource::collection($keyword->keywordsRank),
         ]);
     }
@@ -165,9 +166,12 @@ class KeywordController extends Controller
             } else {
                 $q->orderBy('tracked_at', 'asc');
             }
-        }])->findOrFail($id);
+        }])->with('searchValue')->findOrFail($id);
 
-        return response()->json($keyword);
+        $data = $keyword->toArray();
+        $data['search_value'] = $keyword->searchValue;
+
+        return response()->json($data);
     }
 
     /**
