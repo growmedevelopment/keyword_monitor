@@ -96,3 +96,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/check-pending-tasks', [AdminController::class, 'checkPendingTasks']);
     Route::post('/admin/update-created-tasks', [AdminController::class, 'updateCreatedDataForSEOTasks']);
 });
+
+
+Route::get('/refresh-all-search-volumes', [AdminController::class, 'getAllKeywordsSearchVolume']);

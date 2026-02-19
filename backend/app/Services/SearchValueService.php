@@ -111,6 +111,54 @@ class SearchValueService
     }
 
     /**
+     * Admin helper: iterate through keywords and queue Search Volume tasks for each.
+     *
+     * @param int|null $projectId           If provided, limits to a single project
+     * @param bool     $onlyWithoutValue    If true, processes only keywords missing SearchValue
+     * @param int      $sleepMicros         Micro-sleep between API calls to respect rate limits
+     * @return array                        Summary counters and errors
+     */
+    public function refreshAllKeywordsSearchVolume(?int $projectId = null, bool $onlyWithoutValue = true, int $sleepMicros = 200_000): array
+    {
+        $total = 0;
+        $submitted = 0;
+        $failed = 0;
+        $errors = [];
+
+        $query = Keyword::query()
+            ->when($projectId, fn($q) => $q->where('project_id', $projectId))
+            ->when($onlyWithoutValue, fn($q) => $q->doesntHave('searchValue'))
+            ->where('is_active', true);
+
+        $query->chunkById(200, function ($keywords) use (&$total, &$submitted, &$failed, &$errors, $sleepMicros) {
+            foreach ($keywords as $keyword) {
+                $total++;
+                try {
+                    $res = $this->createTaskForKeyword($keyword);
+                    if (($res['success'] ?? false) === true) {
+                        $submitted++;
+                    } else {
+                        $failed++;
+                        $errors[$keyword->id] = $res['message'] ?? 'Unknown error';
+                    }
+                } catch (\Throwable $e) {
+                    $failed++;
+                    $errors[$keyword->id] = $e->getMessage();
+                }
+
+                // Throttle between requests
+                if ($sleepMicros > 0) {
+                    usleep($sleepMicros);
+                }
+            }
+        });
+
+        Log::info('Search Volume bulk refresh summary', compact('total', 'submitted', 'failed'));
+
+        return compact('total', 'submitted', 'failed', 'errors');
+    }
+
+    /**
      * Get search value for a keyword.
      *
      * @param Keyword $keyword
