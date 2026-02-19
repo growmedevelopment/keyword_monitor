@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Models\Keyword;
 use App\Services\DataForSeo\CredentialsService;
 use App\Services\KeywordSubmissionService;
+use App\Services\SearchValueService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -23,7 +24,7 @@ class ProcessSingleKeywordJob implements ShouldQueue
         $this->keyword = $keyword;
     }
 
-    public function handle(KeywordSubmissionService $submissionService): void {
+    public function handle(KeywordSubmissionService $submissionService, SearchValueService $searchValueService): void {
         $keyword = $this->keyword;
 
         if ($keyword->last_submitted_at && $keyword->last_submitted_at->isToday()) {
@@ -37,6 +38,9 @@ class ProcessSingleKeywordJob implements ShouldQueue
         $credentials = CredentialsService::get();
 
         $submissionService->submitToDataForSeo($payload, $keyword, $keyword->project, $credentials);
+
+        // Also submit task for search volume
+        $searchValueService->createTaskForKeyword($keyword);
 
         Log::info("✅ Done for Keyword ID {$keyword->id}");
     }

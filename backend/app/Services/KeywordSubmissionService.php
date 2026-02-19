@@ -8,6 +8,7 @@ use App\Models\DataForSeoTask;
 use App\Models\KeywordRank;
 use App\Models\Project;
 use App\Services\DataForSeo\CredentialsService;
+use App\Services\SearchValueService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
@@ -15,6 +16,13 @@ use Illuminate\Support\Str;
 
 class KeywordSubmissionService
 {
+
+    protected SearchValueService $searchValueService;
+
+    public function __construct(SearchValueService $searchValueService)
+    {
+        $this->searchValueService = $searchValueService;
+    }
 
     /**
      * Submit a new keyword for tracking via the DataForSEO API.
@@ -34,6 +42,9 @@ class KeywordSubmissionService
 
         $payload = $this->buildPayload($keyword, $project);
         $this->submitToDataForSeo($payload, $keyword, $project, $credentials);
+
+        // Also submit task for search volume
+        $this->searchValueService->createTaskForKeyword($keyword);
 
         usleep(200000); // Respect API rate limits
 
