@@ -19,6 +19,13 @@ export const columnDefs: ColDef[] = [
             new Date(params.value).toISOString().slice(0, 10),
     },
     {
+        field: 'search_volume',
+        headerName: 'Search Volume',
+        sortable: true,
+        width: 130,
+        valueFormatter: params => params.value ? params.value.toLocaleString() : "-",
+    },
+    {
         field: 'position',
         headerName: 'Position',
         sortable: true,

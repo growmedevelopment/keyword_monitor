@@ -76,6 +76,20 @@ class PollDataForSeoTaskJob implements ShouldQueue
 
             Log::info('DataForSEO result response', ['response' => $json]);
 
+            // If we get a 40400 Not Found, it might be that the task is still being initialized
+            if (isset($json['status_code']) && (int) $json['status_code'] === 40400) {
+                Log::info('Task not found yet (40400), retrying...', ['task_id' => $this->task->task_id]);
+
+                $attempts = Cache::increment("seo_retries:{$this->task->task_id}");
+                if ($attempts <= 30) {
+                    self::dispatch($this->task)->delay(now()->addSeconds(20));
+                } else {
+                    Log::warning('Max retries reached for task (40400)', ['task_id' => $this->task->task_id]);
+                    Cache::forget("seo_retries:{$this->task->task_id}");
+                }
+                return;
+            }
+
             $this->task->update([
                 'status_message' => $json['tasks'][0]['status_message'],
                 'status_code' => $json['tasks'][0]['status_code'],
@@ -93,10 +107,11 @@ class PollDataForSeoTaskJob implements ShouldQueue
                 Log::info('Task still in queue, retrying...', ['task_id' => $this->task->task_id]);
 
                 $attempts = Cache::increment("seo_retries:{$this->task->task_id}");
-                if ($attempts <= 5) {
-                    self::dispatch($this->task)->delay(now()->addSeconds(10));
+                if ($attempts <= 30) {
+                    self::dispatch($this->task)->delay(now()->addSeconds(20));
                 } else {
                     Log::warning('Max retries reached for task', ['task_id' => $this->task->task_id]);
+                    Cache::forget("seo_retries:{$this->task->task_id}");
                 }
 
                 return;

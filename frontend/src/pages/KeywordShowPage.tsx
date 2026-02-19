@@ -172,7 +172,10 @@ export default function KeywordShowPage() {
                     </Paper>
 
                     <Paper sx={{ mt: 3 }}>
-                        <KeywordRankGrid data={keywordData.keywords_rank ?? []} />
+                        <KeywordRankGrid
+                            data={keywordData.keywords_rank ?? []}
+                            searchValue={keywordData.search_value?.search_volume ?? null}
+                        />
                     </Paper>
                 </Box>
             )}

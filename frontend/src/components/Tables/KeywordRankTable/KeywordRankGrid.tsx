@@ -8,9 +8,10 @@ import utc from "dayjs/plugin/utc";
 
 interface Props {
     data: KeywordRank[];
+    searchValue: number | null;
 }
 
-export default function KeywordRankGrid({ data }: Props) {
+export default function KeywordRankGrid({ data, searchValue }: Props) {
     const defaultColDef = useMemo(() => ({
         flex: 1,
         minWidth: 100,
@@ -24,6 +25,7 @@ export default function KeywordRankGrid({ data }: Props) {
     const processedData = data.map(item => ({
         ...item,
         month: dayjs.utc(item.tracked_at).format("YYYY-MM"), // group key
+        search_volume: searchValue,
     }));
 
     return (
