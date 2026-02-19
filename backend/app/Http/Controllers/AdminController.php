@@ -5,9 +5,17 @@ namespace App\Http\Controllers;
 use App\Enums\DataForSeoTaskStatus;
 use App\Jobs\PollBacklinkTaskJob;
 use App\Models\LinkTask;
+use App\Services\SearchValueService;
 use Illuminate\Http\JsonResponse;
 
 class AdminController extends Controller{
+
+    protected SearchValueService $searchValueService;
+
+    public function __construct(SearchValueService $searchValueService)
+    {
+        $this->searchValueService = $searchValueService;
+    }
 
     public function checkPendingTasks(): JsonResponse {
         // Check if there are any tasks waiting to be updated
@@ -15,7 +23,7 @@ class AdminController extends Controller{
 
         return response()->json([
             'pending_count' => $count,
-            'has_pending' => $count > 0
+            'has_pending' => $count > 0,
         ]);
     }
 
@@ -36,5 +44,13 @@ class AdminController extends Controller{
         ]);
     }
 
+    public function getAllKeywordsSearchVolume (): JsonResponse {
 
+        $summary = $this->searchValueService->refreshAllKeywordsSearchVolume();
+
+        return response()->json([
+            'message' => 'Search Volume task creation process finished.',
+            'summary' => $summary,
+        ]);
+    }
 }
