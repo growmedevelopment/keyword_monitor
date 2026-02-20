@@ -23,6 +23,8 @@ import type {UserAPIDetailsType} from '../components/types/userAPIDetailsType.ts
 import StatCard from '../components/Dashboard/StatCard';
 import {useCallback, useEffect, useState} from "react";
 import userService from "../services/userService.ts";
+import MonitorHeartIcon from "@mui/icons-material/MonitorHeart";
+import QueryStatsIcon from "@mui/icons-material/QueryStats";
 
 type LoadState = 'idle' | 'loading' | 'success' | 'error';
 
@@ -106,6 +108,28 @@ export default function Dashboard() {
                         icon={<KeyIcon fontSize="inherit" />}
                         color={theme.palette.secondary.main}
                         subtitle="All keywords across your projects"
+                    />
+                </Grid>
+
+                <Grid size={{ xs: 12, md: 4 }}>
+                    <StatCard
+                        title="Citations"
+                        value={data?.citations_amount ?? 0}
+                        loading={loading}
+                        icon={<QueryStatsIcon/>}
+                        color={theme.palette.secondary.main}
+                        subtitle="All citations across your projects"
+                    />
+                </Grid>
+
+                <Grid size={{ xs: 12, md: 4 }}>
+                    <StatCard
+                        title="Backlinks"
+                        value={data?.backlinks_amount ?? 0}
+                        loading={loading}
+                        icon={<MonitorHeartIcon  />}
+                        color={theme.palette.secondary.light}
+                        subtitle="All backlinks across your projects"
                     />
                 </Grid>
 
