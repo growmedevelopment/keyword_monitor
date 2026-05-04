@@ -35,7 +35,7 @@ class ProcessDailyKeywordRanksJob implements ShouldQueue
                         continue;
                     }
 
-                    dispatch(new ProcessSingleKeywordJob($keyword));
+                    dispatch(new ProcessSingleKeywordJob($keyword, false));
                     $processed++;
 
                     Log::info("🚀 Queued submission job for Keyword ID {$keyword->id} ({$keyword->keyword})");

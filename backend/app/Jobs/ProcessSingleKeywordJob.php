@@ -18,10 +18,12 @@ class ProcessSingleKeywordJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected Keyword $keyword;
+    protected bool $shouldRefreshSearchVolume;
 
-    public function __construct(Keyword $keyword)
+    public function __construct(Keyword $keyword, bool $shouldRefreshSearchVolume = true)
     {
         $this->keyword = $keyword;
+        $this->shouldRefreshSearchVolume = $shouldRefreshSearchVolume;
     }
 
     public function handle(KeywordSubmissionService $submissionService, SearchValueService $searchValueService): void {
@@ -39,8 +41,10 @@ class ProcessSingleKeywordJob implements ShouldQueue
 
         $submissionService->submitToDataForSeo($payload, $keyword, $keyword->project, $credentials);
 
-        // Also submit task for search volume
-        $searchValueService->createTaskForKeyword($keyword);
+        if ($this->shouldRefreshSearchVolume) {
+            // Also submit task for search volume
+            $searchValueService->createTaskForKeyword($keyword);
+        }
 
         Log::info("✅ Done for Keyword ID {$keyword->id}");
     }
