@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Log;
 
 class RecoverPendingDataForSeoTasksCommand extends Command
 {
+    private const int RESULT_RETENTION_DAYS = 30;
+
     protected $signature = 'dataforseo:recover-pending
         {--limit=100 : Maximum number of pending tasks to inspect}
         {--id=* : Specific local data_for_seo_tasks IDs to recover}
@@ -38,6 +40,7 @@ class RecoverPendingDataForSeoTasksCommand extends Command
         }
 
         $processed = 0;
+        $expired = 0;
         $stillPending = 0;
         $failed = 0;
 
@@ -98,6 +101,28 @@ class RecoverPendingDataForSeoTasksCommand extends Command
                     continue;
                 }
 
+                if ($this->isTaskResultMissing($taskData)) {
+                    if ($this->shouldMarkAsExpired($task)) {
+                        $this->markTaskAsExpired($task);
+                        $expired++;
+
+                        $this->warn(sprintf(
+                            'Marked task #%d (%s) as expired because DataForSEO no longer has the result.',
+                            $task->id,
+                            $task->task_id,
+                        ));
+                    } else {
+                        $stillPending++;
+                        $this->line(sprintf(
+                            'Task #%d (%s) has no result yet and remains pending.',
+                            $task->id,
+                            $task->task_id,
+                        ));
+                    }
+
+                    continue;
+                }
+
                 if ($this->isSearchVolumeTask($task)) {
                     $taskResultProcessor->processSearchVolumeTaskData($task, $taskData, $searchValueService);
                 } else {
@@ -134,8 +159,8 @@ class RecoverPendingDataForSeoTasksCommand extends Command
 
         $this->newLine();
         $this->table(
-            ['processed', 'still_pending', 'failed'],
-            [[$processed, $stillPending, $failed]],
+            ['processed', 'expired', 'still_pending', 'failed'],
+            [[$processed, $expired, $stillPending, $failed]],
         );
 
         return $failed > 0 ? self::FAILURE : self::SUCCESS;
@@ -186,5 +211,24 @@ class RecoverPendingDataForSeoTasksCommand extends Command
         }
 
         return '/v3/serp/google/organic/task_get/regular/'.$task->task_id;
+    }
+
+    private function isTaskResultMissing(array $taskData): bool
+    {
+        return ! isset($taskData['result'][0]);
+    }
+
+    private function shouldMarkAsExpired(DataForSeoTask $task): bool
+    {
+        return $task->submitted_at !== null
+            && $task->submitted_at->lt(now()->subDays(self::RESULT_RETENTION_DAYS));
+    }
+
+    private function markTaskAsExpired(DataForSeoTask $task): void
+    {
+        $task->update([
+            'completed_at' => now(),
+            'status_message' => 'Result expired in DataForSEO before local recovery.',
+        ]);
     }
 }
