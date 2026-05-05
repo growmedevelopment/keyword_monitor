@@ -14,6 +14,7 @@ use App\Services\DataForSeoTaskResultProcessor;
 use App\Services\KeywordSubmissionService;
 use App\Services\SearchValueService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Laravel\Sanctum\Sanctum;
@@ -404,6 +405,88 @@ class KeywordBulkSubmissionTest extends TestCase
             'keyword_id' => $keyword->id,
             'position' => 3,
             'url' => 'https://example.com/page',
+        ]);
+    }
+
+    public function test_recover_pending_command_processes_legacy_serp_task(): void
+    {
+        Queue::fake();
+        config(['broadcasting.default' => 'null']);
+
+        $user = User::factory()->create();
+        $project = Project::factory()->create([
+            'user_id' => $user->id,
+            'url' => 'https://example.com',
+        ]);
+
+        $keyword = $project->keywords()->create([
+            'keyword' => 'legacy keyword',
+            'location' => $project->location_code,
+            'language' => 'en',
+            'tracking_priority' => 1,
+            'is_active' => true,
+        ]);
+
+        $task = DataForSeoTask::create([
+            'keyword_id' => $keyword->id,
+            'project_id' => $project->id,
+            'task_id' => 'legacy-serp-task',
+            'status_message' => 'Task Created.',
+            'status_code' => 20100,
+            'submitted_at' => now()->subMonths(3),
+            'raw_response' => json_encode([
+                'data' => [
+                    'keyword' => 'legacy keyword',
+                ],
+            ], JSON_THROW_ON_ERROR),
+        ]);
+
+        Http::fake([
+            'https://api.dataforseo.com/v3/serp/google/organic/task_get/regular/legacy-serp-task' => Http::response([
+                'tasks' => [
+                    [
+                        'status_code' => 20000,
+                        'status_message' => 'Ok.',
+                        'result' => [
+                            [
+                                'items' => [
+                                    [
+                                        'type' => 'organic',
+                                        'rank_group' => 1,
+                                        'rank_absolute' => 1,
+                                        'domain' => 'example.com',
+                                        'title' => 'Recovered title',
+                                        'description' => 'Recovered description',
+                                        'url' => 'https://example.com/recovered',
+                                        'breadcrumb' => 'Recovered',
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ], 200),
+        ]);
+
+        $exitCode = Artisan::call('dataforseo:recover-pending', [
+            '--id' => [$task->id],
+        ]);
+
+        $this->assertSame(0, $exitCode);
+        $this->assertDatabaseHas('data_for_seo_tasks', [
+            'id' => $task->id,
+            'status_code' => '20000',
+        ]);
+        $this->assertNotNull($task->fresh()->completed_at);
+        $this->assertDatabaseHas('data_for_seo_results', [
+            'data_for_seo_task_id' => $task->id,
+            'rank_group' => 1,
+            'domain' => 'example.com',
+        ]);
+        $this->assertDatabaseHas('keyword_ranks', [
+            'keyword_id' => $keyword->id,
+            'position' => 1,
+            'url' => 'https://example.com/recovered',
         ]);
     }
 }
