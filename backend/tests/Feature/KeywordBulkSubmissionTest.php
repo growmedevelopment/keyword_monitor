@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Jobs\PollSearchValueTaskJob;
 use App\Jobs\ProcessKeywordSubmissionChunkJob;
+use App\Models\DataForSeoTask;
 use App\Models\Project;
 use App\Models\User;
 use App\Services\KeywordSubmissionService;
+use App\Services\SearchValueService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
@@ -134,6 +137,169 @@ class KeywordBulkSubmissionTest extends TestCase
             'keyword_id' => $secondKeyword->id,
             'project_id' => $project->id,
             'task_id' => 'task-beta',
+        ]);
+    }
+
+    public function test_search_volume_tasks_are_batched_into_one_request(): void
+    {
+        Queue::fake();
+
+        $user = User::factory()->create();
+        $project = Project::factory()->create([
+            'user_id' => $user->id,
+        ]);
+
+        $firstKeyword = $project->keywords()->create([
+            'keyword' => 'alpha keyword',
+            'location' => $project->location_code,
+            'language' => 'en',
+            'tracking_priority' => 1,
+            'is_active' => true,
+        ]);
+
+        $secondKeyword = $project->keywords()->create([
+            'keyword' => 'beta keyword',
+            'location' => $project->location_code,
+            'language' => 'en',
+            'tracking_priority' => 1,
+            'is_active' => true,
+        ]);
+
+        Http::fake([
+            'https://api.dataforseo.com/v3/keywords_data/google_ads/search_volume/task_post' => Http::response([
+                'tasks' => [
+                    [
+                        'id' => 'search-volume-batch-task',
+                        'status_code' => 20100,
+                        'status_message' => 'Task Created.',
+                        'cost' => 0.001,
+                        'data' => [
+                            'keywords' => ['alpha keyword', 'beta keyword'],
+                        ],
+                    ],
+                ],
+            ], 200),
+        ]);
+
+        $result = app(SearchValueService::class)->createTasksForKeywords(
+            new \Illuminate\Database\Eloquent\Collection([$firstKeyword, $secondKeyword]),
+        );
+
+        $this->assertTrue($result['success']);
+
+        Http::assertSentCount(1);
+        Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
+            if ($request->url() !== 'https://api.dataforseo.com/v3/keywords_data/google_ads/search_volume/task_post') {
+                return false;
+            }
+
+            $payload = $request->data();
+
+            return count($payload) === 1
+                && count($payload[0]['keywords']) === 2
+                && $payload[0]['keywords'][0] === 'alpha keyword'
+                && $payload[0]['keywords'][1] === 'beta keyword';
+        });
+
+        $this->assertDatabaseCount('data_for_seo_tasks', 1);
+        $this->assertDatabaseHas('data_for_seo_tasks', [
+            'keyword_id' => null,
+            'project_id' => $project->id,
+            'task_id' => 'search-volume-batch-task',
+        ]);
+
+        Queue::assertPushed(PollSearchValueTaskJob::class, 1);
+    }
+
+    public function test_search_volume_poll_job_updates_all_keywords_from_batch_result(): void
+    {
+        Queue::fake();
+
+        $user = User::factory()->create();
+        $project = Project::factory()->create([
+            'user_id' => $user->id,
+        ]);
+
+        $firstKeyword = $project->keywords()->create([
+            'keyword' => 'alpha keyword',
+            'location' => $project->location_code,
+            'language' => 'en',
+            'tracking_priority' => 1,
+            'is_active' => true,
+        ]);
+
+        $secondKeyword = $project->keywords()->create([
+            'keyword' => 'beta keyword',
+            'location' => $project->location_code,
+            'language' => 'en',
+            'tracking_priority' => 1,
+            'is_active' => true,
+        ]);
+
+        $task = DataForSeoTask::create([
+            'keyword_id' => null,
+            'project_id' => $project->id,
+            'task_id' => 'search-volume-batch-task',
+            'status_message' => 'Task Created.',
+            'status_code' => 20100,
+            'submitted_at' => now(),
+            'raw_response' => json_encode([
+                'data' => [
+                    'keywords' => ['alpha keyword', 'beta keyword'],
+                ],
+            ], JSON_THROW_ON_ERROR),
+            'batch_keyword_map' => [
+                'alpha keyword' => $firstKeyword->id,
+                'beta keyword' => $secondKeyword->id,
+            ],
+        ]);
+
+        Http::fake([
+            'https://api.dataforseo.com/v3/keywords_data/google_ads/search_volume/task_get/search-volume-batch-task' => Http::response([
+                'tasks' => [
+                    [
+                        'status_code' => 20000,
+                        'status_message' => 'Ok.',
+                        'result' => [
+                            [
+                                'keyword' => 'alpha keyword',
+                                'search_volume' => 120,
+                                'cpc' => 1.25,
+                                'competition' => 0.4,
+                                'competition_index' => 40,
+                                'low_top_of_page_bid' => 0.8,
+                                'high_top_of_page_bid' => 1.5,
+                                'search_partners' => false,
+                            ],
+                            [
+                                'keyword' => 'beta keyword',
+                                'search_volume' => 250,
+                                'cpc' => 2.5,
+                                'competition' => 0.7,
+                                'competition_index' => 70,
+                                'low_top_of_page_bid' => 1.7,
+                                'high_top_of_page_bid' => 3.2,
+                                'search_partners' => true,
+                            ],
+                        ],
+                    ],
+                ],
+            ], 200),
+        ]);
+
+        $job = new PollSearchValueTaskJob($task);
+        $job->handle(app(SearchValueService::class));
+
+        $this->assertDatabaseHas('search_values', [
+            'keyword_id' => $firstKeyword->id,
+            'search_volume' => 120,
+            'competition_index' => 40,
+        ]);
+        $this->assertDatabaseHas('search_values', [
+            'keyword_id' => $secondKeyword->id,
+            'search_volume' => 250,
+            'competition_index' => 70,
+            'search_partners' => 1,
         ]);
     }
 }
