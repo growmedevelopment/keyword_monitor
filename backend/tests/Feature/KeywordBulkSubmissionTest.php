@@ -489,4 +489,63 @@ class KeywordBulkSubmissionTest extends TestCase
             'url' => 'https://example.com/recovered',
         ]);
     }
+
+    public function test_recover_pending_command_marks_old_task_without_result_as_expired(): void
+    {
+        Queue::fake();
+
+        $user = User::factory()->create();
+        $project = Project::factory()->create([
+            'user_id' => $user->id,
+            'url' => 'https://example.com',
+        ]);
+
+        $keyword = $project->keywords()->create([
+            'keyword' => 'expired keyword',
+            'location' => $project->location_code,
+            'language' => 'en',
+            'tracking_priority' => 1,
+            'is_active' => true,
+        ]);
+
+        $task = DataForSeoTask::create([
+            'keyword_id' => $keyword->id,
+            'project_id' => $project->id,
+            'task_id' => 'expired-serp-task',
+            'status_message' => 'Task Created.',
+            'status_code' => 20100,
+            'submitted_at' => now()->subDays(45),
+            'raw_response' => json_encode([
+                'data' => [
+                    'keyword' => 'expired keyword',
+                ],
+            ], JSON_THROW_ON_ERROR),
+        ]);
+
+        Http::fake([
+            'https://api.dataforseo.com/v3/serp/google/organic/task_get/regular/expired-serp-task' => Http::response([
+                'tasks' => [
+                    [
+                        'status_code' => 20000,
+                        'status_message' => 'Ok.',
+                    ],
+                ],
+            ], 200),
+        ]);
+
+        $exitCode = Artisan::call('dataforseo:recover-pending', [
+            '--id' => [$task->id],
+        ]);
+
+        $this->assertSame(0, $exitCode);
+        $this->assertDatabaseHas('data_for_seo_tasks', [
+            'id' => $task->id,
+            'status_code' => '20000',
+            'status_message' => 'Result expired in DataForSEO before local recovery.',
+        ]);
+        $this->assertNotNull($task->fresh()->completed_at);
+        $this->assertDatabaseMissing('data_for_seo_results', [
+            'data_for_seo_task_id' => $task->id,
+        ]);
+    }
 }
