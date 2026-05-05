@@ -150,10 +150,10 @@ export default function ProjectKeywordsPage() {
 
             // 4. Smart User Feedback
             if (added_count > 0 && skipped_count === 0) {
-                toast.success(`Successfully added ${added_count} keywords!`);
+                toast.success(`Added ${added_count} keywords. Processing continues in background.`);
 
             } else if (added_count > 0 && skipped_count > 0) {
-                toast.success(`Added ${added_count} keywords. Skipped ${skipped_count} duplicates. ${skipped_keywords.join(',')}`);
+                toast.success(`Added ${added_count} keywords. Background processing started. Skipped ${skipped_count} duplicates. ${skipped_keywords.join(',')}`);
 
             } else if (added_count === 0 && skipped_count > 0) {
                 toast.error(`All ${skipped_count} keywords were duplicates and skipped.`);

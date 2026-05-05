@@ -1,49 +1,54 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Jobs;
 
 use App\Models\Keyword;
 use Illuminate\Bus\Queueable;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 class ProcessDailyKeywordRanksJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
 
     public function handle(): void
     {
         $startTime = now();
         Log::info("🔄 Daily keyword rank job started at: {$startTime}");
 
-        $processed = 0;
-        $skipped = 0;
+        $queued = 0;
 
-        Keyword::with('project')
-            ->where('is_active', 1)
-            ->whereHas('project', function ($q) {
-                $q->whereNull('deleted_at');
+        Keyword::query()
+            ->where('is_active', true)
+            ->where(function ($query) {
+                $query
+                    ->whereNull('last_submitted_at')
+                    ->orWhereDate('last_submitted_at', '<', today());
             })
-            ->chunk(100, function ($keywords) use (&$processed, &$skipped) {
-                foreach ($keywords as $keyword) {
-                    if ($keyword->last_submitted_at && $keyword->last_submitted_at->isToday()) {
-                        $skipped++;
-                        Log::info("⏭️ Skipped Keyword ID {$keyword->id} — already submitted today.");
-                        continue;
-                    }
+            ->whereHas('project', function ($query) {
+                $query->whereNull('deleted_at');
+            })
+            ->chunkById(100, function ($keywords) use (&$queued): void {
+                $keywordIds = $keywords->modelKeys();
+                ProcessKeywordSubmissionChunkJob::dispatchForKeywordIds($keywordIds, false);
 
-                    dispatch(new ProcessSingleKeywordJob($keyword, false));
-                    $processed++;
+                $queued += count($keywordIds);
 
-                    Log::info("🚀 Queued submission job for Keyword ID {$keyword->id} ({$keyword->keyword})");
-                }
+                Log::info('Queued keyword submission chunk jobs for daily refresh.', [
+                    'keyword_count' => count($keywordIds),
+                ]);
             });
 
         $endTime = now();
         Log::info("🏁 ProcessDailyKeywordRanksJob finished at: {$endTime}");
-        Log::info("📊 Summary — Processed: {$processed}, Skipped: {$skipped}");
+        Log::info("📊 Summary — Queued: {$queued}");
     }
 }
