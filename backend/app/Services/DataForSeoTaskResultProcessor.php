@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Log;
 
 class DataForSeoTaskResultProcessor
 {
-    public function processSerpTaskData(DataForSeoTask $task, array $taskData): void
+    public function processSerpTaskData(DataForSeoTask $task, array $taskData, bool $broadcastUpdate = true): void
     {
         if ($task->keyword_id === null || $task->keyword === null) {
             Log::warning('Skipped SERP task processing because keyword mapping is missing.', [
@@ -70,7 +70,9 @@ class DataForSeoTaskResultProcessor
 
         $task->keyword->update(['last_submitted_at' => now()]);
 
-        broadcast(new KeywordUpdatedEvent($task->fresh(), $result));
+        if ($broadcastUpdate) {
+            broadcast(new KeywordUpdatedEvent($task->fresh(), $result));
+        }
     }
 
     public function processSearchVolumeTaskData(DataForSeoTask $task, array $taskData, SearchValueService $searchValueService): void
