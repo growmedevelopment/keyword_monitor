@@ -1,11 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Jobs;
 
 use App\Enums\DataForSeoTaskStatus;
 use App\Models\DataForSeoTask;
-use App\Services\SearchValueService;
 use App\Services\DataForSeo\CredentialsService;
+use App\Services\DataForSeoTaskResultProcessor;
+use App\Services\SearchValueService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -17,25 +20,22 @@ use Illuminate\Support\Facades\Log;
 
 class PollSearchValueTaskJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
 
-    protected DataForSeoTask $task;
-
-    /**
-     * Create a new job instance.
-     *
-     * @param DataForSeoTask $task
-     */
-    public function __construct(DataForSeoTask $task)
-    {
-        $this->task = $task;
-    }
+    public function __construct(
+        protected DataForSeoTask $task,
+    ) {}
 
     /**
      * Execute the job.
      */
-    public function handle(SearchValueService $searchValueService): void
-    {
+    public function handle(
+        SearchValueService $searchValueService,
+        DataForSeoTaskResultProcessor $taskResultProcessor,
+    ): void {
         try {
             $credentials = CredentialsService::get();
 
@@ -59,14 +59,16 @@ class PollSearchValueTaskJob implements ShouldQueue
                     Log::warning('Max retries reached for Search Value task (40400)', ['task_id' => $this->task->task_id]);
                     Cache::forget("search_value_retries:{$this->task->task_id}");
                 }
+
                 return;
             }
 
-            if (!$response->successful() || !isset($json['tasks'][0])) {
+            if (! $response->successful() || ! isset($json['tasks'][0])) {
                 Log::warning('Invalid DataForSEO Search Value response', [
                     'task_id' => $this->task->task_id,
                     'response' => $json,
                 ]);
+
                 return;
             }
 
@@ -93,28 +95,11 @@ class PollSearchValueTaskJob implements ShouldQueue
                 return;
             }
 
-            if ((int) $taskData['status_code'] === DataForSeoTaskStatus::COMPLETED && isset($taskData['result'][0])) {
+            if ((int) $taskData['status_code'] === DataForSeoTaskStatus::COMPLETED && isset($taskData['result'])) {
                 // Clear retry count on success
                 Cache::forget("search_value_retries:{$this->task->task_id}");
 
-                $result = $taskData['result'][0];
-
-                // Update SearchValue via service
-                $searchValueService->updateOrCreateForKeyword($this->task->keyword, [
-                    'search_volume' => $result['search_volume'] ?? null,
-                    'cpc' => $result['cpc'] ?? null,
-                    'competition' => $result['competition'] ?? null,
-                    'competition_index' => $result['competition_index'] ?? null,
-                    'low_top_of_page_bid' => $result['low_top_of_page_bid'] ?? null,
-                    'high_top_of_page_bid' => $result['high_top_of_page_bid'] ?? null,
-                    'search_partners' => $result['search_partners'] ?? false,
-                ]);
-
-                // Mark task as completed
-                $this->task->update([
-                    'completed_at' => now(),
-                    'raw_response' => json_encode($taskData, JSON_THROW_ON_ERROR),
-                ]);
+                $taskResultProcessor->processSearchVolumeTaskData($this->task, $taskData, $searchValueService);
 
                 Log::info('Search Value task completed and updated.', ['task_id' => $this->task->task_id]);
             } else {

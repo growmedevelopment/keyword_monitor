@@ -1,38 +1,32 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Http\Resources\KeywordRankResultResource;
+use App\Jobs\ProcessKeywordSubmissionChunkJob;
 use App\Models\Keyword;
 use App\Models\Project;
 use App\Services\KeywordMetricsService;
 use App\Services\KeywordSubmissionService;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Log;
-use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use App\Enums\DataForSeoTaskStatus;
+use Illuminate\Support\Carbon;
 
 class KeywordController extends Controller
 {
-    protected KeywordSubmissionService $keywordSubmissionService;
-    protected KeywordMetricsService $keywordMetricsService;
-
     public function __construct(
-        KeywordSubmissionService $keywordSubmissionService,
-        KeywordMetricsService $keywordMetricsService
-    ) {
-        $this->keywordSubmissionService = $keywordSubmissionService;
-        $this->keywordMetricsService = $keywordMetricsService;
-    }
+        protected KeywordSubmissionService $keywordSubmissionService,
+        protected KeywordMetricsService $keywordMetricsService,
+    ) {}
 
     public function addKeywordToProject(Request $request, string $project_id): JsonResponse
     {
         try {
             $request->validate([
-                'keywords'      => 'required|array|min:1',
-                'keywords.*'    => 'required|string|max:255',
+                'keywords' => 'required|array|min:1',
+                'keywords.*' => 'required|string|max:255',
                 'keyword_groups' => 'nullable|array',
                 'keyword_groups.*' => 'integer|exists:keyword_groups,id',
             ]);
@@ -42,7 +36,7 @@ class KeywordController extends Controller
 
             // 1. Normalize & Deduplicate Input
             $incomingKeywords = collect($request->keywords)
-                ->map(fn($k) => strtolower(trim($k)))
+                ->map(fn ($k) => strtolower(trim($k)))
                 ->unique();
 
             // 2. Find Duplicates in Database
@@ -55,36 +49,40 @@ class KeywordController extends Controller
             $newKeywords = $incomingKeywords->diff($existingKeywords);
 
             $addedKeywords = [];
+            $addedKeywordIds = [];
 
             // 4. Process Only New Keywords
             foreach ($newKeywords as $keywordText) {
 
-                $keyword = $this->keywordSubmissionService->submitKeyword(
+                $keyword = $this->keywordSubmissionService->createKeyword(
                     $project,
                     $keywordText,
-                    $groupIds
+                    $groupIds,
                 );
 
                 $keyword->load('keyword_groups');
+                $addedKeywordIds[] = $keyword->id;
 
                 $addedKeywords[] = array_merge(
                     $keyword->toArray(),
                     [
-                        'keyword_groups' => $keyword->keyword_groups->map(fn($g) => [
-                            'id'    => $g->id,
-                            'name'  => $g->name,
+                        'keyword_groups' => $keyword->keyword_groups->map(fn ($g) => [
+                            'id' => $g->id,
+                            'name' => $g->name,
                             'color' => $g->color,
                         ]),
                     ]
                 );
             }
 
+            ProcessKeywordSubmissionChunkJob::dispatchForKeywordIds($addedKeywordIds);
+
             return response()->json([
-                'message' => 'Keywords processed.',
-                'data'    => [
-                    'added_count'      => count($addedKeywords),
-                    'skipped_count'    => count($existingKeywords),
-                    'added_keywords'   => $addedKeywords,
+                'message' => 'Keywords queued for background processing.',
+                'data' => [
+                    'added_count' => count($addedKeywords),
+                    'skipped_count' => count($existingKeywords),
+                    'added_keywords' => $addedKeywords,
                     'skipped_keywords' => $existingKeywords,
                 ],
             ], 201);
@@ -99,22 +97,25 @@ class KeywordController extends Controller
     public function show(Request $request, string $id): JsonResponse
     {
         $keyword = Keyword::with([
-            'keywordsRank' => function ($query) {$query->orderBy('tracked_at', 'desc');},
+            'keywordsRank' => function ($query) {
+                $query->orderBy('tracked_at', 'desc');
+            },
             'keyword_groups',
             'searchValue',
         ])->findOrFail($id);
 
         return response()->json([
-            'id'            => $keyword->id,
-            'project_id'    => $keyword->project_id,
+            'id' => $keyword->id,
+            'project_id' => $keyword->project_id,
             'keyword_groups' => $keyword->keyword_groups,
-            'keyword'       => $keyword->keyword,
-            'search_value'  => $keyword->searchValue,
+            'keyword' => $keyword->keyword,
+            'search_value' => $keyword->searchValue,
             'keywords_rank' => KeywordRankResultResource::collection($keyword->keywordsRank),
         ]);
     }
 
-    public function destroy (Request $request, string $id):JsonResponse {
+    public function destroy(Request $request, string $id): JsonResponse
+    {
 
         try {
             $keyword = Keyword::findOrFail($id);
@@ -125,27 +126,26 @@ class KeywordController extends Controller
                 'status' => 'success',
                 'message' => 'keyword and all related results have been deleted',
             ]);
-        }catch (\Exception $e) {
+        } catch (\Exception $e) {
             return response()->json([
-                    'status' => 'error',
-                    'message' => $e->getMessage()]
-                , 500);
+                'status' => 'error',
+                'message' => $e->getMessage()], 500);
         }
     }
 
-    public function filteredResults(Request $request, string $id): JsonResponse {
+    public function filteredResults(Request $request, string $id): JsonResponse
+    {
         $mode = $request->input('mode', 'range');
 
         $startDate = $request->input('date_range.start_date');
-        $endDate   = $request->input('date_range.end_date');
+        $endDate = $request->input('date_range.end_date');
 
-        if ($mode !== 'latest' && (!$startDate || !$endDate)) {
+        if ($mode !== 'latest' && (! $startDate || ! $endDate)) {
             return response()->json(['error' => 'Missing date range'], 422);
         }
 
         $start = $startDate ? Carbon::parse($startDate)->startOfDay() : null;
-        $end   = $endDate ? Carbon::parse($endDate)->endOfDay() : null;
-
+        $end = $endDate ? Carbon::parse($endDate)->endOfDay() : null;
 
         $keyword = Keyword::with(['keywordsRank' => function ($q) use ($mode, $start, $end, $startDate, $endDate) {
 
@@ -186,8 +186,4 @@ class KeywordController extends Controller
 
         return response()->json($assignedIds);
     }
-
 }
-
-
-

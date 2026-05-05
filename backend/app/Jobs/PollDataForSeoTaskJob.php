@@ -3,18 +3,16 @@
 namespace App\Jobs;
 
 use App\Enums\DataForSeoTaskStatus;
-use App\Events\KeywordUpdatedEvent;
-use App\Models\DataForSeoResult;
 use App\Models\DataForSeoTask;
-use App\Models\KeywordRank;
+use App\Services\DataForSeoTaskResultProcessor;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Bus\Dispatchable;
 
 class PollDataForSeoTaskJob implements ShouldQueue
 {
@@ -27,37 +25,7 @@ class PollDataForSeoTaskJob implements ShouldQueue
         $this->task = $task;
     }
 
-    private function filterDataForSeoItemsByHost(array $items, string $project_url): ?array
-    {
-        $projectDomain = parse_url($project_url, PHP_URL_HOST);
-        $projectDomain = str_ireplace('www.', '', $projectDomain); // Normalize
-
-        $result = collect($items)
-            ->filter(function ($item) use ($projectDomain) {
-                if (!isset($item['domain'], $item['rank_group'])) {
-                    return false;
-                }
-
-                $itemDomain = str_ireplace('www.', '', $item['domain']);
-
-                return $itemDomain === $projectDomain;
-            })
-            ->sortBy('rank_group')
-            ->first();
-
-        return $result ?? [
-            "type"          => "no results",
-            "rank_group"    => 0,
-            "rank_absolute" => 0,
-            "domain"        => "",
-            "title"         => "no results",
-            "description"   => "no results",
-            "url"           => "",
-            "breadcrumb"    => "",
-        ];
-    }
-
-    public function handle(): void
+    public function handle(DataForSeoTaskResultProcessor $taskResultProcessor): void
     {
         sleep(15); // Initial wait before polling
 
@@ -87,6 +55,7 @@ class PollDataForSeoTaskJob implements ShouldQueue
                     Log::warning('Max retries reached for task (40400)', ['task_id' => $this->task->task_id]);
                     Cache::forget("seo_retries:{$this->task->task_id}");
                 }
+
                 return;
             }
 
@@ -97,8 +66,9 @@ class PollDataForSeoTaskJob implements ShouldQueue
 
             $taskData = $json['tasks'][0] ?? null;
 
-            if (!$taskData) {
+            if (! $taskData) {
                 Log::warning('No task data found in response', ['task_id' => $this->task->task_id]);
+
                 return;
             }
 
@@ -117,56 +87,16 @@ class PollDataForSeoTaskJob implements ShouldQueue
                 return;
             }
 
-            if (!isset($taskData['result'][0])) {
+            if (! isset($taskData['result'][0])) {
                 Log::warning('No result data found for task', ['task_id' => $this->task->task_id]);
+
                 return;
             }
 
             // Clear retry count on success
             Cache::forget("seo_retries:{$this->task->task_id}");
 
-            $projectHost = $this->task->keyword->project->url;
-            $items = $taskData['result'][0]['items'] ?? [];
-            $resultData = $this->filterDataForSeoItemsByHost($items, $projectHost);
-
-            if (!$resultData) {
-                Log::warning('No matching SEO item found', ['task_id' => $this->task->task_id]);
-                return;
-            }
-
-            // Update task with response
-            $this->task->update([
-                'status_message' => $taskData['status_message'],
-                'status_code' => $taskData['status_code'],
-                'completed_at' => now(),
-                'raw_response' => json_encode($taskData, JSON_THROW_ON_ERROR),
-            ]);
-
-            // Store result
-            $result = DataForSeoResult::create([
-                'data_for_seo_task_id' => $this->task->id,
-                'type' => $resultData['type'],
-                'rank_group' => $resultData['rank_group'],
-                'rank_absolute' => $resultData['rank_absolute'],
-                'domain' => $resultData['domain'],
-                'url' => $resultData['url'],
-                'title' => $resultData['title'],
-            ]);
-
-            // Save keyword position
-            KeywordRank::create([
-                'keyword_id' => $this->task->keyword_id,
-                'position' => $resultData['rank_group'],
-                'url' => $resultData['url'],
-                'raw' => $resultData,
-                'tracked_at' => now()->toDateString(),
-            ]);
-
-            // Update keyword last_submitted_at
-            $this->task->keyword->update(['last_submitted_at' => now()]);
-
-            // Notify frontend
-            broadcast(new KeywordUpdatedEvent($this->task, $result));
+            $taskResultProcessor->processSerpTaskData($this->task, $taskData);
 
         } catch (\Throwable $e) {
             Log::error('Failed to fetch DataForSEO result', [
