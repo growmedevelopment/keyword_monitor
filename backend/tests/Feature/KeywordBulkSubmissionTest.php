@@ -7,7 +7,9 @@ namespace Tests\Feature;
 use App\Jobs\ProcessKeywordSubmissionChunkJob;
 use App\Models\Project;
 use App\Models\User;
+use App\Services\KeywordSubmissionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
@@ -41,7 +43,7 @@ class KeywordBulkSubmissionTest extends TestCase
             ->assertJsonPath('data.added_count', 130)
             ->assertJsonPath('data.skipped_count', 0);
 
-        Queue::assertPushed(ProcessKeywordSubmissionChunkJob::class, 6);
+        Queue::assertPushed(ProcessKeywordSubmissionChunkJob::class, 2);
 
         $queuedKeywordCount = 0;
 
@@ -53,5 +55,85 @@ class KeywordBulkSubmissionTest extends TestCase
         });
 
         $this->assertSame(130, $queuedKeywordCount);
+    }
+
+    public function test_chunk_job_submits_keywords_to_dataforseo_in_one_batch_request(): void
+    {
+        Queue::fake();
+
+        $user = User::factory()->create();
+        $project = Project::factory()->create([
+            'user_id' => $user->id,
+        ]);
+
+        $firstKeyword = $project->keywords()->create([
+            'keyword' => 'alpha keyword',
+            'location' => $project->location_code,
+            'language' => 'en',
+            'tracking_priority' => 1,
+            'is_active' => true,
+        ]);
+
+        $secondKeyword = $project->keywords()->create([
+            'keyword' => 'beta keyword',
+            'location' => $project->location_code,
+            'language' => 'en',
+            'tracking_priority' => 1,
+            'is_active' => true,
+        ]);
+
+        Http::fake([
+            'https://api.dataforseo.com/v3/serp/google/organic/task_post' => Http::response([
+                'tasks' => [
+                    [
+                        'id' => 'task-alpha',
+                        'status_code' => 20100,
+                        'status_message' => 'Task Created.',
+                        'cost' => 0.001,
+                        'data' => [
+                            'tag' => "keyword_{$firstKeyword->id}_project_{$project->id}",
+                        ],
+                    ],
+                    [
+                        'id' => 'task-beta',
+                        'status_code' => 20100,
+                        'status_message' => 'Task Created.',
+                        'cost' => 0.001,
+                        'data' => [
+                            'tag' => "keyword_{$secondKeyword->id}_project_{$project->id}",
+                        ],
+                    ],
+                ],
+            ], 200),
+        ]);
+
+        $job = new ProcessKeywordSubmissionChunkJob([$firstKeyword->id, $secondKeyword->id], false);
+
+        $job->handle(app(KeywordSubmissionService::class));
+
+        Http::assertSentCount(1);
+        Http::assertSent(function (\Illuminate\Http\Client\Request $request) use ($firstKeyword, $secondKeyword, $project): bool {
+            if ($request->url() !== 'https://api.dataforseo.com/v3/serp/google/organic/task_post') {
+                return false;
+            }
+
+            $payload = $request->data();
+
+            return count($payload) === 2
+                && $payload[0]['tag'] === "keyword_{$firstKeyword->id}_project_{$project->id}"
+                && $payload[1]['tag'] === "keyword_{$secondKeyword->id}_project_{$project->id}";
+        });
+
+        $this->assertDatabaseCount('data_for_seo_tasks', 2);
+        $this->assertDatabaseHas('data_for_seo_tasks', [
+            'keyword_id' => $firstKeyword->id,
+            'project_id' => $project->id,
+            'task_id' => 'task-alpha',
+        ]);
+        $this->assertDatabaseHas('data_for_seo_tasks', [
+            'keyword_id' => $secondKeyword->id,
+            'project_id' => $project->id,
+            'task_id' => 'task-beta',
+        ]);
     }
 }

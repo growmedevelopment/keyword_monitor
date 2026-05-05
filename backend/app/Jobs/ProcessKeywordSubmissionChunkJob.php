@@ -8,6 +8,7 @@ use App\Models\Keyword;
 use App\Services\KeywordSubmissionService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
@@ -21,7 +22,7 @@ class ProcessKeywordSubmissionChunkJob implements ShouldQueue
     use Queueable;
     use SerializesModels;
 
-    public const int DEFAULT_CHUNK_SIZE = 25;
+    public const int DEFAULT_CHUNK_SIZE = KeywordSubmissionService::SERP_BATCH_SIZE;
 
     public const int DELAY_BETWEEN_CHUNKS_SECONDS = 2;
 
@@ -59,6 +60,8 @@ class ProcessKeywordSubmissionChunkJob implements ShouldQueue
             ->get()
             ->keyBy('id');
 
+        $keywordsToProcess = new EloquentCollection;
+
         foreach ($this->keywordIds as $keywordId) {
             /** @var Keyword|null $keyword */
             $keyword = $keywords->get($keywordId);
@@ -77,11 +80,25 @@ class ProcessKeywordSubmissionChunkJob implements ShouldQueue
                 continue;
             }
 
-            Log::info("🚀 Processing Keyword ID {$keyword->id} ({$keyword->keyword})");
-
-            $submissionService->submitExistingKeyword($keyword, $this->shouldRefreshSearchVolume);
-
-            Log::info("✅ Done for Keyword ID {$keyword->id}");
+            $keywordsToProcess->push($keyword);
         }
+
+        if ($keywordsToProcess->isEmpty()) {
+            return;
+        }
+
+        Log::info('🚀 Processing keyword submission batch.', [
+            'keyword_count' => $keywordsToProcess->count(),
+            'refresh_search_volume' => $this->shouldRefreshSearchVolume,
+        ]);
+
+        $submissionService->submitKeywordBatch(
+            keywords: $keywordsToProcess,
+            shouldRefreshSearchVolume: $this->shouldRefreshSearchVolume,
+        );
+
+        Log::info('✅ Finished keyword submission batch.', [
+            'keyword_count' => $keywordsToProcess->count(),
+        ]);
     }
 }

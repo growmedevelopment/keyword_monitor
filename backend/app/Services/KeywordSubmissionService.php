@@ -10,6 +10,7 @@ use App\Models\Keyword;
 use App\Models\KeywordRank;
 use App\Models\Project;
 use App\Services\DataForSeo\CredentialsService;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -17,6 +18,8 @@ use Illuminate\Support\Str;
 
 class KeywordSubmissionService
 {
+    public const int SERP_BATCH_SIZE = 100;
+
     public const int SUBMISSION_THROTTLE_MICROSECONDS = 200_000;
 
     public function __construct(
@@ -77,6 +80,45 @@ class KeywordSubmissionService
         usleep(self::SUBMISSION_THROTTLE_MICROSECONDS);
     }
 
+    public function submitKeywordBatch(EloquentCollection $keywords, bool $shouldRefreshSearchVolume = true): void
+    {
+        if ($keywords->isEmpty()) {
+            return;
+        }
+
+        $keywords->loadMissing('project');
+
+        $credentials = CredentialsService::get();
+
+        $payload = [];
+        $keywordsByTag = [];
+
+        foreach ($keywords as $keyword) {
+            /** @var Keyword $keyword */
+            /** @var Project $project */
+            $project = $keyword->project;
+            $tag = $this->buildTaskTag($keyword, $project);
+
+            $payload[] = $this->buildTaskPayload($keyword, $project);
+            $keywordsByTag[$tag] = [
+                'keyword' => $keyword,
+                'project' => $project,
+            ];
+        }
+
+        $this->submitBatchToDataForSeo($payload, $keywordsByTag, $credentials);
+
+        if (! $shouldRefreshSearchVolume) {
+            return;
+        }
+
+        foreach ($keywords as $keyword) {
+            /** @var Keyword $keyword */
+            $this->searchValueService->createTaskForKeyword($keyword);
+            usleep(self::SUBMISSION_THROTTLE_MICROSECONDS);
+        }
+    }
+
     /**
      * Build the payload array for submitting a keyword task to the DataForSEO API.
      *
@@ -90,14 +132,24 @@ class KeywordSubmissionService
      */
     public function buildPayload(Keyword $keyword, Project $project): array
     {
-        return [[
+        return [$this->buildTaskPayload($keyword, $project)];
+    }
+
+    public function buildTaskPayload(Keyword $keyword, Project $project): array
+    {
+        return [
             'keyword' => mb_convert_encoding($keyword->keyword, 'UTF-8'),
             'location_code' => $keyword->location,
             'language_code' => $keyword->language,
             'priority' => $keyword->tracking_priority,
-            'tag' => "keyword_{$keyword->id}_project_{$project->id}",
+            'tag' => $this->buildTaskTag($keyword, $project),
             'depth' => 20,
-        ]];
+        ];
+    }
+
+    public function buildTaskTag(Keyword $keyword, Project $project): string
+    {
+        return "keyword_{$keyword->id}_project_{$project->id}";
     }
 
     /**
@@ -165,6 +217,93 @@ class KeywordSubmissionService
             return [
                 'success' => false,
                 'message' => 'Exception occurred during submission.',
+                'errors' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $payload
+     * @param  array<string, array{keyword: Keyword, project: Project}>  $keywordsByTag
+     * @param  array<string, string>  $credentials
+     * @return array{success: bool, message: string, tasks?: array<int, DataForSeoTask>, errors?: mixed}
+     */
+    public function submitBatchToDataForSeo(array $payload, array $keywordsByTag, array $credentials): array
+    {
+        try {
+            $response = Http::withBasicAuth($credentials['username'], $credentials['password'])
+                ->post('https://api.dataforseo.com/v3/serp/google/organic/task_post', $payload);
+
+            $json = $response->json();
+
+            Log::info('DataForSEO batch response after submitting keywords', [
+                'task_count' => count($payload),
+                'data' => $json,
+            ]);
+
+            if (! $response->successful() || ! isset($json['tasks']) || ! is_array($json['tasks'])) {
+                Log::warning('Invalid batch response from DataForSEO.', [
+                    'response' => $json,
+                ]);
+
+                return [
+                    'success' => false,
+                    'message' => 'Invalid batch response from DataForSEO.',
+                    'errors' => $json,
+                ];
+            }
+
+            $createdTasks = [];
+
+            foreach ($json['tasks'] as $task) {
+                $tag = $task['data']['tag'] ?? null;
+
+                if (! is_string($tag) || ! isset($keywordsByTag[$tag])) {
+                    Log::warning('Skipped DataForSEO batch task because tag mapping is missing.', [
+                        'task' => $task,
+                    ]);
+
+                    continue;
+                }
+
+                if (! isset($task['id'])) {
+                    Log::warning('Skipped DataForSEO batch task because task id is missing.', [
+                        'tag' => $tag,
+                        'task' => $task,
+                    ]);
+
+                    continue;
+                }
+
+                $keyword = $keywordsByTag[$tag]['keyword'];
+                $project = $keywordsByTag[$tag]['project'];
+
+                $createdTasks[] = DataForSeoTask::create([
+                    'keyword_id' => $keyword->id,
+                    'project_id' => $project->id,
+                    'task_id' => $task['id'],
+                    'status_message' => $task['status_message'] ?? null,
+                    'status_code' => $task['status_code'] ?? null,
+                    'cost' => $task['cost'] ?? null,
+                    'submitted_at' => now(),
+                    'raw_response' => json_encode($task, JSON_THROW_ON_ERROR),
+                ]);
+            }
+
+            return [
+                'success' => true,
+                'message' => 'Batch tasks created successfully.',
+                'tasks' => $createdTasks,
+            ];
+        } catch (\Throwable $e) {
+            Log::error('Failed to submit keyword batch to DataForSEO.', [
+                'error' => $e->getMessage(),
+                'task_count' => count($payload),
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Exception occurred during batch submission.',
                 'errors' => $e->getMessage(),
             ];
         }
