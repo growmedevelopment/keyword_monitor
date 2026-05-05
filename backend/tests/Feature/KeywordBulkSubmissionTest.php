@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Jobs\PollSearchValueTaskJob;
+use App\Jobs\FetchReadySearchVolumeTasksJob;
+use App\Jobs\FetchReadySerpTasksJob;
 use App\Jobs\ProcessKeywordSubmissionChunkJob;
 use App\Models\DataForSeoTask;
 use App\Models\Project;
 use App\Models\User;
+use App\Services\DataForSeoTaskResultProcessor;
 use App\Services\KeywordSubmissionService;
 use App\Services\SearchValueService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -208,10 +210,10 @@ class KeywordBulkSubmissionTest extends TestCase
             'task_id' => 'search-volume-batch-task',
         ]);
 
-        Queue::assertPushed(PollSearchValueTaskJob::class, 1);
+        Queue::assertNothingPushed();
     }
 
-    public function test_search_volume_poll_job_updates_all_keywords_from_batch_result(): void
+    public function test_search_volume_tasks_ready_job_updates_all_keywords_from_batch_result(): void
     {
         Queue::fake();
 
@@ -255,6 +257,18 @@ class KeywordBulkSubmissionTest extends TestCase
         ]);
 
         Http::fake([
+            'https://api.dataforseo.com/v3/keywords_data/google_ads/search_volume/tasks_ready' => Http::response([
+                'tasks' => [
+                    [
+                        'result' => [
+                            [
+                                'id' => 'search-volume-batch-task',
+                                'endpoint' => '/v3/keywords_data/google_ads/search_volume/task_get/search-volume-batch-task',
+                            ],
+                        ],
+                    ],
+                ],
+            ], 200),
             'https://api.dataforseo.com/v3/keywords_data/google_ads/search_volume/task_get/search-volume-batch-task' => Http::response([
                 'tasks' => [
                     [
@@ -287,8 +301,11 @@ class KeywordBulkSubmissionTest extends TestCase
             ], 200),
         ]);
 
-        $job = new PollSearchValueTaskJob($task);
-        $job->handle(app(SearchValueService::class));
+        $job = new FetchReadySearchVolumeTasksJob;
+        $job->handle(
+            app(SearchValueService::class),
+            app(DataForSeoTaskResultProcessor::class),
+        );
 
         $this->assertDatabaseHas('search_values', [
             'keyword_id' => $firstKeyword->id,
@@ -300,6 +317,93 @@ class KeywordBulkSubmissionTest extends TestCase
             'search_volume' => 250,
             'competition_index' => 70,
             'search_partners' => 1,
+        ]);
+    }
+
+    public function test_serp_tasks_ready_job_updates_keyword_result_and_rank(): void
+    {
+        Queue::fake();
+        config(['broadcasting.default' => 'null']);
+
+        $user = User::factory()->create();
+        $project = Project::factory()->create([
+            'user_id' => $user->id,
+            'url' => 'https://example.com',
+        ]);
+
+        $keyword = $project->keywords()->create([
+            'keyword' => 'alpha keyword',
+            'location' => $project->location_code,
+            'language' => 'en',
+            'tracking_priority' => 1,
+            'is_active' => true,
+        ]);
+
+        $task = DataForSeoTask::create([
+            'keyword_id' => $keyword->id,
+            'project_id' => $project->id,
+            'task_id' => 'serp-task-1',
+            'status_message' => 'Task Created.',
+            'status_code' => 20100,
+            'submitted_at' => now(),
+            'raw_response' => json_encode([
+                'data' => [
+                    'keyword' => 'alpha keyword',
+                ],
+            ], JSON_THROW_ON_ERROR),
+        ]);
+
+        Http::fake([
+            'https://api.dataforseo.com/v3/serp/google/organic/tasks_ready' => Http::response([
+                'tasks' => [
+                    [
+                        'result' => [
+                            [
+                                'id' => 'serp-task-1',
+                                'endpoint_regular' => '/v3/serp/google/organic/task_get/regular/serp-task-1',
+                            ],
+                        ],
+                    ],
+                ],
+            ], 200),
+            'https://api.dataforseo.com/v3/serp/google/organic/task_get/regular/serp-task-1' => Http::response([
+                'tasks' => [
+                    [
+                        'status_code' => 20000,
+                        'status_message' => 'Ok.',
+                        'result' => [
+                            [
+                                'items' => [
+                                    [
+                                        'type' => 'organic',
+                                        'rank_group' => 3,
+                                        'rank_absolute' => 3,
+                                        'domain' => 'example.com',
+                                        'title' => 'Example title',
+                                        'description' => 'Example description',
+                                        'url' => 'https://example.com/page',
+                                        'breadcrumb' => 'Example > Page',
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ], 200),
+        ]);
+
+        $job = new FetchReadySerpTasksJob;
+        $job->handle(app(DataForSeoTaskResultProcessor::class));
+
+        $this->assertDatabaseHas('data_for_seo_results', [
+            'data_for_seo_task_id' => $task->id,
+            'rank_group' => 3,
+            'domain' => 'example.com',
+        ]);
+        $this->assertDatabaseHas('keyword_ranks', [
+            'keyword_id' => $keyword->id,
+            'position' => 3,
+            'url' => 'https://example.com/page',
         ]);
     }
 }

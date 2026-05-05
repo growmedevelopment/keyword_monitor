@@ -6,8 +6,8 @@ namespace App\Jobs;
 
 use App\Enums\DataForSeoTaskStatus;
 use App\Models\DataForSeoTask;
-use App\Models\Keyword;
 use App\Services\DataForSeo\CredentialsService;
+use App\Services\DataForSeoTaskResultProcessor;
 use App\Services\SearchValueService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -32,8 +32,10 @@ class PollSearchValueTaskJob implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(SearchValueService $searchValueService): void
-    {
+    public function handle(
+        SearchValueService $searchValueService,
+        DataForSeoTaskResultProcessor $taskResultProcessor,
+    ): void {
         try {
             $credentials = CredentialsService::get();
 
@@ -97,13 +99,7 @@ class PollSearchValueTaskJob implements ShouldQueue
                 // Clear retry count on success
                 Cache::forget("search_value_retries:{$this->task->task_id}");
 
-                $this->updateSearchValues($taskData['result'], $searchValueService);
-
-                // Mark task as completed
-                $this->task->update([
-                    'completed_at' => now(),
-                    'raw_response' => json_encode($taskData, JSON_THROW_ON_ERROR),
-                ]);
+                $taskResultProcessor->processSearchVolumeTaskData($this->task, $taskData, $searchValueService);
 
                 Log::info('Search Value task completed and updated.', ['task_id' => $this->task->task_id]);
             } else {
@@ -119,71 +115,5 @@ class PollSearchValueTaskJob implements ShouldQueue
                 'error' => $e->getMessage(),
             ]);
         }
-    }
-
-    /**
-     * @param  array<int, array<string, mixed>>  $results
-     */
-    private function updateSearchValues(array $results, SearchValueService $searchValueService): void
-    {
-        $keywordMap = $this->task->batch_keyword_map ?? [];
-
-        if ($keywordMap === [] && $this->task->keyword_id !== null && $this->task->keyword !== null) {
-            $keywordMap = [
-                $this->normalizeKeyword($this->task->keyword->keyword) => $this->task->keyword_id,
-            ];
-        }
-
-        $keywords = Keyword::query()
-            ->whereIn('id', array_values($keywordMap))
-            ->get()
-            ->keyBy('id');
-
-        foreach ($results as $result) {
-            $keywordText = isset($result['keyword']) ? (string) $result['keyword'] : null;
-
-            if ($keywordText === null) {
-                continue;
-            }
-
-            $keywordId = $keywordMap[$this->normalizeKeyword($keywordText)] ?? null;
-
-            if (! is_int($keywordId)) {
-                Log::warning('Skipped search value result because keyword mapping is missing.', [
-                    'task_id' => $this->task->task_id,
-                    'keyword' => $keywordText,
-                ]);
-
-                continue;
-            }
-
-            /** @var Keyword|null $keyword */
-            $keyword = $keywords->get($keywordId);
-
-            if ($keyword === null) {
-                Log::warning('Skipped search value result because keyword no longer exists.', [
-                    'task_id' => $this->task->task_id,
-                    'keyword_id' => $keywordId,
-                    'keyword' => $keywordText,
-                ]);
-
-                continue;
-            }
-
-            $searchValueService->updateOrCreateForKeyword($keyword, [
-                'search_volume' => $result['search_volume'] ?? null,
-                'cpc' => $result['cpc'] ?? null,
-                'competition' => $result['competition'] ?? null,
-                'competition_index' => $result['competition_index'] ?? null,
-                'low_top_of_page_bid' => $result['low_top_of_page_bid'] ?? null,
-                'high_top_of_page_bid' => $result['high_top_of_page_bid'] ?? null,
-                'search_partners' => $result['search_partners'] ?? false,
-            ]);
-        }
-    }
-
-    private function normalizeKeyword(string $keyword): string
-    {
-        return mb_strtolower(trim($keyword));
     }
 }

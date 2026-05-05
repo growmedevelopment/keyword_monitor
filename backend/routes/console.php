@@ -1,5 +1,7 @@
 <?php
 
+use App\Jobs\FetchReadySearchVolumeTasksJob;
+use App\Jobs\FetchReadySerpTasksJob;
 use App\Jobs\ProcessDailyKeywordRanksJob;
 use Illuminate\Support\Facades\Schedule;
 
@@ -16,6 +18,16 @@ Schedule::call(static function (): void {
     ->timezone('America/Edmonton')
     ->name('keyword-rank-job')
     ->onSuccess(static fn () => info('[Scheduler] Keyword rank job dispatched'));
+
+Schedule::job(new FetchReadySerpTasksJob)
+    ->everyMinute()
+    ->timezone('America/Edmonton')
+    ->name('dataforseo-serp-tasks-ready');
+
+Schedule::job(new FetchReadySearchVolumeTasksJob)
+    ->everyMinute()
+    ->timezone('America/Edmonton')
+    ->name('dataforseo-search-volume-tasks-ready');
 
 /*
 |--------------------------------------------------------------------------
