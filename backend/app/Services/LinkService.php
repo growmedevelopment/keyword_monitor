@@ -1,162 +1,275 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use App\Enums\LinkType;
-use App\Models\Project;
+use App\Jobs\ProcessLinkSubmissionChunkJob;
 use App\Models\LinkTarget;
 use App\Models\LinkTask;
-use Illuminate\Database\Eloquent\Collection;
+use App\Models\Project;
+use App\Services\DataForSeo\CredentialsService;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class LinkService
 {
+    public const int SUBMISSION_BATCH_SIZE = 100;
+
     /**
-     * Add unique URLs and create DFS tasks.
-     * Skips URLs that already exist for this project and type.
+     * Add unique URLs and queue DFS tasks in the background.
+     *
+     * @param  array<int, string>  $urls
+     * @return array{
+     *     added: array<int, array<string, mixed>>,
+     *     skipped: array<int, string>
+     * }
      */
     public function addUrls(Project $project, array $urls, string $type): array
     {
-        // 1. Resolve Type
-        $enum = LinkType::tryFrom($type);
-        // Fallback or throw error if invalid type (though validation catches this)
-        $dbType = match($enum) {
-            LinkType::Backlinks => 'backlink',
-            LinkType::Citations => 'citation',
-            default => 'backlink'
-        };
+        $dbType = $this->resolveDatabaseType(LinkType::from($type));
 
-        // 2. Normalize Input
-        $incomingUrls = collect($urls)->map(fn($u) => trim($u))->unique();
+        $incomingUrls = collect($urls)
+            ->map(static fn (string $url): string => trim($url))
+            ->filter(static fn (string $url): bool => $url !== '')
+            ->unique()
+            ->values();
 
-        // 3. Find Existing URLs in DB (for this project & type)
         $existingUrls = $project->link_urls()
             ->where('type', $dbType)
             ->whereIn('url', $incomingUrls)
             ->pluck('url')
-            ->toArray();
+            ->all();
 
-        // 4. Calculate New URLs (Diff)
-        $newUrls = $incomingUrls->diff($existingUrls);
+        $newUrls = $incomingUrls->diff($existingUrls)->values();
+        $addedTargets = new EloquentCollection;
 
-        $addedModels = [];
-
-        // 5. Create & Trigger Checks for NEW URLs only
         foreach ($newUrls as $url) {
-            /** @var LinkTarget $target */
-            $target = $project->link_urls()->create([
-                'url'  => $url,
+            $addedTargets->push($project->link_urls()->create([
+                'url' => $url,
                 'type' => $dbType,
-            ]);
-
-            // Trigger the external API check immediately
-            $this->checkBacklink($target);
-
-            $addedModels[] = $target;
+            ]));
         }
 
-        // 6. Return structured result
+        if ($addedTargets->isNotEmpty()) {
+            ProcessLinkSubmissionChunkJob::dispatchForLinkTargetIds($addedTargets->modelKeys());
+        }
+
         return [
-            'added'   => $addedModels,
-            'skipped' => $existingUrls, // List of URLs that were duplicates
+            'added' => $addedTargets
+                ->map(fn (LinkTarget $target): array => $this->transformLinkTarget($target, true))
+                ->all(),
+            'skipped' => array_values($existingUrls),
         ];
     }
 
     /**
-     * Universal shared function to get targets by type
+     * Universal shared function to get targets by type.
+     *
+     * @return Collection<int, array<string, mixed>>
      */
-    public function getLinksByType(Project $project, string $type): Collection|\Illuminate\Support\Collection {
-        // We filter by the 'type' column here
+    public function getLinksByType(Project $project, string $type): Collection
+    {
         $targets = $project->link_urls()
             ->where('type', $type)
-            ->with(['checks' => fn($q) => $q->orderBy('checked_at', 'desc')])
+            ->withExists([
+                'tasks as has_pending_task' => static fn ($query) => $query->whereNull('completed_at'),
+            ])
+            ->with([
+                'checks' => static fn ($query) => $query->orderByDesc('checked_at'),
+            ])
             ->orderBy('id')
             ->get();
 
-        return $targets->map(function ($t) {
-            $latest = $t->checks->first();
-            $isChecking = $t->tasks()->whereNull('completed_at')->exists();
-
-            return [
-                'id'            => $t->id,
-                'url'           => $t->url,
-                'type'          => $t->type, // Useful to see in the response
-                'is_checking'   => $isChecking,
-
-                'latest_result' => $latest ? [
-                    'http_code'   => $latest->http_code,
-                    'indexed'     => $latest->indexed,
-                    'checked_at'  => $latest->checked_at,
-                ] : (object)[],
-
-                'history'       => $t->checks->map(fn($h) => [
-                    'http_code'  => $h->http_code,
-                    'indexed'    => $h->indexed,
-                    'title'      => $h->title ?? null, // Added null check safety
-                    'checked_at' => $h->checked_at,
-                ]),
-            ];
-        });
+        return $targets->map(
+            fn (LinkTarget $target): array => $this->transformLinkTarget(
+                target: $target,
+                isChecking: (bool) $target->getAttribute('has_pending_task'),
+            ),
+        );
     }
 
     /**
-     * Return only Backlinks
+     * Return only Backlinks.
+     *
+     * @return Collection<int, array<string, mixed>>
      */
-    public function getBacklinkList(Project $project): Collection|\Illuminate\Support\Collection {
+    public function getBacklinkList(Project $project): Collection
+    {
         return $this->getLinksByType($project, 'backlink');
     }
 
     /**
-     * Return only Citations
+     * Return only Citations.
+     *
+     * @return Collection<int, array<string, mixed>>
      */
-    public function getCitationList(Project $project): Collection|\Illuminate\Support\Collection {
+    public function getCitationList(Project $project): Collection
+    {
         return $this->getLinksByType($project, 'citation');
     }
 
-    /**
-     * Trigger a check for a single backlink target
-     */
     public function checkBacklink(LinkTarget $target): void
     {
-        $username = config('services.dataforseo.username');
-        $password = config('services.dataforseo.password');
+        $this->submitBacklinkBatch(new EloquentCollection([$target]));
+    }
 
-        $payload = $this->buildPayload($target);
+    /**
+     * @param  EloquentCollection<int, LinkTarget>  $targets
+     * @return array{success: bool, message: string}
+     */
+    public function submitBacklinkBatch(EloquentCollection $targets): array
+    {
+        if ($targets->isEmpty()) {
+            return [
+                'success' => true,
+                'message' => 'No backlink targets to submit.',
+            ];
+        }
 
-        $response = Http::withBasicAuth($username, $password)
-            ->post("https://api.dataforseo.com/v3/serp/google/organic/task_post", $payload)
-            ->json();
-
-        $task = $response['tasks'][0] ?? null;
-
-        if ($task) {
-            LinkTask::create([
-                'backlink_target_id' => $target->id,
-                'task_id'            => $task['id'],
-                'status_code'        => $task['status_code'],
-                'status_message'     => $task['status_message'],
+        try {
+            $credentials = CredentialsService::get();
+        } catch (\Throwable $exception) {
+            Log::error('Failed to resolve DataForSEO credentials for backlink batch.', [
+                'error' => $exception->getMessage(),
+                'target_count' => $targets->count(),
             ]);
+
+            return [
+                'success' => false,
+                'message' => 'Missing DataForSEO credentials.',
+            ];
+        }
+
+        $payload = [];
+        $targetsByTag = [];
+
+        foreach ($targets as $target) {
+            $payload[] = $this->buildTaskPayload($target);
+            $targetsByTag[(string) $target->id] = $target;
+        }
+
+        try {
+            $response = Http::withBasicAuth($credentials['username'], $credentials['password'])
+                ->post('https://api.dataforseo.com/v3/serp/google/organic/task_post', $payload);
+
+            $json = $response->json();
+
+            Log::info('DataForSEO batch response after submitting backlinks', [
+                'target_count' => count($payload),
+                'data' => $json,
+            ]);
+
+            if (! $response->successful() || ! isset($json['tasks']) || ! is_array($json['tasks'])) {
+                Log::warning('Invalid backlink batch response from DataForSEO.', [
+                    'response' => $json,
+                ]);
+
+                return [
+                    'success' => false,
+                    'message' => 'Invalid batch response from DataForSEO.',
+                ];
+            }
+
+            foreach ($json['tasks'] as $task) {
+                $tag = (string) ($task['data']['tag'] ?? '');
+
+                if ($tag === '' || ! isset($targetsByTag[$tag])) {
+                    Log::warning('Skipped backlink batch task because tag mapping is missing.', [
+                        'task' => $task,
+                    ]);
+
+                    continue;
+                }
+
+                if (! isset($task['id'])) {
+                    Log::warning('Skipped backlink batch task because task id is missing.', [
+                        'task' => $task,
+                    ]);
+
+                    continue;
+                }
+
+                LinkTask::create([
+                    'backlink_target_id' => $targetsByTag[$tag]->id,
+                    'task_id' => $task['id'],
+                    'status_code' => $task['status_code'] ?? null,
+                    'status_message' => $task['status_message'] ?? null,
+                    'raw_response' => json_encode($task, JSON_THROW_ON_ERROR),
+                ]);
+            }
+
+            return [
+                'success' => true,
+                'message' => 'Backlink batch submitted successfully.',
+            ];
+        } catch (\Throwable $exception) {
+            Log::error('Failed to submit backlink batch to DataForSEO.', [
+                'error' => $exception->getMessage(),
+                'target_count' => count($payload),
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Exception occurred during backlink submission.',
+            ];
         }
     }
 
-    /**
-     * Build DFS payload
-     */
-    protected function buildPayload(LinkTarget $target): array
+    public function removeBacklink(LinkTarget $target): void
     {
-        return [[
-                    "language_name" => "English",
-                    "location_name" => "Canada",
-                    "tag"           => $target->id,
-                    "keyword"       => "site:{$target->url}",
-                ]];
-    }
-
-    /**
-     * Remove a backlink target from the project
-     */
-    public function removeBacklink(LinkTarget $target): void {
         $target->delete();
     }
 
+    protected function buildTaskPayload(LinkTarget $target): array
+    {
+        return [
+            'language_name' => 'English',
+            'location_name' => 'Canada',
+            'tag' => (string) $target->id,
+            'keyword' => "site:{$target->url}",
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function transformLinkTarget(LinkTarget $target, bool $isChecking): array
+    {
+        $checks = $target->relationLoaded('checks')
+            ? $target->checks
+            : $target->checks()->orderByDesc('checked_at')->get();
+
+        $latest = $checks->first();
+
+        return [
+            'id' => $target->id,
+            'url' => $target->url,
+            'type' => $target->type,
+            'is_checking' => $isChecking,
+            'latest_result' => [
+                'http_code' => $latest?->http_code,
+                'indexed' => $latest?->indexed,
+                'title' => $latest?->title,
+                'checked_at' => $latest?->checked_at,
+            ],
+            'history' => $checks->map(static fn ($check): array => [
+                'http_code' => $check->http_code,
+                'indexed' => $check->indexed,
+                'title' => $check->title,
+                'checked_at' => $check->checked_at,
+            ])->values()->all(),
+        ];
+    }
+
+    protected function resolveDatabaseType(LinkType $type): string
+    {
+        return match ($type) {
+            LinkType::Backlinks => 'backlink',
+            LinkType::Citations => 'citation',
+        };
+    }
 }

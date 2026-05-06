@@ -18,6 +18,7 @@ interface Props {
     links: LinkItem[];
     loading: boolean;
     onRefresh?: () => void;
+    onAdded?: (items: LinkItem[]) => void;
     onDelete?: (id: number) => void;
     projectId: string;
     openHistory: (item: LinkItem) => void;
@@ -43,7 +44,7 @@ const SkippedUrlsList = ({ urls }: { urls: string[] }) => (
     </div>
 );
 
-export default function LinksTable({type, links, loading, projectId, openHistory, onRefresh, onDelete}: Props) {
+export default function LinksTable({type, links, loading, projectId, openHistory, onRefresh, onAdded, onDelete}: Props) {
     const [addingUrlDialog, setAddingUrlDialog] = useState(false);
     const link_type = type === 'backlinks' ? 'Backlinks' : 'Citations';
 
@@ -53,6 +54,7 @@ export default function LinksTable({type, links, loading, projectId, openHistory
         try {
             const response = await linkService.create(projectId, urls, type);
             toast.success(response.message);
+            onAdded?.(response.data.added_urls);
             if (response.data.skipped_urls.length > 0) {
                 toast.custom(
                     (toastInstance) => (
@@ -64,7 +66,6 @@ export default function LinksTable({type, links, loading, projectId, openHistory
                     { duration: Infinity },
                 );
             }
-            onRefresh?.();
         } catch (e) {
             console.error(e);
             toast.error("Failed to add URLs");
@@ -95,7 +96,7 @@ export default function LinksTable({type, links, loading, projectId, openHistory
                         sx={{display: 'flex', alignContent: 'center', alignItems: 'center', gap: '5px'}}
                         onClick={()=>{
                             linkService.reCheckAllLinks(projectId, type).then(
-                                (response: any) => {
+                                (response) => {
                                     toast.success(response.message || "Rechecking all links started.");
                                     onRefresh?.();
                                 },
@@ -118,13 +119,11 @@ export default function LinksTable({type, links, loading, projectId, openHistory
                     rowData={links}
                     columnDefs={columnDefs}
                     defaultColDef={defaultColDef}
-                    autoSizeStrategy={{
-                        type: 'fitCellContents'
-                    }}
+                    getRowId={({ data }) => String(data.id)}
                     context={{ openHistory, onDelete, projectId}}
                     pagination={true}
                     paginationPageSize={20}
-                    animateRows={true}
+                    animateRows={false}
                     groupDisplayType="groupRows"
                     rowGroupPanelShow="never"
                     loading={loading}
