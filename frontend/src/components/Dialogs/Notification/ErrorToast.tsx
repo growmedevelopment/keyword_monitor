@@ -22,9 +22,11 @@ export default function ErrorToast({ toastInstance, message }: Props) {
                 borderColor: 'error.light',
                 opacity: toastInstance.visible ? 1 : 0,
                 transition: 'opacity 0.3s ease',
+                maxHeight: '50dvh',
+
             }}
         >
-            <Box sx={{ flex: 1, p: 2, display: 'flex', gap: 1.5, alignItems: 'flex-start' }}>
+            <Box sx={{ flex: 1, p: 2, display: 'flex', gap: 1.5, alignItems: 'flex-start',  overflowY: 'scroll' }}>
                 <ErrorOutlineIcon color="error" sx={{ mt: 0.3, flexShrink: 0 }} />
                 <Typography variant="body2" sx={{ color: 'text.primary', wordBreak: 'break-word' }}>
                     {message}
