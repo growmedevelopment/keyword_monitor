@@ -41,6 +41,10 @@ export type DeleteResponseType = {
     message: string;
 }
 
+export type RecheckAllLinksResponseType = {
+    message: string;
+}
+
 export default {
     async getAll(projectId: string): Promise<LinkItem[]> {
         const res = await axios.get<LinkItem[]>(`${API}/api/projects/${projectId}/links`);
@@ -66,8 +70,8 @@ export default {
         return res.data;
     },
 
-    async reCheckAllLinks(projectId: string, type: 'backlinks' | 'citations'): Promise<void> {
-        const res = await axios.post(`${API}/api/projects/${projectId}/links/recheck-all`, {
+    async reCheckAllLinks(projectId: string, type: 'backlinks' | 'citations'): Promise<RecheckAllLinksResponseType> {
+        const res = await axios.post<RecheckAllLinksResponseType>(`${API}/api/projects/${projectId}/links/recheck-all`, {
             type
         });
         return res.data;

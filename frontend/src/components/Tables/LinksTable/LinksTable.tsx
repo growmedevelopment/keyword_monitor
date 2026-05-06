@@ -9,6 +9,7 @@ import type { LinkItem } from "../../../services/linkService.ts";
 import linkService from "../../../services/linkService.ts";
 import toast from "react-hot-toast";
 import AddUrlDialog from "../../Dialogs/AddUrl/AddUrlDialog.tsx";
+import ErrorToast from "../../Dialogs/Notification/ErrorToast.tsx";
 import RotateLeftIcon from '@mui/icons-material/RotateLeft';
 import ExportLinksButton from "./ExportLinksButton.tsx";
 
@@ -17,23 +18,54 @@ interface Props {
     links: LinkItem[];
     loading: boolean;
     onRefresh?: () => void;
+    onAdded?: (items: LinkItem[]) => void;
     onDelete?: (id: number) => void;
     projectId: string;
     openHistory: (item: LinkItem) => void;
 }
 
-export default function LinksTable({type, links, loading, projectId, openHistory, onRefresh, onDelete}: Props) {
+const SkippedUrlsList = ({ urls }: { urls: string[] }) => (
+    <div style={{ textAlign: 'left' }}>
+        <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>
+            Some URLs were skipped (already exist in table):
+        </div>
+        <ul style={{
+            margin: 0,
+            paddingLeft: '20px',
+            fontSize: '12px',
+            wordBreak: 'break-all'
+        }}>
+            {urls.map((url, index) => (
+                <li key={index} style={{ marginBottom: '4px' }}>
+                    {url}
+                </li>
+            ))}
+        </ul>
+    </div>
+);
+
+export default function LinksTable({type, links, loading, projectId, openHistory, onRefresh, onAdded, onDelete}: Props) {
     const [addingUrlDialog, setAddingUrlDialog] = useState(false);
     const link_type = type === 'backlinks' ? 'Backlinks' : 'Citations';
 
     const handleAddUrl = async (urls: string[]) => {
+        toast.success("URLs sent for processing. Please wait for the results.");
+        setAddingUrlDialog(false);
         try {
             const response = await linkService.create(projectId, urls, type);
             toast.success(response.message);
-            if(response.data.skipped_urls.length > 0) {
-                toast.error(`Some URLs were skipped (It's already exist in table): ${response.data.skipped_urls.join(', ')}`);
+            onAdded?.(response.data.added_urls);
+            if (response.data.skipped_urls.length > 0) {
+                toast.custom(
+                    (toastInstance) => (
+                        <ErrorToast
+                            toastInstance={toastInstance}
+                            message={<SkippedUrlsList urls={response.data.skipped_urls} />}
+                        />
+                    ),
+                    { duration: Infinity },
+                );
             }
-            onRefresh?.();
         } catch (e) {
             console.error(e);
             toast.error("Failed to add URLs");
@@ -64,7 +96,7 @@ export default function LinksTable({type, links, loading, projectId, openHistory
                         sx={{display: 'flex', alignContent: 'center', alignItems: 'center', gap: '5px'}}
                         onClick={()=>{
                             linkService.reCheckAllLinks(projectId, type).then(
-                                (response: any) => {
+                                (response) => {
                                     toast.success(response.message || "Rechecking all links started.");
                                     onRefresh?.();
                                 },
@@ -87,13 +119,11 @@ export default function LinksTable({type, links, loading, projectId, openHistory
                     rowData={links}
                     columnDefs={columnDefs}
                     defaultColDef={defaultColDef}
-                    autoSizeStrategy={{
-                        type: 'fitCellContents'
-                    }}
+                    getRowId={({ data }) => String(data.id)}
                     context={{ openHistory, onDelete, projectId}}
                     pagination={true}
                     paginationPageSize={20}
-                    animateRows={true}
+                    animateRows={false}
                     groupDisplayType="groupRows"
                     rowGroupPanelShow="never"
                     loading={loading}

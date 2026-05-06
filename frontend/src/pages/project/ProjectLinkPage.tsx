@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import linkService, { type LinkItem } from "../../services/linkService.ts";
 import {
     Drawer,
@@ -35,25 +35,43 @@ export default function ProjectLinkPage() {
     const [projectName, setProjectName] = useState<string>("");
     const [loading, setLoading] = useState(true);
     const [historyData, setHistoryData] = useState<LinkItem | null>(null);
+    const reloadTimeoutRef = useRef<number | null>(null);
 
     const link_type = type === 'backlinks' ? 'Backlinks' : 'Citations';
 
-    const reloadLinks = () => {
+    const reloadLinks = useCallback(() => {
         setLoading(true);
         linkService.getLinksByType(type, project_id).then((response) => {
             setLinks(response);
             setLoading(false);
         });
-    };
+    }, [project_id, type]);
 
-    const getProjectName = () => {
+    const getProjectName = useCallback(() => {
         projectService.getProjectName(project_id).then(res => setProjectName(res) );
+    }, [project_id]);
+
+    const mergeAddedLinks = (addedLinks: LinkItem[]) => {
+        if (addedLinks.length === 0) {
+            return;
+        }
+
+        setLinks((previousLinks) => {
+            const existingIds = new Set(previousLinks.map((link) => link.id));
+            const uniqueNewLinks = addedLinks.filter((link) => !existingIds.has(link.id));
+
+            if (uniqueNewLinks.length === 0) {
+                return previousLinks;
+            }
+
+            return [...uniqueNewLinks, ...previousLinks];
+        });
     };
 
     useEffect(() => {
         reloadLinks();
         getProjectName();
-    }, [project_id]);
+    }, [getProjectName, reloadLinks]);
 
 
     // --------------------------------------------
@@ -65,14 +83,25 @@ export default function ProjectLinkPage() {
         const channel = pusher.subscribe(`backlinks.${project_id}`);
 
         channel.bind("backlink-updated", () => {
-            reloadLinks();
+            if (reloadTimeoutRef.current !== null) {
+                window.clearTimeout(reloadTimeoutRef.current);
+            }
+
+            reloadTimeoutRef.current = window.setTimeout(() => {
+                reloadLinks();
+                reloadTimeoutRef.current = null;
+            }, 500);
         });
 
         return () => {
+            if (reloadTimeoutRef.current !== null) {
+                window.clearTimeout(reloadTimeoutRef.current);
+                reloadTimeoutRef.current = null;
+            }
             channel.unbind("backlink-updated");
             pusher.unsubscribe(`backlinks.${project_id}`);
         };
-    }, [project_id]);
+    }, [project_id, reloadLinks]);
     // --------------------------------------------
 
 
@@ -106,6 +135,7 @@ export default function ProjectLinkPage() {
                 loading={loading}
                 projectId={project_id}
                 onRefresh={reloadLinks}
+                onAdded={mergeAddedLinks}
                 onDelete={(id) => {
                     setLinks(prev => prev.filter(b => b.id !== id));
                 }}
